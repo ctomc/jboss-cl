@@ -1,13 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <groupId>org.jboss.microcontainer</groupId>
-    <artifactId>jboss-microcontainer</artifactId>
+    <groupId>org.jboss.cl</groupId>
+    <artifactId>jboss-cl</artifactId>
     <version>2.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>jboss-classloading</artifactId>
   <packaging>jar</packaging>
-  <name>JBoss Microcontainer ClassLoading</name>
+  <name>JBoss ClassLoading</name>
   <url>http://www.jboss.com/products/jbossmc</url>
   <description>JBoss ClassLoading</description>
   <build>
@@ -21,12 +21,28 @@
   <dependencies>
     <!-- Global dependencies -->
     <dependency>
-      <groupId>org.jboss.microcontainer</groupId>
-      <artifactId>jboss-kernel</artifactId>
+      <groupId>org.jboss.cl</groupId>
+      <artifactId>jboss-classloader</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jboss.microcontainer</groupId>
-      <artifactId>jboss-classloader</artifactId>
+      <artifactId>jboss-dependency</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.microcontainer</groupId>
+      <artifactId>jboss-kernel</artifactId>
+      <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss</groupId>
+          <artifactId>jbossxb</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jbossxb</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jboss.man</groupId>
@@ -46,6 +62,14 @@
         <exclusion>
           <groupId>jboss</groupId>
           <artifactId>jboss-common-logging-spi</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>ant</groupId>
+          <artifactId>ant</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>ant</groupId>
+          <artifactId>ant-junit</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
