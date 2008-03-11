@@ -21,6 +21,7 @@
  */
 package org.jboss.classloading.spi.dependency;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -501,6 +502,16 @@ public abstract class Module extends NameAndVersionSupport
       return Collections.emptyList();
    }
 
+   /**
+    * Return a URL where dynamic classes can be stored
+    * 
+    * @return the url or null if there isn't one
+    */
+   public URL getDynamicClassRoot()
+   {
+      return null;
+   }
+   
    /**
     * Create the dependencies for the module
     */
