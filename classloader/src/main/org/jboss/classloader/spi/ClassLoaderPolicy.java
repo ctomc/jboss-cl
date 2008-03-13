@@ -230,7 +230,7 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy
       {
          String name = getName();
          if (name != null && name.trim().length() > 0)
-            return ObjectName.getInstance("jboss.classloader", "id", "'" + name + "'");
+            return ObjectName.getInstance("jboss.classloader", "id", "\"" + name + "\"");
          return ObjectName.getInstance("jboss.classloader", "id", "" + System.identityHashCode(this));
       }
       catch (MalformedObjectNameException e)

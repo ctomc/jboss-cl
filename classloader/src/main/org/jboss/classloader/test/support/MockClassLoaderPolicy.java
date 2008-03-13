@@ -479,7 +479,7 @@ public class MockClassLoaderPolicy extends ClassLoaderPolicy
       {
          Hashtable<String, String> properties = new Hashtable<String, String>();
          properties.put("name", "'" + name + "'");
-         properties.put("domain", "'" + getDomainName() + "'");
+         properties.put("domain", "\"" + getDomainName() + "\"");
          return ObjectName.getInstance("jboss.classloader", properties);
       }
       catch (MalformedObjectNameException e)

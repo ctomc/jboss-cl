@@ -620,7 +620,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
          throw new IllegalArgumentException("Null domain");
       
       Hashtable<String, String> properties = new Hashtable<String, String>();
-      properties.put("domain", "'" + domain.getName() + "'");
+      properties.put("domain", "\"" + domain.getName() + "\"");
       properties.put("system", "" + System.identityHashCode(this));
       try
       {
