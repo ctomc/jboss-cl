@@ -385,9 +385,9 @@ public class JMXUnitTestCase extends AbstractClassLoaderTest
       assertTrue((Boolean) server.getAttribute(testObjectName, "ImportAll"));
       assertTrue((Boolean) server.getAttribute(testObjectName, "Valid"));
       Set<String> expectedPackages = makeSet(A.class.getPackage().getName(), B.class.getPackage().getName());
-      assertEquals(expectedPackages, server.getAttribute(testObjectName, "ExportedPackages"));
+      assertEquals(expectedPackages, server.invoke(testObjectName, "listExportedPackages", null, null));
       List<ObjectName> expectedImports = Arrays.asList(clA.getObjectName(), clB.getObjectName()); 
-      assertEquals(expectedImports, server.getAttribute(testObjectName, "Imports"));
+      assertEquals(expectedImports, server.invoke(testObjectName, "listImports", null, null));
       assertEquals(test.toLongString(), server.getAttribute(testObjectName, "PolicyDetails"));
    }
 
@@ -405,22 +405,22 @@ public class JMXUnitTestCase extends AbstractClassLoaderTest
       
       ObjectName testObjectName = cl.getObjectName();
 
-      Set<String> loadedClasses = (Set) server.getAttribute(testObjectName, "LoadedClasses");
+      Set<String> loadedClasses = (Set) server.invoke(testObjectName, "listLoadedClasses", null, null);
       assertFalse(loadedClasses.contains(A.class.getName()));
       Class<?> expected = ((ClassLoader) cl).loadClass(A.class.getName());
       assertEquals(expected, server.invoke(testObjectName, "loadClass", new Object[] { A.class.getName() }, new String[] { String.class.getName() }));
-      loadedClasses = (Set) server.getAttribute(testObjectName, "LoadedClasses");
+      loadedClasses = (Set) server.invoke(testObjectName, "listLoadedClasses", null, null);
       assertTrue(loadedClasses.contains(A.class.getName()));
 
       assertEquals(cl.getObjectName(), server.invoke(testObjectName, "findClassLoaderForClass", new Object[] { A.class.getName() }, new String[] { String.class.getName() }));
       assertNull(server.invoke(testObjectName, "findClassLoaderForClass", new Object[] { Object.class.getName() }, new String[] { String.class.getName() }));
       
       String resourceName = ClassLoaderUtils.classNameToPath(B.class.getName());
-      Set<String> loadedResourceNames = (Set) server.getAttribute(testObjectName, "LoadedResourceNames");
+      Set<String> loadedResourceNames = (Set) server.invoke(testObjectName, "listLoadedResourceNames", null, null);
       assertFalse(loadedResourceNames.contains(resourceName));
       Set<URL> expectedURLs = makeSet(((ClassLoader) cl).getResource(resourceName));
       assertEquals(expectedURLs, server.invoke(testObjectName, "loadResources", new Object[] { resourceName }, new String[] { String.class.getName() }));
-      loadedResourceNames = (Set) server.getAttribute(testObjectName, "LoadedResourceNames");
+      loadedResourceNames = (Set) server.invoke(testObjectName, "listLoadedResourceNames", null, null);
       assertTrue(loadedResourceNames.contains(resourceName));
    }
       

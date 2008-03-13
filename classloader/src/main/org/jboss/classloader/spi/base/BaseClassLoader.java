@@ -146,7 +146,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       return basePolicy.isImportAll();
    }
 
-   public Set<String> getExportedPackages()
+   public Set<String> listExportedPackages()
    {
       HashSet<String> result = new HashSet<String>();
       String[] packageNames = policy.getPackageNames();
@@ -155,7 +155,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       return result;
    }
 
-   public List<ObjectName> getImports()
+   public List<ObjectName> listImports()
    {
       ArrayList<ObjectName> result = new ArrayList<ObjectName>();
       BaseClassLoaderPolicy basePolicy = policy;
@@ -198,19 +198,19 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       return null;
    }
 
-   public Set<String> getLoadedClasses()
+   public Set<String> listLoadedClasses()
    {
       return new HashSet<String>(loadedClasses);
    }
 
-   public Set<String> getLoadedResourceNames()
+   public Set<String> listLoadedResourceNames()
    {
       if (resourceCache == null)
          return Collections.emptySet();
       return new HashSet<String>(resourceCache.keySet());
    }
 
-   public Set<URL> getLoadedResources()
+   public Set<URL> listLoadedResources()
    {
       if (resourceCache == null)
          return Collections.emptySet();

@@ -83,14 +83,14 @@ public interface BaseClassLoaderMBean
     * 
     * @return the exported packages
     */
-   Set<String> getExportedPackages();
+   Set<String> listExportedPackages();
 
    /**
     * Get the imports of this classloader
     * 
     * @return the imports
     */
-   List<ObjectName> getImports();
+   List<ObjectName> listImports();
    
    /**
     * Get the policy as a string
@@ -104,21 +104,21 @@ public interface BaseClassLoaderMBean
     * 
     * @return the loaded classes
     */
-   Set<String> getLoadedClasses();
+   Set<String> listLoadedClasses();
    
    /**
     * Get the loaded resource names
     * 
     * @return the loaded resources names
     */
-   Set<String> getLoadedResourceNames();
+   Set<String> listLoadedResourceNames();
    
    /**
     * Get the loaded resources
     * 
     * @return the loaded resources
     */
-   Set<URL> getLoadedResources();
+   Set<URL> listLoadedResources();
    
    /**
     * Load a class
