@@ -172,7 +172,7 @@ public class PackageVisitor extends AbstractVirtualFileFilterWithAttributes impl
       try
       {
          // We only want only directories
-         if (accepts(file) && file.isLeaf() == false)
+         if (file.isLeaf() == false && accepts(file))
          {
             boolean empty = true;
             // Include empty directories?
