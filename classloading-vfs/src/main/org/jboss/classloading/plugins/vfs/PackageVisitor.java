@@ -31,6 +31,7 @@ import org.jboss.classloading.spi.metadata.ExportAll;
 import org.jboss.virtual.VirtualFile;
 import org.jboss.virtual.VirtualFileVisitor;
 import org.jboss.virtual.VisitorAttributes;
+import org.jboss.virtual.plugins.vfs.helpers.AbstractVirtualFileFilterWithAttributes;
 
 /**
  * Visits a virtual file system recursively
@@ -39,10 +40,16 @@ import org.jboss.virtual.VisitorAttributes;
  * @author <a href="adrian@jboss.org">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public class PackageVisitor implements VirtualFileVisitor
+public class PackageVisitor extends AbstractVirtualFileFilterWithAttributes implements VirtualFileVisitor
 {
    /** The packages */
    private Set<String> packages = new HashSet<String>();
+
+   /** The roots */
+   private VirtualFile[] roots;
+   
+   /** The current root */
+   private VirtualFile root;
    
    /** The export all */
    private ExportAll exportAll;
@@ -74,7 +81,7 @@ public class PackageVisitor implements VirtualFileVisitor
     */
    public static Set<String> determineAllPackages(VirtualFile[] roots, ExportAll exportAll, ClassFilter included, ClassFilter excluded, ClassFilter excludedExport)
    {
-      PackageVisitor visitor = new PackageVisitor(exportAll, included, excluded, excludedExport);
+      PackageVisitor visitor = new PackageVisitor(roots, exportAll, included, excluded, excludedExport);
       for (VirtualFile root : roots)
       {
          try
@@ -99,10 +106,11 @@ public class PackageVisitor implements VirtualFileVisitor
     * @param excludedExport the excluded export packages
     * @throws IllegalArgumentException for a null exportAll policy
     */
-   PackageVisitor(ExportAll exportAll, ClassFilter included, ClassFilter excluded, ClassFilter excludedExport)
+   PackageVisitor(VirtualFile[] roots, ExportAll exportAll, ClassFilter included, ClassFilter excluded, ClassFilter excludedExport)
    {
       if (exportAll == null)
          throw new IllegalArgumentException("Null export policy");
+      this.roots = roots;
       this.exportAll = exportAll;
       this.included = included;
       this.excluded = excluded;
@@ -119,6 +127,7 @@ public class PackageVisitor implements VirtualFileVisitor
    {
       if (root == null)
          throw new IllegalArgumentException("Null root");
+      this.root = root;
       rootPath = root.getPathName();
       rootPathWithSlash = rootPath + "/";
    }
@@ -137,8 +146,25 @@ public class PackageVisitor implements VirtualFileVisitor
    {
       VisitorAttributes attributes = new VisitorAttributes();
       attributes.setIncludeRoot(true);
-      attributes.setRecurseFilter(VisitorAttributes.RECURSE_ALL);
+      attributes.setRecurseFilter(this);
       return attributes;
+   }
+   
+   public boolean accepts(VirtualFile file)
+   {
+      // This is our current root
+      if (file.equals(root))
+         return true;
+
+      // Some other root, it will be handled later
+      for (VirtualFile other : roots)
+      {
+         if (file.equals(other))
+            return false;
+      }
+      
+      // Ok
+      return true;
    }
    
    public void visit(VirtualFile file)
@@ -146,7 +172,7 @@ public class PackageVisitor implements VirtualFileVisitor
       try
       {
          // We only want only directories
-         if (file.isLeaf() == false)
+         if (accepts(file) && file.isLeaf() == false)
          {
             boolean empty = true;
             // Include empty directories?

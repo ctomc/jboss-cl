@@ -21,6 +21,7 @@
 */
 package org.jboss.test.classloading.vfs.policy.test;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -96,7 +97,27 @@ public class ExportAllUnitTestCase extends BaseTestCase
       VirtualFile base = VFS.getRoot(baseURL);
       VirtualFile[] files = new VirtualFile[urls.length];
       for (int i = 0; i < urls.length; ++i)
-         files[i] = base.findChild(urls[i]);
+      {
+         try
+         {
+            files[i] = base.getChild(urls[i]);
+         }
+         catch (IOException ignored)
+         {
+         }
+         if (files[i] == null && i > 0)
+         {
+            try
+            {
+               files[i] = files[0].getChild(urls[i]);
+            }
+            catch (IOException ignored)
+            {
+            }
+         }
+         if (files[i] == null)
+            fail("Can't find " + urls[i]);
+      }
       
       testExportAllCommon(exportAll, expected, empty, files);
    }
@@ -108,8 +129,17 @@ public class ExportAllUnitTestCase extends BaseTestCase
       {
          String urlString = "/classloader/" + urls[i];
          URL url = getResource(urlString);
-         assertNotNull("Expected to find resource: " + urlString, url);
-         files[i]= VFS.getRoot(url);
+         if (url != null)
+         {
+            files[i]= VFS.getRoot(url);
+         }
+         else
+         {
+            if (i > 0)
+               files[i] = files[0].getChild(urls[i]);
+            if (files[i] == null)
+               fail("Expected to find resource: " + urlString);
+         }
       }
       
       testExportAllCommon(exportAll, expected, empty, files);
@@ -247,6 +277,36 @@ public class ExportAllUnitTestCase extends BaseTestCase
       );
 
       testExportAll(ExportAll.NON_EMPTY, expected, "testjar2", "testjar1");
+   }
+   
+   public void testExportAllJar3() throws Exception
+   {
+      Map<String,String> expected = makeSimpleMap("testjar3",
+            "",
+            "package1",
+            "package2"
+      );
+
+      testExportAll(ExportAll.ALL, expected, "testjar3", "subjar1.jar");
+   }
+   public void testJar3Resources()
+      throws Exception
+   {
+      URL testjar3URL = getResource("/classloader/testjar3");
+      VirtualFile testjar3 = VFS.getRoot(testjar3URL);
+      VirtualFile testjar3subjar = testjar3.getChild("subjar1.jar");
+      assertNotNull(testjar3subjar);
+      VFSClassLoaderPolicy policy = VFSClassLoaderPolicy.createVFSClassLoaderPolicy(testjar3, testjar3subjar);
+      policy.setExportAll(ExportAll.NON_EMPTY);
+      
+      ClassLoaderSystem system = new DefaultClassLoaderSystem();
+      ClassLoader classLoader = system.registerClassLoaderPolicy(policy);
+      URL notempty = classLoader.getResource("notempty");
+      assertNotNull(notempty);
+      notempty = classLoader.getResource("package1/notempty");
+      assertNotNull(notempty);
+      notempty = classLoader.getResource("package2/notempty");
+      assertNotNull(notempty);
    }
 
    protected String getContents(InputStream is) throws Exception
