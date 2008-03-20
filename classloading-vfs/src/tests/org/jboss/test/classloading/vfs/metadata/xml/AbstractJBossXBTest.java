@@ -118,12 +118,12 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
 
    protected <T, U> T unmarshalObject(Class<T> expected, Class<U> reference) throws Exception
    {
-      return unmarshalObject(expected, reference, null);
+      return unmarshalObject(expected, reference, (Class[]) null);
    }
 
    protected <T> T unmarshalObject(Class<T> expected) throws Exception
    {
-      return unmarshalObject(expected, expected, null);
+      return unmarshalObject(expected, expected, (Class[]) null);
    }
 
    protected String findTestXml()
