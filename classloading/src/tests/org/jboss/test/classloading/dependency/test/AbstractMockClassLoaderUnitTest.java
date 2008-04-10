@@ -24,7 +24,6 @@ package org.jboss.test.classloading.dependency.test;
 import java.util.Collections;
 
 import junit.framework.Test;
-
 import org.jboss.beans.metadata.plugins.AbstractBeanMetaData;
 import org.jboss.beans.metadata.plugins.InstallCallbackMetaData;
 import org.jboss.beans.metadata.plugins.UninstallCallbackMetaData;
@@ -39,6 +38,7 @@ import org.jboss.classloading.spi.dependency.ClassLoading;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoaderPolicyModule;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.dependency.spi.ControllerState;
+import org.jboss.dependency.spi.ControllerStateModel;
 import org.jboss.kernel.Kernel;
 import org.jboss.kernel.plugins.bootstrap.AbstractBootstrap;
 import org.jboss.kernel.plugins.bootstrap.basic.BasicBootstrap;
@@ -78,7 +78,10 @@ public abstract class AbstractMockClassLoaderUnitTest extends AbstractClassLoadi
    
    protected MockClassLoaderPolicyModule assertModule(KernelControllerContext context) throws Exception
    {
-      assertEquals(context.getName() + " should be installed: " + context.getState() + " unresolved=" + context.getDependencyInfo().getUnresolvedDependencies(), ControllerState.INSTALLED, context.getState());
+      ControllerStateModel states = context.getController().getStates();
+      ControllerState state = context.getState();
+      ControllerState next = states.getNextState(state);
+      assertEquals(context.getName() + " should be installed: " + state + " unresolved=" + context.getDependencyInfo().getUnresolvedDependencies(next), ControllerState.INSTALLED, context.getState());
       Object target = context.getTarget();
       assertNotNull(target);
       return assertInstanceOf(target, MockClassLoaderPolicyModule.class);
