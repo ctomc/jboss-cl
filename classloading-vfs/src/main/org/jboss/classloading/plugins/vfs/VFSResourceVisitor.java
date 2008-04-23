@@ -177,7 +177,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
          ResourceContext resource = new ResourceContext(file.toURL(), path, classLoader);
          
          //Check the filter and visit
-         if (filter.accepts(resource))
+         if (filter == null || filter.accepts(resource))
             visitor.visit(resource);
       }
       catch (Exception e)
