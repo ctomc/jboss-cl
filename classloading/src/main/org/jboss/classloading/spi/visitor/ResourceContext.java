@@ -144,9 +144,9 @@ public class ResourceContext
    }
    
    /**
-    * Get the input stream for the resource
+    * Get the bytes for the resource
     * 
-    * @return the input stream
+    * @return the byte array
     * @throws IOException for any error
     */
    public byte[] getBytes() throws IOException
