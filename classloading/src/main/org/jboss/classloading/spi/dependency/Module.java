@@ -39,6 +39,8 @@ import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.ExportAll;
 import org.jboss.classloading.spi.metadata.ExportPackages;
 import org.jboss.classloading.spi.metadata.Requirement;
+import org.jboss.classloading.spi.visitor.ResourceFilter;
+import org.jboss.classloading.spi.visitor.ResourceVisitor;
 import org.jboss.dependency.spi.Controller;
 import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerState;
@@ -275,6 +277,33 @@ public abstract class Module extends NameAndVersionSupport
       return true;
    }
 
+   /**
+    * Visit the resources in this module
+    * using the filter defined on the visitor
+    * 
+    * @param visitor the visitor
+    */
+   public void visit(ResourceVisitor visitor)
+   {
+      if (visitor == null)
+         throw new IllegalArgumentException("Null visitor");
+      visit(visitor, visitor.getFilter());
+   }
+
+   /**
+    * Visit the resources in this module
+    * using the given filter
+    * 
+    * @param visitor the visitor
+    * @param filter the filter
+    */
+   public void visit(ResourceVisitor visitor, ResourceFilter filter)
+   {
+      if (visitor == null)
+         throw new IllegalArgumentException("Null visitor");
+      throw new UnsupportedOperationException("The module " + getContextName() + " does not support filtering: " + getClass().getName());
+   }
+   
    /**
     * Get the delegate loaders for this module
     * 

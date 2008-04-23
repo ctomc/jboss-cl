@@ -63,6 +63,20 @@ public class ClassLoaderUtils
    }
 
    /**
+    * Convert a resource name to a class name
+    * 
+    * @param resourceName the resource name
+    * @return the class name or null if it is not a class
+    */
+   public static final String resourceNameToClassName(String resourceName)
+   {
+      if (resourceName.endsWith(".class") == false)
+         return null;
+      resourceName = resourceName.substring(0, resourceName.length()-6);
+      return resourceName.replace('/', '.');
+   }
+
+   /**
     * Convert a class's package name into a path
     * 
     * @param className the class name
@@ -123,6 +137,37 @@ public class ClassLoaderUtils
       catch (IOException e)
       {
          throw new RuntimeException("Unable to load class byte code " + name, e);
+      }
+      finally
+      {
+         try
+         {
+            is.close();
+         }
+         catch (IOException e)
+         {
+            // pointless
+         }
+      }
+   }
+   
+   /**
+    * Load bytes from a stream
+    * 
+    * @param is the input stream
+    * @return the bytes
+    * @throws IOException for any error
+    */
+   public static final byte[] loadBytes(final InputStream is) throws IOException
+   {
+      try
+      {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         byte[] tmp = new byte[1024];
+         int read = 0;
+         while ( (read = is.read(tmp)) >= 0 )
+            baos.write(tmp, 0, read);
+         return baos.toByteArray();
       }
       finally
       {

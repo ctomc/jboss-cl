@@ -53,6 +53,9 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    
    /** The classloader system we are registered with */
    private ClassLoaderSystem system;
+   
+   /** The classloader */
+   private ClassLoader classLoader;
 
    /**
     * Create a new ClassLoaderPolicyModule.
@@ -81,6 +84,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       String parentName = getDeterminedParentDomainName();
       ClassLoader result = system.registerClassLoaderPolicy(domainName, parentPolicy, parentName, getPolicy());
       this.system = system;
+      this.classLoader = result;
       return result;
    }
    
@@ -99,7 +103,9 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
          throw new IllegalArgumentException("Null parent");
 
       Loader loader = new ClassLoaderToLoaderAdapter(parent);
-      return registerClassLoaderPolicy(system, loader);
+      ClassLoader result = registerClassLoaderPolicy(system, loader); 
+      this.classLoader = result;
+      return result;
    }
    
    /**
@@ -118,6 +124,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       ParentPolicy parentPolicy = getDeterminedParentPolicy();
       ClassLoader result = system.registerClassLoaderPolicy(domainName, parentPolicy, loader, getPolicy());
       this.system = system;
+      this.classLoader = result;
       return result;
    }
 
@@ -138,6 +145,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    {
       if (system != null && policy != null)
          system.unregisterClassLoaderPolicy(policy);
+      classLoader = null;
       system = null;
       policy = null;
    }
@@ -148,6 +156,16 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
     * @return the policy
     */
    protected abstract ClassLoaderPolicy determinePolicy();
+   
+   /**
+    * Get the classloader
+    * 
+    * @return the classloader
+    */
+   protected ClassLoader getClassLoader()
+   {
+      return classLoader;
+   }
    
    @Override
    public DelegateLoader createLazyDelegateLoader(Domain domain, RequirementDependencyItem item)
