@@ -59,6 +59,7 @@ public class ResourceContext
          throw new IllegalArgumentException("Null resourceName");
       if (classLoader == null)
          throw new IllegalArgumentException("Null classloader");
+
       this.url = url;
       this.resourceName = resourceName;
       this.classLoader = classLoader;
@@ -116,8 +117,13 @@ public class ResourceContext
    
    /**
     * Load a class
+    *
+    * Do isClass check before,
+    * unless you want to handle exception
+    * when resource is not actually a class. 
     * 
-    * @return the class or null if it is not a class
+    * @return the class from resource
+    * @throws RuntimeException for any errors during class loading
     */
    public Class<?> loadClass()
    {

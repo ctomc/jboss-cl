@@ -299,8 +299,6 @@ public abstract class Module extends NameAndVersionSupport
     */
    public void visit(ResourceVisitor visitor, ResourceFilter filter)
    {
-      if (visitor == null)
-         throw new IllegalArgumentException("Null visitor");
       throw new UnsupportedOperationException("The module " + getContextName() + " does not support filtering: " + getClass().getName());
    }
    

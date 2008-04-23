@@ -105,6 +105,13 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     */
    VFSResourceVisitor(VirtualFile[] roots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter)
    {
+      if (roots == null)
+         throw new IllegalArgumentException("Null roots");
+      if (classLoader == null)
+         throw new IllegalArgumentException("Null classloader");
+      if (visitor == null)
+         throw new IllegalArgumentException("Null visitor");
+
       this.roots = roots;
       this.included = included;
       this.excluded = excluded;
