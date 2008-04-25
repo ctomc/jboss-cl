@@ -71,30 +71,18 @@ public class MockResourceVisitorUnitTestCase extends AbstractMockClassLoaderUnit
    {
       MockClassLoadingMetaData a = createClassLoadingMetaData("a");
       a.setIncluded(new PackageClassFilter(new String[]{A.class.getPackage().getName(), B.class.getPackage().getName()}));
-      KernelControllerContext contextA = install(a);
-      try
-      {
-         MockClassLoaderPolicyModule module = assertModule(contextA);
-         module.registerClassLoaderPolicy(system);
-
-         MockResourceVisitor visitor = new MockResourceVisitor();
-         module.visit(visitor);
-
-         Set<String> resources = new HashSet<String>(Arrays.asList(paths));
-         resources.remove(ClassLoaderUtils.classNameToPath(C.class));
-         assertEquals(resources, visitor.getResources());
-      }
-      finally
-      {
-         uninstall(contextA);
-      }
-      assertNoModule(contextA);
+      testMockClassLoadingMetaData(a);
    }
 
    public void testExcluded() throws Exception
    {
       MockClassLoadingMetaData a = createClassLoadingMetaData("a");
       a.setExcluded(new PackageClassFilter(new String[]{C.class.getPackage().getName()}));
+      testMockClassLoadingMetaData(a);
+   }
+
+   protected void testMockClassLoadingMetaData(MockClassLoadingMetaData a) throws Exception
+   {
       KernelControllerContext contextA = install(a);
       try
       {
