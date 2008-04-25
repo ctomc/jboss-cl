@@ -21,14 +21,22 @@
 */
 package org.jboss.classloading.spi.dependency.policy.mock;
 
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.test.support.MockClassLoaderHelper;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.classloading.spi.dependency.policy.ClassLoaderPolicyModule;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
+import org.jboss.classloading.spi.visitor.ResourceContext;
+import org.jboss.classloading.spi.visitor.ResourceFilter;
+import org.jboss.classloading.spi.visitor.ResourceVisitor;
 import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.kernel.spi.dependency.KernelControllerContextAware;
 
@@ -52,6 +60,68 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
    public MockClassLoaderPolicyModule(MockClassLoadingMetaData classLoadingMetaData, String contextName)
    {
       super(classLoadingMetaData, contextName);
+   }
+
+   /**
+    * Get collection from string array.
+    *
+    * @param strings the strings
+    * @return string collection
+    */
+   private static Collection<String> toCollection(String[] strings)
+   {
+      if (strings == null || strings.length == 0)
+         return Collections.emptySet();
+      else
+         return Arrays.asList(strings);
+   }
+
+   /**
+    * Get URL for path param.
+    *
+    * @param path the path
+    * @return path's URL
+    */
+   protected URL getURL(String path)
+   {
+      ClassLoader classLoader = getClassLoader();
+      if (classLoader == null)
+         throw new IllegalStateException("ClassLoader has not been constructed for " + getContextName());
+
+      return classLoader.getResource(path);
+   }
+
+   public void visit(ResourceVisitor visitor, ResourceFilter filter)
+   {
+      MockClassLoadingMetaData mclmd = getClassLoadingMetaData();
+      String[] paths = mclmd.getPaths();
+      if (paths != null && paths.length > 0)
+      {
+         ClassLoader classLoader = getClassLoader();
+         if (classLoader == null)
+            throw new IllegalStateException("ClassLoader has not been constructed for " + getContextName());
+
+         Collection<String> included = toCollection(mclmd.getIncludedClasses());
+         ClassFilter includedFilter = getIncluded();
+         Collection<String> excluded = toCollection(mclmd.getExcludedClasses());
+         ClassFilter excludedFilter = getExcluded();
+
+         for (String path : paths)
+         {
+            if (included.isEmpty() == false && included.contains(path) == false)
+               continue;
+            if (includedFilter != null && includedFilter.matchesResourcePath(path) == false)
+               continue;
+            if (excluded.isEmpty() == false && excluded.contains(path))
+               continue;
+            if (excludedFilter != null && excludedFilter.matchesResourcePath(path))
+               continue;
+
+            ResourceContext context = new ResourceContext(getURL(path), path, classLoader);
+            if (filter == null || filter.accepts(context))
+               visitor.visit(context);
+         }
+      }
    }
 
    @Override

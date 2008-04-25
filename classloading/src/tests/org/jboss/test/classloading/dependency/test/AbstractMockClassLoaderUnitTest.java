@@ -21,14 +21,8 @@
  */
 package org.jboss.test.classloading.dependency.test;
 
-import java.util.Collections;
-
 import junit.framework.Test;
-import org.jboss.beans.metadata.plugins.AbstractBeanMetaData;
-import org.jboss.beans.metadata.plugins.InstallCallbackMetaData;
-import org.jboss.beans.metadata.plugins.UninstallCallbackMetaData;
 import org.jboss.beans.metadata.spi.BeanMetaData;
-import org.jboss.beans.metadata.spi.CallbackMetaData;
 import org.jboss.beans.metadata.spi.builder.BeanMetaDataBuilder;
 import org.jboss.classloader.plugins.system.DefaultClassLoaderSystem;
 import org.jboss.classloader.spi.ClassLoaderDomain;
@@ -54,8 +48,6 @@ import org.jboss.test.classloading.AbstractClassLoadingTest;
  */
 public abstract class AbstractMockClassLoaderUnitTest extends AbstractClassLoadingTest
 {
-   private Kernel kernel;
-   
    private KernelController controller;
 
    protected ClassLoaderSystem system;
@@ -106,11 +98,16 @@ public abstract class AbstractMockClassLoaderUnitTest extends AbstractClassLoadi
    
    protected KernelControllerContext install(MockClassLoadingMetaData metaData) throws Exception
    {
+      return install(metaData, MockClassLoaderPolicyModule.class);
+   }
+
+   protected KernelControllerContext install(MockClassLoadingMetaData metaData, Class<? extends MockClassLoaderPolicyModule> clazz) throws Exception
+   {
       // Determine some properties
       String contextName = metaData.getName() + ":" + metaData.getVersion().toString(); 
       
       // Create the module
-      BeanMetaDataBuilder builder = BeanMetaDataBuilder.createBuilder(contextName, MockClassLoaderPolicyModule.class.getName());
+      BeanMetaDataBuilder builder = BeanMetaDataBuilder.createBuilder(contextName, clazz.getName());
       builder.addConstructorParameter(MockClassLoadingMetaData.class.getName(), metaData);
       builder.addConstructorParameter(String.class.getName(), contextName);
       builder.setNoClassLoader();
@@ -147,7 +144,7 @@ public abstract class AbstractMockClassLoaderUnitTest extends AbstractClassLoadi
       // Bootstrap the kernel
       AbstractBootstrap bootstrap = new BasicBootstrap();
       bootstrap.run();
-      kernel = bootstrap.getKernel();
+      Kernel kernel = bootstrap.getKernel();
       controller = kernel.getController();
 
       system = new DefaultClassLoaderSystem();
@@ -155,19 +152,10 @@ public abstract class AbstractMockClassLoaderUnitTest extends AbstractClassLoadi
       defaultDomain.setParentPolicy(ParentPolicy.BEFORE_BUT_JAVA_ONLY);
 
       BeanMetaDataBuilder builder = BeanMetaDataBuilder.createBuilder("ClassLoading", ClassLoading.class.getName());
-      BeanMetaData beanMetaData = builder.getBeanMetaData();
-      
-      // TODO Add in/uncallbacks to the builder
-      AbstractBeanMetaData abmd = (AbstractBeanMetaData) beanMetaData;
-      InstallCallbackMetaData install = new InstallCallbackMetaData();
-      install.setMethodName("addModule");
-      install.setDependentState(ControllerState.CONFIGURED);
-      abmd.setInstallCallbacks(Collections.singletonList((CallbackMetaData) install));
-      UninstallCallbackMetaData uninstall = new UninstallCallbackMetaData();
-      uninstall.setMethodName("removeModule");
-      uninstall.setDependentState(ControllerState.CONFIGURED);
-      abmd.setUninstallCallbacks(Collections.singletonList((CallbackMetaData) uninstall));
-      install(beanMetaData);
+      builder.addMethodInstallCallback("addModule", null, null, ControllerState.CONFIGURED, null);
+      builder.addMethodUninstallCallback("removeModule", null, null, ControllerState.CONFIGURED, null);
+
+      install(builder.getBeanMetaData());
    }
 
    protected void tearDown() throws Exception

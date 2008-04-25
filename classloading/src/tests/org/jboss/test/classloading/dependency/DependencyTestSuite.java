@@ -34,6 +34,7 @@ import org.jboss.test.classloading.dependency.test.PackageDependencyUnitTestCase
 import org.jboss.test.classloading.dependency.test.ReExportModuleUnitTestCase;
 import org.jboss.test.classloading.dependency.test.ReExportPackageUnitTestCase;
 import org.jboss.test.classloading.dependency.test.UsesPackageUnitTestCase;
+import org.jboss.test.classloading.dependency.test.MockResourceVisitorUnitTestCase;
 
 /**
  * Version Test Suite.
@@ -71,7 +72,8 @@ public class DependencyTestSuite extends TestSuite
       suite.addTest(ReExportModuleUnitTestCase.suite());
       suite.addTest(ReExportPackageUnitTestCase.suite());
       suite.addTest(UsesPackageUnitTestCase.suite());
-      
+      suite.addTest(MockResourceVisitorUnitTestCase.suite());
+
       return suite;
    }
 }

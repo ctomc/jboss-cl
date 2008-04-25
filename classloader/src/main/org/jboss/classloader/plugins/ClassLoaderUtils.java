@@ -59,7 +59,24 @@ public class ClassLoaderUtils
     */
    public static final String classNameToPath(final String className)
    {
+      if (className == null)
+         throw new IllegalArgumentException("Null className");
+
       return className.replace('.', '/') + ".class";
+   }
+
+   /**
+    * Convert a class into a path
+    *
+    * @param clazz the class
+    * @return the path
+    */
+   public static final String classNameToPath(final Class<?> clazz)
+   {
+      if (clazz == null)
+         throw new IllegalArgumentException("Null class");
+
+      return classNameToPath(clazz.getName());
    }
 
    /**
