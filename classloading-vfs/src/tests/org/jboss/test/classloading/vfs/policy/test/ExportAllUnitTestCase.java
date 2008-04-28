@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,7 +34,6 @@ import java.util.Set;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.jboss.classloader.plugins.system.DefaultClassLoaderSystem;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloading.spi.metadata.ExportAll;
@@ -325,10 +325,7 @@ public class ExportAllUnitTestCase extends BaseTestCase
    protected Set<String> makeSet(String... elements)
    {
       assertNotNull(elements);
-      Set<String> result = new HashSet<String>();
-      for (String string : elements)
-         result.add(string);
-      return result;
+      return new HashSet<String>(Arrays.asList(elements));
    }
    
    protected Map<String,String> makeSimpleMap(String prefix, String... elements)

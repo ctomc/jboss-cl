@@ -33,6 +33,7 @@ import org.jboss.classloader.plugins.system.DefaultClassLoaderSystem;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.ParentPolicy;
+import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory;
 import org.jboss.kernel.plugins.deployment.AbstractKernelDeployment;
 import org.jboss.kernel.spi.deployment.KernelDeployment;
@@ -90,7 +91,7 @@ public class VFSClassLoadingMicrocontainerTest extends MicrocontainerTest
    
    protected ClassLoader assertClassLoader(String name, String version) throws Exception
    {
-      String contextName = name + ":" + version.toString();
+      String contextName = name + ":" + version;
       return assertClassLoader(contextName);
    }
    
@@ -107,7 +108,7 @@ public class VFSClassLoadingMicrocontainerTest extends MicrocontainerTest
    
    protected void assertNoClassLoader(String name, String version) throws Exception
    {
-      String contextName = name + ":" + version.toString();
+      String contextName = name + ":" + version;
       assertNoClassLoader(contextName);
    }
    
@@ -215,6 +216,11 @@ public class VFSClassLoadingMicrocontainerTest extends MicrocontainerTest
       {
          checkThrowable(IllegalStateException.class, t);
       }
+   }
+
+   protected Module assertModule(String contextName)
+   {
+      return assertBean(contextName + "$MODULE", Module.class);
    }
    
    protected void setUp() throws Exception

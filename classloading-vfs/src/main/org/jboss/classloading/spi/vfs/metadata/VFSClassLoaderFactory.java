@@ -177,7 +177,7 @@ public class VFSClassLoaderFactory extends ClassLoadingMetaData implements BeanM
       // Determine some properties
       String contextName = getContextName();
       if (contextName == null)
-         contextName = getName() + ":" + getVersion().toString(); 
+         contextName = getName() + ":" + getVersion();
       String moduleName = contextName + "$MODULE";
       
       // Create the module

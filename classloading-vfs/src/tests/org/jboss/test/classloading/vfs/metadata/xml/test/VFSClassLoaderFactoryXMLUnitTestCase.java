@@ -160,7 +160,7 @@ public class VFSClassLoaderFactoryXMLUnitTestCase extends AbstractJBossXBTest
    public void testModuleRoots() throws Exception
    {
       VFSClassLoaderFactory result = unmarshal();
-      assertEquals(Arrays.asList(new String[] { "root1", "root2", "root3" }), result.getRoots());
+      assertEquals(Arrays.asList("root1", "root2", "root3"), result.getRoots());
    }
 
    public void testExportOneModuleNoVersion() throws Exception

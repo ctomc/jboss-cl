@@ -27,7 +27,7 @@ import org.jboss.test.kernel.junit.MicrocontainerTestDelegate;
 
 /**
  * 
- * An AOPMicrocontainerTestDelegate.
+ * An VFSCLMicrocontainerTestDelegate.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 63094 $
