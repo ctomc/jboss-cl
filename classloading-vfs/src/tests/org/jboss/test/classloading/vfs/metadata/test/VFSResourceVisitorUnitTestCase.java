@@ -37,6 +37,7 @@ import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory;
 import org.jboss.classloading.spi.visitor.ClassVisitor;
 import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
+import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.kernel.spi.deployment.KernelDeployment;
 import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTest;
 import org.jboss.test.classloading.vfs.metadata.support.a.A;
@@ -154,6 +155,41 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
                in.close();
             }
          }
+      }
+      finally
+      {
+         undeploy(deployment);
+      }
+   }
+
+   public void testClassloading() throws Exception
+   {
+      VFSClassLoaderFactory factory = new VFSClassLoaderFactory("test");
+      factory.setRoots(Arrays.asList(getRoot(getClass())));
+      KernelDeployment deployment = install(factory);
+      try
+      {
+         ResourceVisitor visitor = new ResourceVisitor()
+         {
+            public ResourceFilter getFilter()
+            {
+               return new ResourceFilter()
+               {
+                  public boolean accepts(ResourceContext resource)
+                  {
+                     return resource.isClass() && resource.getResourceName().contains("C.class");
+                  }
+               };
+            }
+
+            public void visit(ResourceContext resource)
+            {
+               Class<?> clazz = resource.loadClass();
+               assertEquals(C.class.getName(), clazz.getName());
+            }
+         };
+         Module module = assertModule("test:0.0.0");
+         module.visit(visitor);
       }
       finally
       {
