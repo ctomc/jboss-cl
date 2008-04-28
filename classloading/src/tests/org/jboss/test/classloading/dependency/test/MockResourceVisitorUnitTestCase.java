@@ -32,6 +32,7 @@ import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoaderPolicyMo
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.test.classloading.dependency.support.MockResourceVisitor;
+import org.jboss.test.classloading.dependency.support.MockFilteredResourceVisitor;
 import org.jboss.test.classloading.dependency.support.a.A;
 import org.jboss.test.classloading.dependency.support.b.B;
 import org.jboss.test.classloading.dependency.support.c.C;
@@ -81,7 +82,18 @@ public class MockResourceVisitorUnitTestCase extends AbstractMockClassLoaderUnit
       testMockClassLoadingMetaData(a);
    }
 
+   public void testFiltered() throws Exception
+   {
+      MockClassLoadingMetaData a = createClassLoadingMetaData("a");
+      testMockClassLoadingMetaData(a, new MockFilteredResourceVisitor());
+   }
+
    protected void testMockClassLoadingMetaData(MockClassLoadingMetaData a) throws Exception
+   {
+      testMockClassLoadingMetaData(a, new MockResourceVisitor());
+   }
+
+   protected void testMockClassLoadingMetaData(MockClassLoadingMetaData a, MockResourceVisitor visitor) throws Exception
    {
       KernelControllerContext contextA = install(a);
       try
@@ -89,7 +101,6 @@ public class MockResourceVisitorUnitTestCase extends AbstractMockClassLoaderUnit
          MockClassLoaderPolicyModule module = assertModule(contextA);
          module.registerClassLoaderPolicy(system);
 
-         MockResourceVisitor visitor = new MockResourceVisitor();
          module.visit(visitor);
 
          Set<String> resources = new HashSet<String>(Arrays.asList(paths));
