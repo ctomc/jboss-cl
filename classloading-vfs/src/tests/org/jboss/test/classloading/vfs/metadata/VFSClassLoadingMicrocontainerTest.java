@@ -70,12 +70,17 @@ public class VFSClassLoadingMicrocontainerTest extends MicrocontainerTest
    
    protected String getRoot(Class<?> clazz)
    {
-      ProtectionDomain pd = clazz.getProtectionDomain();
-      CodeSource cs = pd.getCodeSource();
-      URL location = cs.getLocation();
+      URL location = getRootURL(clazz);
       return location.toString();
    }
-   
+
+   protected URL getRootURL(Class<?> clazz)
+   {
+      ProtectionDomain pd = clazz.getProtectionDomain();
+      CodeSource cs = pd.getCodeSource();
+      return cs.getLocation();
+   }
+
    protected String getContextName(VFSClassLoaderFactory factory)
    {
       String contextName = factory.getContextName();

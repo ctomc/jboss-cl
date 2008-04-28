@@ -21,12 +21,17 @@
  */
 package org.jboss.test.classloading.vfs.metadata.test;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Test;
+import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory;
 import org.jboss.classloading.spi.visitor.ClassVisitor;
@@ -34,6 +39,9 @@ import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
 import org.jboss.kernel.spi.deployment.KernelDeployment;
 import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTest;
+import org.jboss.test.classloading.vfs.metadata.support.a.A;
+import org.jboss.test.classloading.vfs.metadata.support.b.B;
+import org.jboss.test.classloading.vfs.metadata.support.c.C;
 
 /**
  * VFSResourceVisitorUnitTestCase.
@@ -42,7 +50,15 @@ import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTes
  */
 public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontainerTest
 {
-   private static String[] paths = new String[] {"a/A.class", "b/B.class", "c/C.class"};
+   private static Map<String, Class<?>> aliases;
+
+   static
+   {
+      aliases = new HashMap<String, Class<?>>();
+      aliases.put("a/A.class", A.class);
+      aliases.put("b/B.class", B.class);
+      aliases.put("c/C.class", C.class);
+   }
 
    public static Test suite()
    {
@@ -84,18 +100,66 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
    {
       VFSClassLoaderFactory factory = new VFSClassLoaderFactory("test");
       factory.setRoots(Arrays.asList(System.getProperty("test.dir") + "/support/"));
-      install(factory);
+      KernelDeployment deployment = install(factory);
       try
       {
          visitModule();
       }
       finally
       {
-         shutdown();
+         undeploy(deployment);
       }
    }
 
-   // TODO - test inputstream / bytes
+   public void testBytes() throws Exception
+   {
+      VFSClassLoaderFactory factory = new VFSClassLoaderFactory("test");
+      factory.setRoots(Arrays.asList(System.getProperty("test.dir") + "/support/"));
+      KernelDeployment deployment = install(factory);
+      try
+      {
+         final Map<String, byte[]> bytes = new HashMap<String,byte[]>();
+         ResourceVisitor visitor = new ClassVisitor()
+         {
+            public void visit(ResourceContext resource)
+            {
+               try
+               {
+                  bytes.put(resource.getResourceName(), resource.getBytes());
+               }
+               catch (IOException e)
+               {
+                  throw new Error(e);
+               }
+            }
+         };
+         Module module = assertModule("test:0.0.0");
+         module.visit(visitor);
+
+         assertFalse(bytes.isEmpty());
+         for (Map.Entry<String, byte[]> entry : bytes.entrySet())
+         {
+            Class<?> clazz = aliases.get(entry.getKey());
+            assertNotNull(clazz);
+            URL url = new URL(getRoot(clazz) + ClassLoaderUtils.classNameToPath(clazz));
+            InputStream in = url.openStream();
+            try
+            {
+               byte[] classBytes = ClassLoaderUtils.loadBytes(in);
+               byte[] value = entry.getValue();
+               assertTrue(Arrays.equals(classBytes, value));
+            }
+            finally
+            {
+               in.close();
+            }
+         }
+      }
+      finally
+      {
+         undeploy(deployment);
+      }
+   }
 
    protected void visitModule()
    {
@@ -109,6 +173,6 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
          }
       };
       module.visit(visitor);
-      assertEquals(new HashSet<String>(Arrays.asList(paths)), set);
+      assertEquals(aliases.keySet(), set);
    }
 }
