@@ -100,6 +100,7 @@ public class PackageVisitor extends AbstractVirtualFileFilterWithAttributes impl
    /**
     * Create a new PackageVisitor.
     *
+    * @param roots the vfs roots
     * @param exportAll the export all policy
     * @param included the included packages
     * @param excluded the excluded packages
@@ -213,7 +214,7 @@ public class PackageVisitor extends AbstractVirtualFileFilterWithAttributes impl
                if (excludedExport != null && excludedExport.matchesPackageName(pkg))
                   return;
                
-               // Ok this is a pacakge for export
+               // Ok this is a package for export
                packages.add(pkg);
             }
          }
