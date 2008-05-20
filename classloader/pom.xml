@@ -21,7 +21,7 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.jboss</groupId>
+        <groupId>org.jboss.test</groupId>
         <artifactId>jboss-test</artifactId>
         <version>${version.org.jboss.test}</version>
         <scope>compile</scope>
@@ -34,11 +34,12 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  
   <dependencies>
     <!-- Global dependencies -->
     <dependency>
-	    <groupId>org.jboss</groupId>
-	    <artifactId>jboss-classloading-spi</artifactId>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-classloading-spi</artifactId>
       <exclusions>
         <exclusion>
           <groupId>org.jboss</groupId>
@@ -46,10 +47,12 @@
         </exclusion>
       </exclusions>
      </dependency>
+     
     <dependency>
-	    <groupId>jboss</groupId>
-	    <artifactId>jboss-common-logging-spi</artifactId>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging-spi</artifactId>
      </dependency>
+     
     <dependency>
       <groupId>org.jboss</groupId>
       <artifactId>jboss-common-core</artifactId>
@@ -72,24 +75,10 @@
         </exclusion>
       </exclusions>
     </dependency>
-	  <!-- Test dependencies -->
+    
+    <!-- Test dependencies -->
     <dependency>
-      <groupId>jboss</groupId>
-      <artifactId>jboss-common-logging-log4j</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>jboss</groupId>
-          <artifactId>jboss-common-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>jboss</groupId>
-          <artifactId>jboss-common-logging-spi</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss</groupId>
+      <groupId>org.jboss.test</groupId>
       <artifactId>jboss-test</artifactId>
       <optional>true</optional>
       <exclusions>
@@ -127,10 +116,12 @@
         </exclusion>
       </exclusions>
     </dependency>
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <optional>true</optional>
     </dependency>
+    
   </dependencies>  
 </project>

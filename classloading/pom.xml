@@ -17,13 +17,26 @@
       </testResource>
     </testResources>
   </build>
+  
   <!-- Do not add version information here, use ../build/pom.xml instead -->
   <dependencies>
+  
     <!-- Global dependencies -->
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-common-core</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging-spi</artifactId>
+    </dependency>
+    
     <dependency>
       <groupId>org.jboss.cl</groupId>
       <artifactId>jboss-classloader</artifactId>
     </dependency>
+    
     <dependency>
       <groupId>org.jboss.microcontainer</groupId>
       <artifactId>jboss-dependency</artifactId>
@@ -38,6 +51,7 @@
         </exclusion>
       </exclusions>
     </dependency>
+    
     <dependency>
       <groupId>org.jboss.microcontainer</groupId>
       <artifactId>jboss-kernel</artifactId>
@@ -61,6 +75,7 @@
         </exclusion>
       </exclusions>
     </dependency>
+    
     <dependency>
       <groupId>org.jboss</groupId>
       <artifactId>jbossxb</artifactId>
@@ -80,6 +95,7 @@
         </exclusion>
       </exclusions>
     </dependency>
+    
     <dependency>
       <groupId>org.jboss.man</groupId>
       <artifactId>jboss-managed</artifactId>
@@ -99,24 +115,10 @@
         </exclusion>
       </exclusions>
     </dependency>
-	  <!-- Test dependencies -->
+    
+    <!-- Test dependencies -->
     <dependency>
-      <groupId>jboss</groupId>
-      <artifactId>jboss-common-logging-log4j</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>jboss</groupId>
-          <artifactId>jboss-common-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>jboss</groupId>
-          <artifactId>jboss-common-logging-spi</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss</groupId>
+      <groupId>org.jboss.test</groupId>
       <artifactId>jboss-test</artifactId>
       <scope>test</scope>
       <exclusions>
@@ -154,10 +156,12 @@
         </exclusion>
       </exclusions>
     </dependency>
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    
   </dependencies>  
 </project>
