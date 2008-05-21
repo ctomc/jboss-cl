@@ -30,6 +30,7 @@ import java.security.Policy;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,6 +45,7 @@ import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloading.plugins.vfs.PackageVisitor;
 import org.jboss.classloading.spi.metadata.ExportAll;
 import org.jboss.logging.Logger;
+import org.jboss.util.collection.SoftValueHashMap;
 import org.jboss.virtual.VFSUtils;
 import org.jboss.virtual.VirtualFile;
 
@@ -96,6 +98,10 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    
    /** Manifest cache */
    private Map<URL, Manifest> manifestCache = new ConcurrentHashMap<URL, Manifest>();
+   
+   /** Cache of virtual file information by path */
+   @SuppressWarnings("unchecked")
+   private Map<String, VirtualFileInfo> vfsCache = Collections.synchronizedMap(new SoftValueHashMap());
    
    /**
     * Determine a name from the roots
@@ -443,20 +449,10 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
     */
    protected VirtualFile findChild(String path)
    {
-      for (VirtualFile root : roots)
-      {
-         try
-         {
-            VirtualFile child = root.getChild(path);
-            if (child != null)
-               return child;
-         }
-         catch (Exception ignored)
-         {
-            // not found
-         }
-      }
-      return null;
+      VirtualFileInfo vfi = findVirtualFileInfo(path);
+      if (vfi == null)
+         return null;
+      return vfi.getFile();
    }
 
    /**
@@ -467,16 +463,38 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
     */
    protected VirtualFile findRoot(String path)
    {
+      VirtualFileInfo vfi = findVirtualFileInfo(path);
+      if (vfi == null)
+         return null;
+      return vfi.getRoot();
+   }
+
+   /**
+    * Find the virtual file information for a path
+    * 
+    * @param path the path
+    * @return the virtual file information
+    */
+   protected VirtualFileInfo findVirtualFileInfo(String path)
+   {
+      VirtualFileInfo result = vfsCache.get(path);
+      if (result != null)
+         return result;
+      
       for (VirtualFile root : roots)
       {
          try
          {
-            if (root.getChild(path) != null)
-               return root;
+            VirtualFile file = root.getChild(path);
+            if (file != null)
+            {
+               result = new VirtualFileInfo(file, root);
+               vfsCache.put(path, result);
+               return result;
+            }
          }
          catch (Exception ignored)
          {
-            // not found
          }
       }
       return null;
@@ -536,7 +554,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       }
       try
       {
-         VirtualFile root = clazz.getVFS().getRoot();
+         VirtualFile root = findRoot(path);;
          URL codeSourceURL = root.toURL();
          Certificate[] certs = null; // TODO JBMICROCONT-182 determine certificates
          CodeSource cs = new CodeSource(codeSourceURL, certs);
@@ -571,5 +589,42 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          return true;
       }
       return false;
+   }
+
+   /**
+    * VirtualFileInfo.    */
+   private static class VirtualFileInfo
+   {
+      /** The file */
+      private VirtualFile file;
+      
+      /** The root */
+      private VirtualFile root;
+      
+      public VirtualFileInfo(VirtualFile file, VirtualFile root)
+      {
+         this.file = file;
+         this.root = root;
+      }
+
+      /**
+       * Get the file.
+       * 
+       * @return the file.
+       */
+      public VirtualFile getFile()
+      {
+         return file;
+      }
+
+      /**
+       * Get the root.
+       * 
+       * @return the root.
+       */
+      public VirtualFile getRoot()
+      {
+         return root;
+      }
    }
 }
