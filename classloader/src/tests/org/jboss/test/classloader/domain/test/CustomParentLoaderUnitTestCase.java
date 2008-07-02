@@ -69,14 +69,13 @@ public class CustomParentLoaderUnitTestCase extends AbstractClassLoaderTestWithS
       ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
       
       assertLoadClass(MockLoader.class, classLoader, null, true);
-      checkGetResource(loader, MockLoader.class);
       checkLoadClass(loader, MockLoader.class);
    }
    
    public void testCustomLoaderBeforeNotFound() throws Exception
    {
       ClassLoaderSystem system = createClassLoaderSystem();
-      MockLoader loader = new MockLoader();
+      MockLoader loader = new MockLoader(false);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", ParentPolicy.BEFORE, loader);
       
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
@@ -84,8 +83,7 @@ public class CustomParentLoaderUnitTestCase extends AbstractClassLoaderTestWithS
       ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
       
       assertLoadClass(ClassLoaderDomain.class, classLoader);
-      checkGetResource(loader, ClassLoaderDomain.class, BaseClassLoaderDomain.class, ClassLoaderDomainMBean.class, MBeanRegistration.class, Loader.class, Object.class);
-      checkLoadClass(loader);
+      checkLoadClassAttempted(loader, ClassLoaderDomain.class);
    }
    
    public void testCustomLoaderAfterNotReached() throws Exception
@@ -99,8 +97,7 @@ public class CustomParentLoaderUnitTestCase extends AbstractClassLoaderTestWithS
       ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
       
       assertLoadClass(MockLoader.class, classLoader);
-      checkGetResource(loader);
-      checkLoadClass(loader);
+      checkLoadClassNotAttempted(loader, MockLoader.class);
    }
    
    public void testCustomLoaderAfterReached() throws Exception
@@ -113,7 +110,6 @@ public class CustomParentLoaderUnitTestCase extends AbstractClassLoaderTestWithS
       ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
       
       assertLoadClass(MockLoader.class, classLoader, null, true);
-      checkGetResource(loader, MockLoader.class);
       checkLoadClass(loader, MockLoader.class);
    }
    
@@ -124,6 +120,87 @@ public class CustomParentLoaderUnitTestCase extends AbstractClassLoaderTestWithS
       NoMatchClassFilter filter = new NoMatchClassFilter(MockLoader.class);
       ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilter.NOTHING);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, loader);
+      
+      MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
+      policy.setPathsAndPackageNames(MockLoader.class, Loader.class);
+      ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
+      
+      assertLoadClass(MockLoader.class, classLoader);
+      checkLoadClassNotAttempted(loader, MockLoader.class);
+      assertTrue("Should have been filtered", filter.filtered);
+   }
+   
+   public void testCustomLoaderBeforeGetResource() throws Exception
+   {
+      ClassLoaderSystem system = createClassLoaderSystem();
+      MockLoader loader = new MockLoader();
+      ClassLoaderDomain domain = system.createAndRegisterDomain("test", ParentPolicy.BEFORE, loader);
+      domain.setUseLoadClassForParent(false);
+      
+      MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
+      policy.setPathsAndPackageNames(MockLoader.class);
+      ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
+      
+      assertLoadClass(MockLoader.class, classLoader, null, true);
+      checkGetResource(loader, MockLoader.class);
+      checkLoadClass(loader, MockLoader.class);
+   }
+   
+   public void testCustomLoaderBeforeNotFoundGetResource() throws Exception
+   {
+      ClassLoaderSystem system = createClassLoaderSystem();
+      MockLoader loader = new MockLoader();
+      ClassLoaderDomain domain = system.createAndRegisterDomain("test", ParentPolicy.BEFORE, loader);
+      domain.setUseLoadClassForParent(false);
+      
+      MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
+      policy.setPathsAndPackageNames(ClassLoaderDomain.class);
+      ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
+      
+      assertLoadClass(ClassLoaderDomain.class, classLoader);
+      checkGetResource(loader, ClassLoaderDomain.class, BaseClassLoaderDomain.class, ClassLoaderDomainMBean.class, MBeanRegistration.class, Loader.class, Object.class);
+      checkLoadClass(loader);
+   }
+   
+   public void testCustomLoaderAfterNotReachedGetResource() throws Exception
+   {
+      ClassLoaderSystem system = createClassLoaderSystem();
+      MockLoader loader = new MockLoader();
+      ClassLoaderDomain domain = system.createAndRegisterDomain("test", ParentPolicy.AFTER, loader);
+      domain.setUseLoadClassForParent(false);
+      
+      MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
+      policy.setPathsAndPackageNames(MockLoader.class, Loader.class);
+      ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
+      
+      assertLoadClass(MockLoader.class, classLoader);
+      checkGetResource(loader);
+      checkLoadClass(loader);
+   }
+   
+   public void testCustomLoaderAfterReachedGetResource() throws Exception
+   {
+      ClassLoaderSystem system = createClassLoaderSystem();
+      MockLoader loader = new MockLoader();
+      ClassLoaderDomain domain = system.createAndRegisterDomain("test", ParentPolicy.AFTER, loader);
+      domain.setUseLoadClassForParent(false);
+      
+      MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
+      ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
+      
+      assertLoadClass(MockLoader.class, classLoader, null, true);
+      checkGetResource(loader, MockLoader.class);
+      checkLoadClass(loader, MockLoader.class);
+   }
+   
+   public void testCustomLoaderFilteredGetResource() throws Exception
+   {
+      ClassLoaderSystem system = createClassLoaderSystem();
+      MockLoader loader = new MockLoader();
+      NoMatchClassFilter filter = new NoMatchClassFilter(MockLoader.class);
+      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilter.NOTHING);
+      ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, loader);
+      domain.setUseLoadClassForParent(false);
       
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPathsAndPackageNames(MockLoader.class, Loader.class);
@@ -159,5 +236,15 @@ public class CustomParentLoaderUnitTestCase extends AbstractClassLoaderTestWithS
       for (Class<?> clazz : classes)
          classNames.add(clazz.getName());
       assertEquals(classNames, loader.loadClass);
+   }
+   
+   protected void checkLoadClassNotAttempted(MockLoader loader, Class<?> clazz)
+   {
+      assertFalse("Didn't expect " + clazz.getName() + " in " + loader.loadClass, loader.loadClass.contains(clazz.getName()));
+   }
+   
+   protected void checkLoadClassAttempted(MockLoader loader, Class<?> clazz)
+   {
+      assertTrue("Expected " + clazz.getName() + " in " + loader.loadClass, loader.loadClass.contains(clazz.getName()));
    }
 }

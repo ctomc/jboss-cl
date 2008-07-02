@@ -36,9 +36,21 @@ import org.jboss.classloader.spi.Loader;
  */
 public class MockLoader implements Loader
 {
+   private boolean doLoadClass;
+   
    public Set<String> getResource = new HashSet<String>();
    public Set<String> getResources = new HashSet<String>();
    public Set<String> loadClass = new HashSet<String>();
+   
+   public MockLoader()
+   {
+      this(true);
+   }
+   
+   public MockLoader(boolean doLoadClass)
+   {
+      this.doLoadClass = doLoadClass;
+   }
    
    public URL getResource(String name)
    {
@@ -54,6 +66,8 @@ public class MockLoader implements Loader
    public Class<?> loadClass(String className)
    {
       loadClass.add(className);
+      if (doLoadClass == false)
+         return null;
       try
       {
          return getClass().getClassLoader().loadClass(className);

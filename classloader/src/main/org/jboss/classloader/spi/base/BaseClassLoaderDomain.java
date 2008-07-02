@@ -153,6 +153,13 @@ public abstract class BaseClassLoaderDomain implements Loader
    }
    
    /**
+    * Whether to use load class for parent
+    * 
+    * @return true to load class on the parent loader
+    */
+   public abstract boolean isUseLoadClassForParent();
+   
+   /**
     * Transform the byte code<p>
     * 
     * By default, this delegates to the classloader system
@@ -184,10 +191,20 @@ public abstract class BaseClassLoaderDomain implements Loader
    protected Class<?> loadClass(BaseClassLoader classLoader, String name, boolean allExports) throws ClassNotFoundException
    {
       boolean trace = log.isTraceEnabled();
+
+      boolean findInParent = (isUseLoadClassForParent() == false);
+      
+      // Should we directly load from the parent?
+      if (findInParent == false)
+      {
+         Class<?> clazz = loadClassBefore(name);
+         if (clazz != null)
+            return clazz;
+      }
       
       String path = ClassLoaderUtils.classNameToPath(name);
-
-      Loader loader = findLoader(classLoader, path, allExports);
+      
+      Loader loader = findLoader(classLoader, path, allExports, findInParent);
       if (loader != null)
       {
          Thread thread = Thread.currentThread();
@@ -195,8 +212,17 @@ public abstract class BaseClassLoaderDomain implements Loader
          ClassLoaderManager.scheduleTask(task, loader, false);
          return ClassLoaderManager.process(thread, task);
       }
+      
+      // Should we directly load from the parent?
+      if (findInParent == false)
+      {
+         Class<?> clazz = loadClassAfter(name);
+         if (clazz != null)
+            return clazz;
+      }
+
       // Finally see whether this is the JDK assuming it can load its classes from any classloader
-      else if (classLoader != null)
+      if (classLoader != null)
       {
          BaseClassLoaderPolicy policy = classLoader.getPolicy();
          ClassLoader hack = policy.isJDKRequest(name);
@@ -226,7 +252,7 @@ public abstract class BaseClassLoaderDomain implements Loader
     */
    protected Loader findLoader(String name)
    {
-      return findLoader(null, name, true);
+      return findLoader(null, name, true, true);
    }
 
    /**
@@ -237,17 +263,19 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param allExports whether we should look at all exports
     * @return the loader
     */
-   Loader findLoader(BaseClassLoader classLoader, String name, boolean allExports)
+   Loader findLoader(BaseClassLoader classLoader, String name, boolean allExports, boolean findInParent)
    {
       boolean trace = log.isTraceEnabled();
       if (trace)
-         log.trace(this + " findLoader " + name + " classLoader=" + classLoader + " allExports=" + allExports);
+         log.trace(this + " findLoader " + name + " classLoader=" + classLoader + " allExports=" + allExports + " findInParent=" + findInParent);
       
       if (getClassLoaderSystem() == null)
          throw new IllegalStateException("Domain is not registered with a classloader system: " + toLongString());
       
       // Try the before attempt (e.g. from the parent)
-      Loader loader = findBeforeLoader(name);
+      Loader loader = null;
+      if (findInParent)
+         loader = findBeforeLoader(name);
       if (loader != null)
          return loader;
 
@@ -290,7 +318,10 @@ public abstract class BaseClassLoaderDomain implements Loader
       }
 
       // Try the after attempt (e.g. from the parent)
-      return findAfterLoader(name);
+      if (findInParent)
+         return findAfterLoader(name);
+      
+      return null;
    }
    
    /**
@@ -903,6 +934,22 @@ public abstract class BaseClassLoaderDomain implements Loader
       for (DelegateLoader delegate : delegates)
          delegate.getPackages(packages);
    }
+
+   /**
+    * Invoked before classloading is attempted to allow a preload attempt, e.g. from the parent
+    * 
+    * @param name the class name
+    * @return the loader if found or null otherwise
+    */
+   protected abstract Class<?> loadClassBefore(String name);
+   
+   /**
+    * Invoked after classloading is attempted to allow a postload attempt, e.g. from the parent
+    * 
+    * @param name the class name
+    * @return the loader if found or null otherwise
+    */
+   protected abstract Class<?> loadClassAfter(String name);
 
    /**
     * Invoked before classloading is attempted to allow a preload attempt, e.g. from the parent

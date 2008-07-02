@@ -69,6 +69,9 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
    /** The object name */
    private ObjectName objectName;
    
+   /** Whether to use load class for the parent */
+   private boolean useLoadClassForParent = false;
+   
    /**
     * Create a new ClassLoaderDomain with the {@link ParentPolicy#BEFORE} loading rules.
     * 
@@ -150,6 +153,26 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
    {
       this.parent = parent;
       fixUpParent();
+   }
+
+   /**
+    * Get the useLoadClassForParent.
+    * 
+    * @return the useLoadClassForParent.
+    */
+   public boolean isUseLoadClassForParent()
+   {
+      return useLoadClassForParent;
+   }
+
+   /**
+    * Set the useLoadClassForParent.
+    * 
+    * @param useLoadClassForParent the useLoadClassForParent.
+    */
+   public void setUseLoadClassForParent(boolean useLoadClassForParent)
+   {
+      this.useLoadClassForParent = useLoadClassForParent;
    }
 
    public ObjectName getParentDomain()
@@ -270,6 +293,63 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
       builder.append("@").append(Integer.toHexString(System.identityHashCode(this)));
       builder.append("{").append(name).append('}');
       return builder.toString();
+   }
+   
+   @Override
+   protected Class<?> loadClassBefore(String name)
+   {
+      boolean trace = log.isTraceEnabled();
+      ClassFilter filter = getParentPolicy().getBeforeFilter();
+      if (filter.matchesClassName(name))
+      {
+         if (trace)
+            log.trace(this + " " + name + " matches parent beforeFilter=" + filter);
+         return loadClassFromParent(name);
+      }
+      if (trace)
+         log.trace(this + " " + name + " does NOT match parent beforeFilter=" + filter);
+      return null;
+   }
+
+   @Override
+   protected Class<?> loadClassAfter(String name)
+   {
+      boolean trace = log.isTraceEnabled();
+      ClassFilter filter = getParentPolicy().getAfterFilter();
+      if (filter.matchesClassName(name))
+      {
+         if (trace)
+            log.trace(this + " " + name + " matches parent afterFilter=" + filter);
+         return loadClassFromParent(name);
+      }
+      if (trace)
+         log.trace(this + " " + name + " does NOT match parent afterFilter=" + filter);
+      return null;
+   }
+
+   /**
+    * Try to find a load a from the parent
+    * 
+    * @param name the name
+    * @return the class if found
+    */
+   protected Class<?> loadClassFromParent(String name)
+   {
+      Loader parentLoader = getParent();
+
+      boolean trace = log.isTraceEnabled();
+      if (parentLoader == null)
+      {
+         if (trace)
+            log.trace(this + " not loading from non-existant parent");
+         return null;
+      }
+
+      if (trace)
+         log.trace(this + " load class from parent " + name + " parent=" + parent);
+
+      // Recurse into parent domains
+      return parentLoader.loadClass(name);
    }
    
    @Override
@@ -581,19 +661,26 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
     */
    private void fixUpParent()
    {
-      if (parent == null)
+      try
       {
-         final ClassLoader classLoader = getParentClassLoader();
-         if (classLoader != null)
+         if (parent == null)
          {
-            parent = AccessController.doPrivileged(new PrivilegedAction<Loader>()
+            final ClassLoader classLoader = getParentClassLoader();
+            if (classLoader != null)
             {
-               public Loader run()
+               parent = AccessController.doPrivileged(new PrivilegedAction<Loader>()
                {
-                  return new ClassLoaderToLoaderAdapter(classLoader);
-               }
-            });
+                  public Loader run()
+                  {
+                     return new ClassLoaderToLoaderAdapter(classLoader);
+                  }
+               });
+            }
          }
+      }
+      finally
+      {
+         setUseLoadClassForParent(parent instanceof ClassLoaderDomain == false);
       }
    }
 
