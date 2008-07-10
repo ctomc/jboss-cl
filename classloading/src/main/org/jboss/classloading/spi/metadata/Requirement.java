@@ -58,4 +58,15 @@ public interface Requirement extends Serializable
     * @return true if the requirement is dynamic
     */
    boolean isDynamic();
+   
+   /**
+    * Check whether this requirement is consistent with another requirement.<p>
+    * 
+    * Typically they will be inconsistent if they are the same type,
+    * have the same name but a different version
+    * 
+    * @param other the other requirement
+    * @return true when consistent, false when inconsistent
+    */
+   boolean isConsistent(Requirement other);
 }

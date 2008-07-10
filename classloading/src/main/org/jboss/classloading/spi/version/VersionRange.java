@@ -186,6 +186,49 @@ public class VersionRange implements Serializable
       return true;
    }
 
+   /**
+    * Check whether two version ranges are consistent
+    * 
+    * @param other the other version
+    * @return true when the version ranges "overlap"
+    */
+   public boolean isConsistent(VersionRange other)
+   {
+      // No version range is consistent with ours
+      if (other == null)
+         return true;
+      
+      Object otherLow = other.getLow();
+      Object otherHigh = other.getHigh();
+      
+      VersionComparatorRegistry comparator = VersionComparatorRegistry.getInstance();
+      
+      // Other low is "lower"
+      int comparison = comparator.compare(low, otherLow);
+      if (comparison > 0 || (lowInclusive == false && comparison == 0))
+      {
+         // Just need to check that the other high is not lower
+         if (otherHigh == null)
+            return true;
+         comparison = comparator.compare(low, otherHigh);
+         return (comparison > 0 || (lowInclusive == false && comparison == 0)) == false;
+      }
+
+      // So the other low is "bigger" than our low
+      
+      // We have no high so we are done
+      if (high == null)
+         return true;
+      
+      // Check the other low is not "bigger" than our higher
+      comparison = comparator.compare(high, otherLow);
+      if (comparison < 0 || (highInclusive == false && comparison == 0))
+         return false;
+      
+      // The low is in our range so we are done
+      return true;
+   }
+   
    @Override
    public boolean equals(Object obj)
    {

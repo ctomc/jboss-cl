@@ -160,7 +160,7 @@ public abstract class ClassLoadingMetaDataModule extends Module
    }
 
    @Override
-   public List<Requirement> getRequirements()
+   public List<Requirement> determineRequirements()
    {
       return classLoadingMetaData.getRequirements().getRequirements();
    }

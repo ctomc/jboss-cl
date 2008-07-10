@@ -78,6 +78,9 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    {
       if (system == null)
          throw new IllegalArgumentException("Null classloader system");
+
+      if (isValid() == false)
+         throw new IllegalStateException("Module " + this + " is not registered, see previous error messages");
       
       String domainName = getDeterminedDomainName();
       ParentPolicy parentPolicy = getDeterminedParentPolicy();
@@ -102,6 +105,9 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       if (parent == null)
          throw new IllegalArgumentException("Null parent");
 
+      if (isValid() == false)
+         throw new IllegalStateException("Module " + this + " is not registered, see previous error messages");
+
       Loader loader = new ClassLoaderToLoaderAdapter(parent);
       ClassLoader result = registerClassLoaderPolicy(system, loader); 
       this.classLoader = result;
@@ -119,6 +125,9 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    {
       if (system == null)
          throw new IllegalArgumentException("Null classloader system");
+
+      if (isValid() == false)
+         throw new IllegalStateException("Module " + this + " is not registered, see previous error messages");
       
       String domainName = getDeterminedDomainName();
       ParentPolicy parentPolicy = getDeterminedParentPolicy();

@@ -197,6 +197,36 @@ public class VersionRangeUnitTestCase extends AbstractClassLoadingTestWithSecuri
       testIsInRangeFromString("1.2.3", true, "4.5.6", true, "4.5.6", true);
    }
    
+   public void testIsConsistent() throws Exception
+   {
+      testIsConsistentFromString(null, null, null, null, true);
+      testIsConsistentFromString(null, null, "0.0.0", null, true);
+      testIsConsistentFromString("0.0.0", null, "0.0.0", null, true);
+
+      testIsConsistentFromString(null, null, null, "1.2.3", true);
+      testIsConsistentFromString(null, null, "0.0.0", "1.2.3", true);
+      testIsConsistentFromString("0.0.0", null, "0.0.0", "1.2.3", true);
+      testIsConsistentFromString(null, "1.2.3", "0.0.0", "1.2.3", true);
+      testIsConsistentFromString("0.0.0", "1.2.3", "0.0.0", "1.2.3", true);
+
+      testIsConsistentFromString("1.2.3", "4.5.6", "1.2.3", "4.5.6", true);
+
+      testIsConsistentFromString("1.2.3", "4.5.6", "0.0.0", "1.2.3", false);
+      testIsConsistentFromString("1.2.3", "4.5.6", "4.5.7", "5.0.0", false);
+      
+      testIsConsistentFromStringAllPerms("1.0.0", "2.0.0", "3.0.0", "4.0.0", false);
+      testIsConsistentFromStringAllPerms("1.0.0", "2.0.0", "1.0.1", "1.9.0", true);
+      testIsConsistentFromStringAllPerms("1.0.0", "2.0.0", "1.0.1", "2.0.1", true);
+      testIsConsistentFromStringAllPerms("1.0.0", "2.0.0", "0.9.0", "1.9.0", true);
+      
+      testIsConsistent("1.0.0", true, "2.0.0", false, "1.0.0", true, "2.0.0", false, true);
+      testIsConsistentOneWay("1.0.0", true, "2.0.0", false, "2.0.0", true, "2.0.0", true, false);
+      testIsConsistentOneWay("1.0.0", true, "2.0.0", false, "1.0.0", true, "1.0.0", true, true);
+      testIsConsistentOneWay("1.0.0", false, "2.0.0", false, "1.0.0", true, "1.0.0", true, false);
+      testIsConsistentOneWay("1.0.0", true, "2.0.0", true, "2.0.0", true, "2.0.0", true, true);
+      testIsConsistentOneWay("1.0.0", true, "2.0.0", false, "2.0.0", false, "3.0.0", true, false);
+   }
+   
    public void testSerialization() throws Exception
    {
       VersionRange range = new VersionRange("1.0.0", "2.0.0");;
@@ -443,5 +473,85 @@ public class VersionRangeUnitTestCase extends AbstractClassLoadingTestWithSecuri
          assertTrue("Expected " + range + ".isInRange(" + version + ") to be true", range.isInRange(version));
       else
          assertFalse("Expected " + range + ".isInRange(" + version + ") to be false", range.isInRange(version));
+   }
+   
+   protected void testIsConsistentFromString(String low1, String high1, String low2, String high2, boolean result)
+   {
+      testIsConsistentFromString(low1, false, high1, false, low2, false, high2, false, result);
+   }
+   
+   protected void testIsConsistentFromStringAllPerms(String low1, String high1, String low2, String high2, boolean result)
+   {
+      testIsConsistentFromString(low1, false, high1, false, low2, false, high2, false, result);
+      testIsConsistentFromString(low1, false, high1, false, low2, false, high2, true, result);
+      testIsConsistentFromString(low1, false, high1, false, low2, true, high2, false, result);
+      testIsConsistentFromString(low1, false, high1, false, low2, true, high2, true, result);
+      testIsConsistentFromString(low1, false, high1, true, low2, false, high2, false, result);
+      testIsConsistentFromString(low1, false, high1, true, low2, false, high2, true, result);
+      testIsConsistentFromString(low1, false, high1, true, low2, true, high2, false, result);
+      testIsConsistentFromString(low1, false, high1, true, low2, true, high2, true, result);
+      testIsConsistentFromString(low1, true, high1, false, low2, false, high2, false, result);
+      testIsConsistentFromString(low1, true, high1, false, low2, false, high2, true, result);
+      testIsConsistentFromString(low1, true, high1, false, low2, true, high2, false, result);
+      testIsConsistentFromString(low1, true, high1, false, low2, true, high2, true, result);
+      testIsConsistentFromString(low1, true, high1, true, low2, false, high2, false, result);
+      testIsConsistentFromString(low1, true, high1, true, low2, false, high2, true, result);
+      testIsConsistentFromString(low1, true, high1, true, low2, true, high2, false, result);
+      testIsConsistentFromString(low1, true, high1, true, low2, true, high2, true, result);
+   }
+   
+   protected void testIsConsistentFromString(String low1, boolean lowInclusive1, String high1, boolean highInclusive1, String low2, boolean lowInclusive2, String high2, boolean highInclusive2, boolean result)
+   {
+      testIsConsistent(low1, lowInclusive1, high1, highInclusive1, low2, lowInclusive2, high2, highInclusive2, result);
+
+      Version lowVersion1 = null;
+      if (low1 != null)
+         lowVersion1 = Version.parseVersion(low1);
+      Version highVersion1 = null;
+      if (high1 != null)
+         highVersion1 = Version.parseVersion(high1);
+      Version lowVersion2 = null;
+      if (low2 != null)
+         lowVersion2 = Version.parseVersion(low2);
+      Version highVersion2 = null;
+      if (high2 != null)
+         highVersion2 = Version.parseVersion(high2);
+      testIsConsistent(lowVersion1, lowInclusive1, highVersion1, highInclusive1, lowVersion2, lowInclusive2, highVersion2, highInclusive2, result);
+   }
+   
+   protected void testIsConsistent(Object low1, boolean lowInclusive1, Object high1, boolean highInclusive1, Object low2, boolean lowInclusive2, Object high2, boolean highInclusive2, boolean result)
+   {
+      VersionRange range1 = new VersionRange(low1, lowInclusive1, high1, highInclusive1);
+      VersionRange range2 = new VersionRange(low2, lowInclusive2, high2, highInclusive2);
+      testIsConsistent(range1, range2, result);
+   }
+   
+   protected void testIsConsistentOneWay(Object low1, boolean lowInclusive1, Object high1, boolean highInclusive1, Object low2, boolean lowInclusive2, Object high2, boolean highInclusive2, boolean result)
+   {
+      VersionRange range1 = new VersionRange(low1, lowInclusive1, high1, highInclusive1);
+      VersionRange range2 = new VersionRange(low2, lowInclusive2, high2, highInclusive2);
+      testIsConsistentOneWay(range1, range2, result);
+   }
+   
+   protected void testIsConsistent(VersionRange range1, VersionRange range2, boolean result)
+   {
+      if (result)
+      {
+         assertTrue("Expected " + range1 + ".isConsistent(" + range2 + ") to be true", range1.isConsistent(range2));
+         assertTrue("Expected " + range2 + ".isConsistent(" + range1 + ") to be true", range2.isConsistent(range1));
+      }
+      else
+      {
+         assertFalse("Expected " + range1 + ".isConsistent(" + range2 + ") to be false", range1.isConsistent(range2));
+         assertFalse("Expected " + range2 + ".isConsistent(" + range1 + ") to be false", range2.isConsistent(range1));
+      }
+   }
+   
+   protected void testIsConsistentOneWay(VersionRange range1, VersionRange range2, boolean result)
+   {
+      if (result)
+         assertTrue("Expected " + range1 + ".isConsistent(" + range2 + ") to be true", range1.isConsistent(range2));
+      else
+         assertFalse("Expected " + range1 + ".isConsistent(" + range2 + ") to be false", range1.isConsistent(range2));
    }
 }

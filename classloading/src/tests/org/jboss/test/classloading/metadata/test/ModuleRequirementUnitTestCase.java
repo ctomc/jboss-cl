@@ -24,8 +24,10 @@ package org.jboss.test.classloading.metadata.test;
 import junit.framework.Test;
 
 import org.jboss.classloading.plugins.metadata.ModuleRequirement;
+import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.classloading.spi.version.VersionRange;
 import org.jboss.test.classloading.AbstractClassLoadingTestWithSecurity;
+import org.jboss.test.classloading.metadata.xml.support.TestRequirement;
 
 /**
  * ModuleRequirementUnitTestCase.
@@ -112,7 +114,33 @@ public class ModuleRequirementUnitTestCase extends AbstractClassLoadingTestWithS
       assertNotNull(test.getName());
       assertEquals(VersionRange.ALL_VERSIONS, test.getVersionRange());
    }
+   
+   public void testIsConsistent() throws Exception
+   {
+      testIsConsistent("a", VersionRange.ALL_VERSIONS, "a", VersionRange.ALL_VERSIONS, true);
+      testIsConsistent("a", VersionRange.ALL_VERSIONS, "a", null, true);
+      testIsConsistent("a", null, "a", VersionRange.ALL_VERSIONS, true);
+
+      testIsConsistent("a", "1.0.0", "2.0.0", "a", "1.0.0", "2.0.0", true);
+      testIsConsistent("a", "1.0.0", "2.0.0", "a", "2.0.0", "2.0.0", true);
+      testIsConsistent("a", "1.0.0", "2.0.0", "a", "1.0.0", "1.0.0", true);
+
+      testIsConsistent("a", "1.0.0", "2.0.0", "b", "1.0.0", "2.0.0", true);
+      testIsConsistent("a", "1.0.0", "2.0.0", "b", "0.0.1", "0.0.1", true);
+      testIsConsistent("a", "1.0.0", "2.0.0", "b", "2.0.1", "2.0.1", true);
+
+      testIsConsistent("a", "1.0.0", "2.0.0", "a", "0.0.1", "0.0.1", false);
+      testIsConsistent("a", "1.0.0", "2.0.0", "a", "2.0.1", "2.0.1", false);
+
+      testIsConsistentOther("a", "1.0.0", "2.0.0", "b", "1.0.0", "2.0.0", true);
+      testIsConsistentOther("a", "1.0.0", "2.0.0", "b", "0.0.1", "0.0.1", true);
+      testIsConsistentOther("a", "1.0.0", "2.0.0", "b", "2.0.1", "2.0.1", true);
+      testIsConsistentOther("a", "1.0.0", "2.0.0", "a", "1.0.0", "2.0.0", true);
+      testIsConsistentOther("a", "1.0.0", "2.0.0", "a", "0.0.1", "0.0.1", true);
+      testIsConsistentOther("a", "1.0.0", "2.0.0", "a", "2.0.1", "2.0.1", true);
       
+   }
+   
    public void testEquals() throws Exception
    {
       testEquals("a", VersionRange.ALL_VERSIONS, "a", VersionRange.ALL_VERSIONS, true);
@@ -147,5 +175,38 @@ public class ModuleRequirementUnitTestCase extends AbstractClassLoadingTestWithS
          assertFalse("Expected " + test1 + ".equals(" + test2 + ") to be false", test1.equals(test2));
          assertFalse("Expected " + test2 + ".equals(" + test1 + ") to be false", test2.equals(test1));
       }
+   }
+   
+   protected void testIsConsistent(String name1, String low1, String high1, String name2, String low2, String high2, boolean result)
+   {
+      VersionRange range1 = new VersionRange(low1, true, high1, true);
+      VersionRange range2 = new VersionRange(low2, true, high2, true);
+      testIsConsistent(name1, range1, name2, range2, result);
+      testIsConsistent(name2, range2, name1, range1, result);
+   }
+   
+   protected void testIsConsistentOther(String name1, String low1, String high1, String name2, String low2, String high2, boolean result)
+   {
+      VersionRange range1 = new VersionRange(low1, true, high1, true);
+      VersionRange range2 = new VersionRange(low2, true, high2, true);
+      ModuleRequirement test1 = new ModuleRequirement(name1, range1);
+      TestRequirement test2 = new TestRequirement(name2, range2);
+      testIsConsistent(test1, test2, result);
+      testIsConsistent(test1, test2, result);
+   }
+   
+   protected void testIsConsistent(String name1, VersionRange range1, String name2, VersionRange range2, boolean result)
+   {
+      ModuleRequirement test1 = new ModuleRequirement(name1, range1);
+      ModuleRequirement test2 = new ModuleRequirement(name2, range2);
+      testIsConsistent(test1, test2, result);
+   }
+   
+   protected void testIsConsistent(Requirement test1, Requirement test2, boolean result)
+   {
+      if (result)
+         assertTrue("Expected " + test1 + ".isConsistent(" + test2 + ") to be true", test1.isConsistent(test2));
+      else
+         assertFalse("Expected " + test1 + ".isConsistent(" + test2 + ") to be false", test1.isConsistent(test2));
    }
 }

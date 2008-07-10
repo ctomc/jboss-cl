@@ -25,8 +25,11 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
+import org.jboss.test.classloading.dependency.test.ConflictingPackageUnitTestCase;
+import org.jboss.test.classloading.dependency.test.ConflictingRequirementUnitTestCase;
 import org.jboss.test.classloading.dependency.test.DependencyUnitTestCase;
 import org.jboss.test.classloading.dependency.test.DomainUnitTestCase;
+import org.jboss.test.classloading.dependency.test.HierarchicalDomainUnitTestCase;
 import org.jboss.test.classloading.dependency.test.ImportAllUnitTestCase;
 import org.jboss.test.classloading.dependency.test.MockClassLoadingMetaDataUnitTestCase;
 import org.jboss.test.classloading.dependency.test.ModuleDependencyUnitTestCase;
@@ -73,6 +76,9 @@ public class DependencyTestSuite extends TestSuite
       suite.addTest(ReExportPackageUnitTestCase.suite());
       suite.addTest(UsesPackageUnitTestCase.suite());
       suite.addTest(MockResourceVisitorUnitTestCase.suite());
+      suite.addTest(HierarchicalDomainUnitTestCase.suite());
+      suite.addTest(ConflictingPackageUnitTestCase.suite());
+      suite.addTest(ConflictingRequirementUnitTestCase.suite());
 
       return suite;
    }

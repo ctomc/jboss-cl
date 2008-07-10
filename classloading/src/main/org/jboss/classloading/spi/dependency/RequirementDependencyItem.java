@@ -84,9 +84,10 @@ public class RequirementDependencyItem extends AbstractDependencyItem
    public boolean resolve(Controller controller)
    {
       Requirement requirement = getRequirement();
-      Object iDependOn = getModule().resolve(controller, requirement);
-      if (iDependOn != null)
+      Module module = getModule().resolveModule(this, true);
+      if (module != null)
       {
+         Object iDependOn = module.getContextName();
          ControllerContext context = controller.getContext(iDependOn, getDependentState());
          if (context != null)
          {

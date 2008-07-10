@@ -28,7 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.Requirement;
-import org.jboss.dependency.spi.Controller;
+import org.jboss.logging.Logger;
 
 /**
  * Domain.
@@ -38,8 +38,20 @@ import org.jboss.dependency.spi.Controller;
  */
 public class Domain
 {
+   /** The log */
+   private static final Logger log = Logger.getLogger(Domain.class);
+   
    /** The domain name */
    private String name;
+
+   /** The classloading */
+   private ClassLoading classLoading;
+
+   /** The parent domain name */
+   private String parentDomainName;
+   
+   /** Whether we are parent first */
+   private boolean parentFirst;
    
    /** The registered modules in registration order */
    private List<Module> modules = new CopyOnWriteArrayList<Module>();
@@ -50,14 +62,22 @@ public class Domain
    /**
     * Create a new Domain.
     * 
+    * @param classLoading the classloading 
     * @param name the name
-    * @throws IllegalArgumentException for a null domain
+    * @param parentDomainName  the parent domain name
+    * @param parentFirst whether to check the parent first
+    * @throws IllegalArgumentException for a null domain or classloading
     */
-   public Domain(String name)
+   public Domain(ClassLoading classLoading, String name, String parentDomainName, boolean parentFirst)
    {
       if (name == null)
          throw new IllegalArgumentException("Null name");
+      if (classLoading == null)
+         throw new IllegalArgumentException("Null classLoading");
+      this.classLoading = classLoading;
       this.name = name;
+      this.parentDomainName = parentDomainName;
+      this.parentFirst = parentFirst;
    }
 
    /**
@@ -68,6 +88,33 @@ public class Domain
    public String getName()
    {
       return name;
+   }
+
+   /**
+    * Get the parentDomainName.
+    * 
+    * @return the parentDomainName.
+    */
+   public String getParentDomainName()
+   {
+      return parentDomainName;
+   }
+
+   public Domain getParentDomain()
+   {
+      if (parentDomainName != null)
+         return classLoading.getDomain(parentDomainName);
+      return null;
+   }
+   
+   /**
+    * Get the parentFirst.
+    * 
+    * @return the parentFirst.
+    */
+   public boolean isParentFirst()
+   {
+      return parentFirst;
    }
 
    /**
@@ -87,12 +134,22 @@ public class Domain
       String contextName = module.getContextName();
       if (modulesByName.containsKey(contextName))
          throw new IllegalArgumentException("The context " + contextName + " is already registered in domain " + getName());
+
+      log.debug(this + " add module " + module);
+      
       module.setDomain(this);
       modulesByName.put(contextName, module);
       modules.add(module);
       try
       {
          module.createDependencies();
+
+         // Skip the classloader space checking when it is import all
+         if (module.isImportAll() == false)
+         {
+            ClassLoadingSpace space = new ClassLoadingSpace();
+            space.joinAndResolve(module);
+         }
       }
       catch (Throwable t)
       {
@@ -105,48 +162,6 @@ public class Domain
             throw new RuntimeException("Error adding module " + module, t);
       }
    }
-
-   /**
-    * Get a module for a context name
-    * 
-    * @param name the context name
-    * @return the module
-    */
-   public Module getModule(String name)
-   {
-      if (name == null)
-         throw new IllegalArgumentException("Null module name");
-      return modulesByName.get(name);
-   }
-   
-   /**
-    * Resolve the requirement
-    * 
-    * @param controller the controller
-    * @param module the module
-    * @param requirement the requirement
-    * @return the resolved name or null if not resolved
-    */
-   protected Object resolve(Controller controller, Module module, Requirement requirement)
-   {
-      // TODO JBMICROCONT-182 include parent domains in requirements
-      // TODO JBMICROCONT-182 check consistency of re-exports
-      // TODO JBMICROCONT-182 check for self-dependency
-      // TODO JBMICROCONT-182 test circularity
-      for (Module other : modules)
-      {
-         List<Capability> capabilities = other.getCapabilities();
-         if (capabilities != null)
-         {
-            for (Capability capability : capabilities)
-            {
-               if (capability.resolves(module, requirement))
-                  return other.getContextName();
-            }
-         }
-      }
-      return null;
-   }
    
    /**
     * Remove a deployment
@@ -158,9 +173,92 @@ public class Domain
    {
       if (module == null)
          throw new IllegalArgumentException("Null module");
+
+      log.debug(this + " add module " + module);
+      
       modulesByName.remove(module.getContextName());
       modules.remove(module);
       module.setDomain(null);
       module.removeDependencies();
+      
+      ClassLoadingSpace space = module.getClassLoadingSpace();
+      if (space != null)
+         space.split(module);
+   }
+
+   /**
+    * Get a module for a context name
+    * 
+    * @param name the context name
+    * @return the module
+    */
+   public Module getModule(String name)
+   {
+      if (name == null)
+         throw new IllegalArgumentException("Null module name");
+
+      Module module = modulesByName.get(name);
+      if (module != null)
+         return module;
+      Domain parent = getParentDomain();
+      if (parent != null)
+         return parent.getModule(name);
+      return null;
+   }
+   
+   /**
+    * Resolve a requirement to a module
+    * 
+    * @param module the module
+    * @param requirement the requirement
+    * @return the resolved name or null if not resolved
+    */
+   protected Module resolveModule(Module module, Requirement requirement)
+   {
+      // First check the parent domain has been setup
+      Domain parentDomain = null;
+      if (parentDomainName != null)
+      {
+         parentDomain = getParentDomain();
+         if (parentDomain == null)
+            return null;
+      }
+
+      // Check the parent first when required
+      if (parentDomain != null && parentFirst == true)
+      {
+         Module result = parentDomain.resolveModule(module, requirement);
+         if (result != null)
+            return result;
+      }
+      
+      // TODO JBCL-7 check for self-dependency/circularity
+      for (Module other : modules)
+      {
+         List<Capability> capabilities = other.getCapabilities();
+         if (capabilities != null)
+         {
+            for (Capability capability : capabilities)
+            {
+               if (capability.resolves(module, requirement))
+                  return other;
+            }
+         }
+      }
+
+      // Check the parent afterwards when required
+      if (parentDomain != null && parentFirst == false)
+         return parentDomain.resolveModule(module, requirement);
+      
+      return null;
+   }
+   
+   @Override
+   public String toString()
+   {
+      StringBuilder builder = new StringBuilder();
+      builder.append(super.toString());
+      builder.append('{').append(getName()).append('}');
+      return builder.toString();
    }
 }

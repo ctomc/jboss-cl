@@ -21,6 +21,12 @@
 */
 package org.jboss.classloading.plugins.metadata;
 
+import java.util.Collections;
+import java.util.Set;
+
+import org.jboss.classloading.spi.dependency.Module;
+import org.jboss.classloading.spi.metadata.OptionalPackages;
+import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.classloading.spi.metadata.helpers.AbstractRequirement;
 import org.jboss.classloading.spi.version.VersionRange;
 
@@ -30,7 +36,7 @@ import org.jboss.classloading.spi.version.VersionRange;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public class PackageRequirement extends AbstractRequirement
+public class PackageRequirement extends AbstractRequirement implements OptionalPackages
 {
    /** The serialVersionUID */
    private static final long serialVersionUID = -7552921085464308835L;
@@ -65,6 +71,19 @@ public class PackageRequirement extends AbstractRequirement
       super(name, versionRange);
    }
    
+   public Set<String> getOptionalPackageNames(Module module)
+   {
+      if (isOptional() == false)
+         return null;
+      return Collections.singleton(getName());
+   }
+
+   @Override
+   public boolean isConsistent(Requirement other)
+   {
+      return isConsistent(other, PackageRequirement.class);
+   }
+
    @Override
    public boolean equals(Object obj)
    {

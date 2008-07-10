@@ -92,7 +92,13 @@ public abstract class AbstractMockClassLoaderUnitTest extends AbstractClassLoadi
          MockClassLoaderPolicyModule module = assertModule(context);
          Object target = context.getTarget();
          assertNotNull(target);
-         fail("Should not be able to create classloader: " + module.registerClassLoaderPolicy(system));
+         try
+         {
+            fail("Should not be able to create classloader: " + module.registerClassLoaderPolicy(system));
+         }
+         catch (IllegalStateException expected)
+         {
+         }
       }
    }
    

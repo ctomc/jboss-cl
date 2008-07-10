@@ -38,10 +38,10 @@ import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.ExportAll;
 import org.jboss.classloading.spi.metadata.ExportPackages;
+import org.jboss.classloading.spi.metadata.OptionalPackages;
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
-import org.jboss.dependency.spi.Controller;
 import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerState;
 
@@ -58,6 +58,9 @@ public abstract class Module extends NameAndVersionSupport
    
    /** Our cached capabilities */
    private List<Capability> capabilities;
+   
+   /** Our cached requirements */
+   private List<Requirement> requirements;
 
    /** The controller context */
    private ControllerContext context;
@@ -65,6 +68,9 @@ public abstract class Module extends NameAndVersionSupport
    /** The domain */
    private Domain domain;
 
+   /** The classloading space */
+   private ClassLoadingSpace space;
+   
    /** The requirements */
    private List<RequirementDependencyItem> requirementDependencies;
    
@@ -141,6 +147,16 @@ public abstract class Module extends NameAndVersionSupport
    }
    
    /**
+    * Whether this is a valid  module
+    * 
+    * @return true when valid
+    */
+   public boolean isValid()
+   {
+      return domain != null;
+   }
+   
+   /**
     * Get the domain name.
     * 
     * @return the domain name.
@@ -187,6 +203,26 @@ public abstract class Module extends NameAndVersionSupport
             return ClassLoaderSystem.DEFAULT_DOMAIN_NAME;
       }
       return parentDomain;
+   }
+
+   /**
+    * Get the classloading space.
+    * 
+    * @return the space.
+    */
+   ClassLoadingSpace getClassLoadingSpace()
+   {
+      return space;
+   }
+
+   /**
+    * Set the classloading space.
+    * 
+    * @param space the space.
+    */
+   void setClassLoadingSpace(ClassLoadingSpace space)
+   {
+      this.space = space;
    }
 
    /**
@@ -474,7 +510,20 @@ public abstract class Module extends NameAndVersionSupport
     */
    public String[] getPackageNames()
    {
-      List<String> packageNames = new ArrayList<String>();
+      List<String> packageNames = determinePackageNames(true);
+      return packageNames.toArray(new String[packageNames.size()]);
+   }
+
+   /**
+    * Determine the package names
+    * 
+    * TODO JBCL-7 Better handling of conflicts for optional packages
+    * @param optional whether to include optional packages
+    * @return the package names
+    */
+   public List<String> determinePackageNames(boolean optional)
+   {
+      List<String> packageNames = Collections.emptyList();
 
       List<Capability> capabilities = getCapabilities();
       if (capabilities != null && capabilities.isEmpty() == false)
@@ -486,7 +535,11 @@ public abstract class Module extends NameAndVersionSupport
                ExportPackages exported = (ExportPackages) capability;
                Set<String> exportPackages = exported.getPackageNames(this);
                if (exportPackages != null)
+               {
+                  if (packageNames.isEmpty())
+                     packageNames = new ArrayList<String>();
                   packageNames.addAll(exportPackages);
+               }
             }
          }
       }
@@ -500,13 +553,27 @@ public abstract class Module extends NameAndVersionSupport
             {
                ExportPackages exported = (ExportPackages) requirement;
                Set<String> exportPackages = exported.getPackageNames(this);
-               if (exportPackages != null)
-                  packageNames.addAll(exportPackages);
+               if (optional || requirement.isOptional() == false)
+               {
+                  if (exportPackages != null && exportPackages.isEmpty() == false)
+                  {
+                     if (packageNames.isEmpty())
+                        packageNames = new ArrayList<String>();
+                     packageNames.addAll(exportPackages);
+                  }
+               }
+            }
+            else if (optional == false && requirement instanceof OptionalPackages)
+            {
+               OptionalPackages exported = (OptionalPackages) requirement;
+               Set<String> optionalPackages = exported.getOptionalPackageNames(this);
+               if (optionalPackages != null && packageNames.isEmpty() == false)
+                  packageNames.removeAll(optionalPackages);
             }
          }
       }
 
-      return packageNames.toArray(new String[packageNames.size()]);
+      return packageNames;
    }
    
    /**
@@ -526,6 +593,25 @@ public abstract class Module extends NameAndVersionSupport
     */
    public List<Requirement> getRequirements()
    {
+      // Have we already worked this out?
+      if (requirements != null)
+         return requirements;
+      
+      // Are there any configured ones?
+      List<Requirement> requirements = determineRequirements();
+      
+      // Cache it
+      this.requirements = requirements;
+      return requirements;
+   }
+
+   /**
+    * Determine the requirements.
+    * 
+    * @return the requirements.
+    */
+   public List<Requirement> determineRequirements()
+   {
       return Collections.emptyList();
    }
 
@@ -537,6 +623,11 @@ public abstract class Module extends NameAndVersionSupport
    public URL getDynamicClassRoot()
    {
       return null;
+   }
+   
+   List<RequirementDependencyItem> getDependencies()
+   {
+      return requirementDependencies;
    }
    
    /**
@@ -617,15 +708,20 @@ public abstract class Module extends NameAndVersionSupport
    }
    
    /**
-    * Resolve the requirement
+    * Resolve a requirement
     * 
-    * @param controller the controller
-    * @param requirement the requirement
+    * @param dependency the dependency the dependency
+    * @param resolveSpace whether to resolve the module in the classloading space
     * @return the resolved name or null if not resolved
     */
-   protected Object resolve(Controller controller, Requirement requirement)
+   protected Module resolveModule(RequirementDependencyItem dependency, boolean resolveSpace)
    {
-      return checkDomain().resolve(controller, this, requirement);
+      ClassLoadingSpace space = getClassLoadingSpace();
+      if (resolveSpace && space != null)
+         space.resolve(this);
+
+      Requirement requirement = dependency.getRequirement();
+      return checkDomain().resolveModule(this, requirement);
    }
    
    /**
@@ -633,7 +729,9 @@ public abstract class Module extends NameAndVersionSupport
     */
    public void release()
    {
-      checkDomain().removeModule(this);
+      Domain domain = this.domain;
+      if (domain != null)
+         domain.removeModule(this);
       reset();
    }
    
@@ -643,6 +741,7 @@ public abstract class Module extends NameAndVersionSupport
    public void reset()
    {
       this.capabilities = null;
+      this.requirements = null;
    }
 
    @Override

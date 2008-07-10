@@ -129,6 +129,42 @@ public class AbstractRequirement extends NameAndVersionRangeSupport implements R
    {
       this.reExport = reExport;
    }
+   
+   public boolean isConsistent(Requirement other)
+   {
+      return isConsistent(other, null);
+   }
+
+   /**
+    * Check whether the requirements are consistent
+    * 
+    * @param other the other requirement
+    * @param requirementType the class to check when looking for inconsistencies (uses getClass() when null)
+    * @return true when consistent, false otherwise
+    */
+   protected boolean isConsistent(Requirement other, Class<? extends AbstractRequirement> requirementType)
+   {
+      if (other == null)
+         throw new IllegalArgumentException("Null requirement");
+      if (requirementType == null)
+         requirementType = getClass();
+      
+      // Not our type
+      if (requirementType.isInstance(other) == false)
+         return true;
+      
+      AbstractRequirement otherRequirement = (AbstractRequirement) other;
+      // Not the same name
+      String name = getName();
+      String otherName = otherRequirement.getName();
+      if (name.equals(otherName) == false)
+         return true;
+
+      // Check the version ranges are consistent
+      VersionRange range = getVersionRange();
+      VersionRange otherRange = otherRequirement.getVersionRange();
+      return range.isConsistent(otherRange);
+   }
 
    @Override
    public boolean equals(Object obj)

@@ -22,7 +22,6 @@
 package org.jboss.classloading.plugins.metadata;
 
 import org.jboss.classloading.spi.dependency.Module;
-import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.classloading.spi.metadata.helpers.AbstractCapability;
 
@@ -32,7 +31,7 @@ import org.jboss.classloading.spi.metadata.helpers.AbstractCapability;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public class ModuleCapability extends AbstractCapability implements Capability
+public class ModuleCapability extends AbstractCapability
 {
    /** The serialVersionUID */
    private static final long serialVersionUID = -5444212755644141118L;
