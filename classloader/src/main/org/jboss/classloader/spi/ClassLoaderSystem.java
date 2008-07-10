@@ -572,7 +572,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
 
    public void postRegister(Boolean registrationDone)
    {
-      if (registrationDone.booleanValue())
+      if (registrationDone)
       {
          for (ClassLoaderDomain domain : registeredDomains.values())
             registerDomainMBean(domain);
