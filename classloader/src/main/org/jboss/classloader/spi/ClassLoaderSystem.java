@@ -53,7 +53,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
    private static final Logger log = Logger.getLogger(ClassLoaderSystem.class);
 
    /** The name of the default domain */
-   public static final String DEFAULT_DOMAIN_NAME = "<DEFAULT>";
+   public static final String DEFAULT_DOMAIN_NAME = "DefaultDomain";
 
    /** The class loading system builder */
    private static final ClassLoaderSystemBuilder builder = new ClassLoaderSystemBuilder();
