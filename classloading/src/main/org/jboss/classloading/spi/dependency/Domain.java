@@ -148,7 +148,7 @@ public class Domain
          if (module.isImportAll() == false)
          {
             ClassLoadingSpace space = new ClassLoadingSpace();
-            space.joinAndResolve(module);
+            space.join(module);
          }
       }
       catch (Throwable t)

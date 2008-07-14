@@ -198,7 +198,7 @@ public class ClassLoadingSpace
     * @param module the module to add
     * @throws IllegalArgumentException for a null module
     */
-   private void join(Module module)
+   synchronized void join(Module module)
    {
       if (module == null)
          throw new IllegalArgumentException("Null module");
