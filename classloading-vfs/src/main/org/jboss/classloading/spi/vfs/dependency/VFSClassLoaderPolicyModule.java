@@ -214,7 +214,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
    }
 
    @Override
-   public void visit(ResourceVisitor visitor, ResourceFilter filter)
+   public void visit(ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
    {
       ClassLoader classLoader = getClassLoader();
       if (classLoader == null)
@@ -225,7 +225,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
       {
          ClassFilter included = getIncluded();
          ClassFilter excluded = getExcluded();
-         VFSResourceVisitor.visit(roots, included, excluded, classLoader, visitor, filter);
+         VFSResourceVisitor.visit(roots, included, excluded, classLoader, visitor, filter, recurseFilter);
       }
    }
 }

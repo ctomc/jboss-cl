@@ -36,8 +36,8 @@ import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory;
 import org.jboss.classloading.spi.visitor.ClassVisitor;
 import org.jboss.classloading.spi.visitor.ResourceContext;
-import org.jboss.classloading.spi.visitor.ResourceVisitor;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
+import org.jboss.classloading.spi.visitor.ResourceVisitor;
 import org.jboss.kernel.spi.deployment.KernelDeployment;
 import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTest;
 import org.jboss.test.classloading.vfs.metadata.support.a.A;
@@ -190,6 +190,91 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
          };
          Module module = assertModule("test:0.0.0");
          module.visit(visitor);
+      }
+      finally
+      {
+         undeploy(deployment);
+      }
+   }
+
+   public void testRecurseFilter() throws Exception
+   {
+      VFSClassLoaderFactory factory = new VFSClassLoaderFactory("test");
+      factory.setRoots(Arrays.asList(System.getProperty("test.dir") + "/support/"));
+      KernelDeployment deployment = install(factory);
+      try
+      {
+         final Set<String> classes = new HashSet<String>();
+         ResourceVisitor visitor = new ClassVisitor()
+         {
+            public void visit(ResourceContext resource)
+            {
+               classes.add(resource.getResourceName());
+            }
+         };
+         ResourceFilter recurseFilter = new ResourceFilter()
+         {
+            public boolean accepts(ResourceContext resource)
+            {
+               return "a".equals(resource.getResourceName());
+            }
+         };
+
+         Module module = assertModule("test:0.0.0");
+         module.visit(visitor, visitor.getFilter(), recurseFilter);
+
+         assertEquals(1, classes.size());
+         assertEquals(aliases.get(classes.iterator().next()), A.class);
+      }
+      finally
+      {
+         undeploy(deployment);
+      }
+   }
+
+   public void testRecurseFilterFromTop() throws Exception
+   {
+      VFSClassLoaderFactory factory = new VFSClassLoaderFactory("test");
+      factory.setRoots(Arrays.asList(getRoot(getClass())));
+      KernelDeployment deployment = install(factory);
+      try
+      {
+         final Set<String> classes = new HashSet<String>();
+         ResourceVisitor visitor = new ResourceVisitor()
+         {
+            public ResourceFilter getFilter()
+            {
+               return new ResourceFilter()
+               {
+                  public boolean accepts(ResourceContext resource)
+                  {
+                     return resource.getResourceName().contains("support");
+                  }
+               };
+            }
+
+            public void visit(ResourceContext resource)
+            {
+               classes.add(resource.getClassName());
+            }
+         };
+         final String pathA = ClassLoaderUtils.packageNameToPath(A.class.getName());
+         final int pathAlength = pathA.length();
+         ResourceFilter recurseFilter = new ResourceFilter()
+         {
+            public boolean accepts(ResourceContext resource)
+            {
+               String resourceName = resource.getResourceName();
+               int min = Math.min(resourceName.length(), pathAlength);
+               return pathA.substring(0, min).equals(resourceName.substring(0, min));
+            }
+         };
+
+         Module module = assertModule("test:0.0.0");
+         module.visit(visitor, visitor.getFilter(), recurseFilter);
+
+         assertEquals(1, classes.size());
+         assertEquals(classes.iterator().next(), A.class.getName());
       }
       finally
       {

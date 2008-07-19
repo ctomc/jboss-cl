@@ -66,6 +66,9 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
    /** The resource filter */
    private ResourceFilter filter;
    
+   /** The resource filter */
+   private ResourceFilter recurseFilter;
+
    /**
     * Visit the resources
     * 
@@ -75,10 +78,11 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     * @param classLoader the classLoader
     * @param visitor the visitor
     * @param filter the filter
+    * @param recurseFilter the recurse filter
     */
-   public static void visit(VirtualFile[] roots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter)
+   public static void visit(VirtualFile[] roots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
    {
-      VFSResourceVisitor vfsVisitor = new VFSResourceVisitor(roots, included, excluded, classLoader, visitor, filter);
+      VFSResourceVisitor vfsVisitor = new VFSResourceVisitor(roots, included, excluded, classLoader, visitor, filter, recurseFilter);
       for (VirtualFile root : roots)
       {
          try
@@ -102,8 +106,9 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     * @param classLoader the classloader
     * @param visitor the visitor
     * @param filter the filter
+    * @param recurseFilter the recurse filter
     */
-   VFSResourceVisitor(VirtualFile[] roots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter)
+   VFSResourceVisitor(VirtualFile[] roots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
    {
       if (roots == null)
          throw new IllegalArgumentException("Null roots");
@@ -118,6 +123,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
       this.classLoader = classLoader;
       this.visitor = visitor;
       this.filter = filter;
+      this.recurseFilter = recurseFilter;
    }
 
    /**
@@ -141,10 +147,41 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
       attributes.setIncludeRoot(false);
       attributes.setRecurseFilter(this);
       return attributes;
+   }   
+
+   /**
+    * Determine the file's path.
+    *
+    * @param file the file
+    * @return file's path
+    */
+   protected String determinePath(VirtualFile file)
+   {
+      String path = file.getPathName();
+      if (path.equals(rootPath))
+         path = "";
+      else if (path.startsWith(rootPathWithSlash))
+         path = path.substring(rootPathWithSlash.length());
+      return path;
    }
-   
+
    public boolean accepts(VirtualFile file)
    {
+      if (recurseFilter != null)
+      {
+         try
+         {
+            String path = determinePath(file);
+            ResourceContext resource = new ResourceContext(file.toURL(), path, classLoader);
+            if (recurseFilter.accepts(resource) == false)
+               return false;
+         }
+         catch (Exception e)
+         {
+            throw new Error("Error accepting " + file, e);
+         }
+      }
+
       // This is our current root
       if (file.equals(root))
          return true;
@@ -169,11 +206,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
             return;
 
          // Determine the resource name
-         String path = file.getPathName();
-         if (path.equals(rootPath))
-            path = "";
-         else if (path.startsWith(rootPathWithSlash))
-            path = path.substring(rootPathWithSlash.length());
+         String path = determinePath(file);
 
          // Check for inclusions/exclusions
          if (included != null && included.matchesResourcePath(path) == false)

@@ -91,7 +91,7 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
       return classLoader.getResource(path);
    }
 
-   public void visit(ResourceVisitor visitor, ResourceFilter filter)
+   public void visit(ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
    {
       MockClassLoadingMetaData mclmd = getClassLoadingMetaData();
       String[] paths = mclmd.getPaths();

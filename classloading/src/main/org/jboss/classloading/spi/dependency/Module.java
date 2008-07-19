@@ -335,9 +335,24 @@ public abstract class Module extends NameAndVersionSupport
     */
    public void visit(ResourceVisitor visitor, ResourceFilter filter)
    {
+      visit(visitor, filter, null);
+   }
+
+   /**
+    * Visit the resources in this module using the given filter(s)
+    * <p/>
+    * Typically the filter is used to determine which types of files to visit, e.g. .class files.
+    * While the recurseFilter determines which jars/directories to recurse into.
+    *
+    * @param visitor       the visitor
+    * @param filter        the filter
+    * @param recurseFilter the recursion filter (null means recurse into everything)
+    */
+   public void visit(ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
+   {
       throw new UnsupportedOperationException("The module " + getContextName() + " does not support filtering: " + getClass().getName());
    }
-   
+
    /**
     * Get the delegate loaders for this module
     * 
