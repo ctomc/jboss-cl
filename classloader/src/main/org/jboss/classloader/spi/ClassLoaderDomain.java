@@ -693,7 +693,7 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
    
    public void postRegister(Boolean registrationDone)
    {
-      if (registrationDone.booleanValue())
+      if (registrationDone)
       {
          // Register any classloaders that were added before we were registered in the MBeanServer
          for (ClassLoader cl : getAllClassLoaders())
