@@ -24,9 +24,7 @@ package org.jboss.classloader.spi.base;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.Loader;
@@ -58,13 +56,13 @@ public class ClassLoaderInformation
    private Map<String, Loader> classCache;
    
    /** The class black list */
-   private Set<String> classBlackList;
+   private Map<String, String> classBlackList;
    
    /** The resource cache */
    private Map<String, URL> resourceCache;
    
    /** The resource black list */
-   private Set<String> resourceBlackList;
+   private Map<String, String> resourceBlackList;
 
    /**
     * Create a new ClassLoaderInformation.
@@ -111,8 +109,8 @@ public class ClassLoaderInformation
       
       if (canBlackList)
       {
-         classBlackList = new CopyOnWriteArraySet<String>();
-         resourceBlackList = new CopyOnWriteArraySet<String>();
+         classBlackList = new ConcurrentHashMap<String, String>();
+         resourceBlackList = new ConcurrentHashMap<String, String>();
       }
    }
 
@@ -189,6 +187,7 @@ public class ClassLoaderInformation
     */
    public Loader getCachedLoader(String name)
    {
+      Map<String, Loader> classCache = this.classCache;
       if (classCache != null)
          return classCache.get(name);
       return null;
@@ -202,6 +201,7 @@ public class ClassLoaderInformation
     */
    public void cacheLoader(String name, Loader loader)
    {
+      Map<String, Loader> classCache = this.classCache;
       if (classCache != null)
          classCache.put(name, loader);
    }
@@ -214,8 +214,9 @@ public class ClassLoaderInformation
     */
    public boolean isBlackListedClass(String name)
    {
+      Map<String, String> classBlackList = this.classBlackList;
       if (classBlackList != null)
-         return classBlackList.contains(name);
+         return classBlackList.containsKey(name);
       return false;
    }
    
@@ -226,8 +227,9 @@ public class ClassLoaderInformation
     */
    public void blackListClass(String name)
    {
+      Map<String, String> classBlackList = this.classBlackList;
       if (classBlackList != null)
-         classBlackList.add(name);
+         classBlackList.put(name, name);
    }
    
    /**
@@ -238,6 +240,7 @@ public class ClassLoaderInformation
     */
    public URL getCachedResource(String name)
    {
+      Map<String, URL> resourceCache = this.resourceCache;
       if (resourceCache != null)
          return resourceCache.get(name);
       return null;
@@ -251,6 +254,7 @@ public class ClassLoaderInformation
     */
    public void cacheResource(String name, URL url)
    {
+      Map<String, URL> resourceCache = this.resourceCache;
       if (resourceCache != null)
          resourceCache.put(name, url);
    }
@@ -263,8 +267,9 @@ public class ClassLoaderInformation
     */
    public boolean isBlackListedResource(String name)
    {
+      Map<String, String> resourceBlackList = this.resourceBlackList;
       if (resourceBlackList != null)
-         return resourceBlackList.contains(name);
+         return resourceBlackList.containsKey(name);
       return false;
    }
    
@@ -275,8 +280,9 @@ public class ClassLoaderInformation
     */
    public void blackListResource(String name)
    {
+      Map<String, String> resourceBlackList = this.resourceBlackList;
       if (resourceBlackList != null)
-         resourceBlackList.add(name);
+         resourceBlackList.put(name, name);
    }
    
    @Override

@@ -199,7 +199,7 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
       return system.getObjectName();
    }
 
-   public List<ObjectName> getClassLoaders()
+   public List<ObjectName> listClassLoaders()
    {
       List<ObjectName> result = new ArrayList<ObjectName>();
       for (ClassLoader cl : super.getAllClassLoaders())
@@ -210,7 +210,7 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
       return result;
    }
 
-   public Map<String, List<ObjectName>> getExportingClassLoaders()
+   public Map<String, List<ObjectName>> listExportingClassLoaders()
    {
       HashMap<String, List<ObjectName>> result = new HashMap<String, List<ObjectName>>();
       for (Entry<String, List<ClassLoader>> entry : getClassLoadersByPackage().entrySet())
@@ -227,7 +227,7 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
       return result;
    }
 
-   public List<ObjectName> getExportingClassLoaders(String packageName)
+   public List<ObjectName> listExportingClassLoaders(String packageName)
    {
       if (packageName == null)
          throw new IllegalArgumentException("Null package name");

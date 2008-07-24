@@ -326,20 +326,20 @@ public class JMXUnitTestCase extends AbstractClassLoaderTest
       RealClassLoader clB2 = (RealClassLoader) system.registerClassLoaderPolicy(domain, b2);
       
       ObjectName testDomain = domain.getObjectName();
-      List<ObjectName> classLoaders = (List) server.getAttribute(testDomain, "ClassLoaders");
+      List<ObjectName> classLoaders = (List) server.invoke(testDomain, "listClassLoaders", null, null);
       List<ObjectName> expected = Arrays.asList(clA1.getObjectName(), clA2.getObjectName(), clB1.getObjectName(), clB2.getObjectName());
       assertEquals(expected, classLoaders);
       
-      Map<String, List<ObjectName>> packageClassLoaders = (Map) server.getAttribute(testDomain, "ExportingClassLoaders");
+      Map<String, List<ObjectName>> packageClassLoaders = (Map) server.invoke(testDomain, "listExportingClassLoaders", null, null);
       Map<String, List<ObjectName>> expectedMap = new HashMap<String, List<ObjectName>>();
       expectedMap.put(A.class.getPackage().getName(), Arrays.asList(clA1.getObjectName(), clA2.getObjectName()));
       expectedMap.put(B.class.getPackage().getName(), Arrays.asList(clB1.getObjectName()));
       assertEquals(expectedMap, packageClassLoaders);
       
-      classLoaders = (List) server.invoke(testDomain, "getExportingClassLoaders", new Object[] { A.class.getPackage().getName() }, new String[] { String.class.getName()});
+      classLoaders = (List) server.invoke(testDomain, "listExportingClassLoaders", new Object[] { A.class.getPackage().getName() }, new String[] { String.class.getName()});
       expected = Arrays.asList(clA1.getObjectName(), clA2.getObjectName());
 
-      classLoaders = (List) server.invoke(testDomain, "getExportingClassLoaders", new Object[] { B.class.getPackage().getName() }, new String[] { String.class.getName()});
+      classLoaders = (List) server.invoke(testDomain, "listExportingClassLoaders", new Object[] { B.class.getPackage().getName() }, new String[] { String.class.getName()});
       expected = Arrays.asList(clB1.getObjectName());
 
       Class<?> clazz = (Class<?>) server.invoke(testDomain, "loadClass", new Object[] { A.class.getName() }, new String[] { String.class.getName() });
@@ -388,7 +388,7 @@ public class JMXUnitTestCase extends AbstractClassLoaderTest
       assertEquals(expectedPackages, server.invoke(testObjectName, "listExportedPackages", null, null));
       List<ObjectName> expectedImports = Arrays.asList(clA.getObjectName(), clB.getObjectName()); 
       assertEquals(expectedImports, server.invoke(testObjectName, "listImports", null, null));
-      assertEquals(test.toLongString(), server.getAttribute(testObjectName, "PolicyDetails"));
+      assertEquals(test.toLongString(), server.invoke(testObjectName, "listPolicyDetails", null, null));
    }
 
    @SuppressWarnings("unchecked")

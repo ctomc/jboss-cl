@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +34,6 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
@@ -71,13 +71,13 @@ public abstract class BaseClassLoaderDomain implements Loader
    private Map<String, Loader> globalClassCache = new ConcurrentHashMap<String, Loader>();
    
    /** The global class black list */
-   private Set<String> globalClassBlackList = new CopyOnWriteArraySet<String>();
+   private Map<String, String> globalClassBlackList = new ConcurrentHashMap<String, String>();
    
    /** The global resource cache */
    private Map<String, URL> globalResourceCache = new ConcurrentHashMap<String, URL>();
    
    /** The global resource black list */
-   private Set<String> globalResourceBlackList = new CopyOnWriteArraySet<String>();
+   private Map<String, String> globalResourceBlackList = new ConcurrentHashMap<String, String>();
    
    /** Keep track of the added order */
    private int order = 0;
@@ -92,7 +92,50 @@ public abstract class BaseClassLoaderDomain implements Loader
       globalResourceCache.clear();
       globalResourceBlackList.clear();
    }
+
+   public int getClassBlackListSize()
+   {
+      return globalClassBlackList.size();
+   }
+
+   public int getClassCacheSize()
+   {
+      return globalClassCache.size();
+   }
+
+   public int getResourceBlackListSize()
+   {
+      return globalClassBlackList.size();
+   }
+
+   public int getResourceCacheSize()
+   {
+      return globalClassCache.size();
+   }
    
+   public Set<String> listClassBlackList()
+   {
+      return Collections.unmodifiableSet(globalClassBlackList.keySet());
+   }
+
+   public Map<String, String> listClassCache()
+   {
+      Map<String, String> result = new HashMap<String, String>(globalClassCache.size());
+      for (Map.Entry<String, Loader> entry : globalClassCache.entrySet())
+         result.put(entry.getKey(), entry.getValue().toString());
+      return result;
+   }
+
+   public Set<String> listResourceBlackList()
+   {
+      return Collections.unmodifiableSet(globalResourceBlackList.keySet());
+   }
+
+   public Map<String, URL> listResourceCache()
+   {
+      return Collections.unmodifiableMap(globalResourceCache);
+   }
+
    /**
     * Get the classloader system
     * 
@@ -590,7 +633,7 @@ public abstract class BaseClassLoaderDomain implements Loader
          return loader;
       }
 
-      if (globalClassBlackList.contains(name))
+      if (globalClassBlackList.containsKey(name))
       {
          if (trace)
             log.trace(this + " class is black listed " + name);
@@ -626,7 +669,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       }
       // Here is not found in the exports so can we blacklist it?
       if (canBlackList)
-         globalClassBlackList.add(name);
+         globalClassBlackList.put(name, name);
       
       return null;
    }
@@ -648,7 +691,7 @@ public abstract class BaseClassLoaderDomain implements Loader
             log.trace(this + " got resource from cache " + name);
       }
       
-      if (globalResourceBlackList.contains(name))
+      if (globalResourceBlackList.containsKey(name))
       {
          if (trace)
             log.trace(this + " resource is black listed, not looking at exports " + name);
@@ -685,7 +728,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       }
       // Here is not found in the exports so can we blacklist it?
       if (canBlackList)
-         globalResourceBlackList.add(name);
+         globalResourceBlackList.put(name, name);
       return null;
    }
    

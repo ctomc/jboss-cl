@@ -77,14 +77,14 @@ public interface ClassLoaderDomainMBean
     * 
     * @return the classloaders
     */
-   List<ObjectName> getClassLoaders();
+   List<ObjectName> listClassLoaders();
 
    /**
     * Get the exporting classloaders
     * 
     * @return a map of packages to classloaders
     */
-   Map<String, List<ObjectName>> getExportingClassLoaders();
+   Map<String, List<ObjectName>> listExportingClassLoaders();
 
    /**
     * Get the classloaders export a package
@@ -92,7 +92,7 @@ public interface ClassLoaderDomainMBean
     * @param packageName the package name
     * @return the classloaders
     */
-   List<ObjectName> getExportingClassLoaders(String packageName);
+   List<ObjectName> listExportingClassLoaders(String packageName);
    
    /**
     * Load a class
@@ -120,6 +120,62 @@ public interface ClassLoaderDomainMBean
     * @throws ClassNotFoundException when the class is not found
     */
    ObjectName findClassLoaderForClass(String name) throws ClassNotFoundException; 
+   
+   /**
+    * Show the class cache
+    * 
+    * @return a map of class name to a loader description
+    */
+   Map<String, String> listClassCache();
+   
+   /**
+    * Show the class blacklist
+    * 
+    * @return a set of class names
+    */
+   Set<String> listClassBlackList();
+   
+   /**
+    * Show the resource cache
+    * 
+    * @return a map of resource name to urls
+    */
+   Map<String, URL> listResourceCache();
+   
+   /**
+    * Show the resource blacklist
+    * 
+    * @return a set of resource names
+    */
+   Set<String> listResourceBlackList();
+
+   /**
+    * Get the number of classes black listed
+    * 
+    * @return the size
+    */
+   int getClassBlackListSize();
+
+   /**
+    * Get the number of classes cached
+    * 
+    * @return the size
+    */
+   int getClassCacheSize();
+
+   /**
+    * Get the number of resources black listed
+    * 
+    * @return the size
+    */
+   int getResourceBlackListSize();
+
+   /**
+    * Get the number of resource cached
+    * 
+    * @return the size
+    */
+   int getResourceCacheSize();
    
    /**
     * Flush the caches

@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -75,13 +74,16 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
    private DelegateLoader loader;
    
    /** The loaded classes */
-   private Set<String> loadedClasses = new CopyOnWriteArraySet<String>();
+   private Map<String, String> loadedClasses = new ConcurrentHashMap<String, String>();
    
    /** Our resource cache */
    private Map<String, URL> resourceCache;
    
    /** Our black list */
-   private Set<String> blackList;
+   private Map<String, String> blackList;
+
+   /** A cached version of toLongString() */
+   private String cachedToString;
    
    /**
     * Create a new ClassLoader with no parent.
@@ -106,7 +108,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          resourceCache = new ConcurrentHashMap<String, URL>();
 
       if (basePolicy.isBlackListable())
-         blackList = new CopyOnWriteArraySet<String>();
+         blackList = new ConcurrentHashMap<String, String>();
       
       log.debug("Created " + this + " with policy " + policy.toLongString());
    }
@@ -173,7 +175,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       return result;
    }
    
-   public String getPolicyDetails()
+   public String listPolicyDetails()
    {
       return policy.toLongString();
    }
@@ -200,7 +202,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    public Set<String> listLoadedClasses()
    {
-      return new HashSet<String>(loadedClasses);
+      return Collections.unmodifiableSet(loadedClasses.keySet());
    }
 
    public Set<String> listLoadedResourceNames()
@@ -508,7 +510,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          }
       }, policy.getAccessControlContext());
       
-      loadedClasses.add(name);
+      loadedClasses.put(name, name);
       
       return result;
    }
@@ -549,7 +551,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       }
       
       // Is this resource blacklisted?
-      if (blackList != null && blackList.contains(name))
+      if (blackList != null && blackList.containsKey(name))
       {
          if (trace)
             log.trace(this + " resource is blacklisted " + name);
@@ -581,7 +583,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       
       // Blacklist when not found
       if (blackList != null && result == null)
-         blackList.add(name);
+         blackList.put(name, name);
       
       return result;
    }
@@ -754,11 +756,43 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       return null;
    }
 
+   public int getResourceBlackListSize()
+   {
+      Map<String, String> blackList = this.blackList;
+      if (blackList == null)
+         return 0;
+      return blackList.size();
+   }
+
+   public int getResourceCacheSize()
+   {
+      Map<String, URL> resourceCache = this.resourceCache;
+      if (resourceCache == null)
+         return 0;
+      return resourceCache.size();
+   }
+
+   public Set<String> listResourceBlackList()
+   {
+      Map<String, String> blackList = this.blackList;
+      if (blackList == null)
+         return Collections.emptySet();
+      return Collections.unmodifiableSet(blackList.keySet());
+   }
+
+   public Map<String, URL> listResourceCache()
+   {
+      Map<String, URL> resourceCache = this.resourceCache;
+      if (resourceCache == null)
+         return Collections.emptyMap();
+      return Collections.unmodifiableMap(resourceCache);
+   }
+
    public void clearBlackList()
    {
       if (blackList != null)
       {
-         for (String name : blackList)
+         for (String name : blackList.keySet())
             clearBlackList(name);
       }
    }
@@ -782,13 +816,17 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
     */
    public String toLongString()
    {
+      if (cachedToString != null)
+         return cachedToString;
+      
       StringBuilder builder = new StringBuilder();
       builder.append(getClass().getSimpleName());
       builder.append('@').append(Integer.toHexString(System.identityHashCode(this)));
       builder.append('{').append(getPolicy().toLongString());
       toLongString(builder);
       builder.append('}');
-      return builder.toString();
+      cachedToString = builder.toString();
+      return cachedToString;
    }
    
    /**
@@ -801,6 +839,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          resourceCache.clear();
       if (blackList != null)
          blackList.clear();
+      cachedToString = null;
    }
    
    /**

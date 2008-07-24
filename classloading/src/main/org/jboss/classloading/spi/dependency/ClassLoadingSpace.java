@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.logging.Logger;
@@ -54,7 +53,7 @@ public class ClassLoadingSpace
    private static boolean trace = log.isTraceEnabled();
    
    /** The modules */
-   private Set<Module> modules = new CopyOnWriteArraySet<Module>();
+   private Map<Module, Module> modules = new ConcurrentHashMap<Module, Module>();
 
    /** The modules by package */
    private Map<String, Module> modulesByPackage = new ConcurrentHashMap<String, Module>();
@@ -69,7 +68,7 @@ public class ClassLoadingSpace
     */
    public Set<Module> getModules()
    {
-      return Collections.unmodifiableSet(modules);
+      return Collections.unmodifiableSet(modules.keySet());
    }
    
    /**
@@ -266,7 +265,7 @@ public class ClassLoadingSpace
          other.split(module);
       
       // This module is now part of our space
-      modules.add(module);
+      modules.put(module, module);
       module.setClassLoadingSpace(this);
    }
    

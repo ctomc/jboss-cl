@@ -24,6 +24,7 @@ package org.jboss.classloader.spi.base;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.management.ObjectName;
@@ -97,7 +98,7 @@ public interface BaseClassLoaderMBean
     * 
     * @return the policy string
     */
-   String getPolicyDetails();
+   String listPolicyDetails();
    
    /**
     * Get the loaded classes
@@ -146,6 +147,34 @@ public interface BaseClassLoaderMBean
     * @throws ClassNotFoundException when the class is not found
     */
    ObjectName findClassLoaderForClass(String name) throws ClassNotFoundException; 
+   
+   /**
+    * Show the resource cache
+    * 
+    * @return a map of resource name to urls
+    */
+   Map<String, URL> listResourceCache();
+   
+   /**
+    * Show the resource blacklist
+    * 
+    * @return a set of resource names
+    */
+   Set<String> listResourceBlackList();
+
+   /**
+    * Get the number of resources black listed
+    * 
+    * @return the size
+    */
+   int getResourceBlackListSize();
+
+   /**
+    * Get the number of resource cached
+    * 
+    * @return the size
+    */
+   int getResourceCacheSize();
 
    /**
     * Clear the black list

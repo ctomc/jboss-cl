@@ -110,7 +110,7 @@ public class BaseDelegateLoader implements Loader
       // Nothing by default
    }
    
-   BaseClassLoader getBaseClassLoader(String context)
+   BaseClassLoader getBaseClassLoader(String message, String context)
    {
       BaseClassLoader result = null;
       try
@@ -123,13 +123,13 @@ public class BaseDelegateLoader implements Loader
       {
       }
       if (result == null)
-         log.warn("Not " + context + " from policy that has no classLoader: " + toLongString());
+         log.warn("Not " + message + context + " from policy that has no classLoader: " + toLongString());
       return result;
    }
    
    public Class<?> loadClass(String className)
    {
-      BaseClassLoader classLoader = getBaseClassLoader("loading class " + className);
+      BaseClassLoader classLoader = getBaseClassLoader("loading class ", className);
       if (classLoader != null)
          return classLoader.loadClassLocally(className);
       return null;
@@ -137,7 +137,7 @@ public class BaseDelegateLoader implements Loader
    
    public URL getResource(String name)
    {
-      BaseClassLoader classLoader = getBaseClassLoader("getting resource " + name);
+      BaseClassLoader classLoader = getBaseClassLoader("getting resource ", name);
       if (classLoader != null)
          return classLoader.getResourceLocally(name);
       return null;
@@ -145,14 +145,14 @@ public class BaseDelegateLoader implements Loader
 
    public void getResources(String name, Set<URL> urls) throws IOException
    {
-      BaseClassLoader classLoader = getBaseClassLoader("getting resources " + name);
+      BaseClassLoader classLoader = getBaseClassLoader("getting resources ", name);
       if (classLoader != null)
          classLoader.getResourcesLocally(name, urls);
    }
 
    public Package getPackage(String name)
    {
-      BaseClassLoader classLoader = getBaseClassLoader("getting package " + name);
+      BaseClassLoader classLoader = getBaseClassLoader("getting package ", name);
       if (classLoader != null)
          return classLoader.getPackageLocally(name);
       return null;
