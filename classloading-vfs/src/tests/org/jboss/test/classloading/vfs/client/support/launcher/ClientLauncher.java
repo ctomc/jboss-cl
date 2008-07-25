@@ -338,6 +338,7 @@ public class ClientLauncher
     * @param args
     * @throws Throwable
     */
+   @SuppressWarnings("unchecked")
    public static void launch(String clientClass, String clientName, String[] cp, String[] args)
       throws Throwable
    {
@@ -404,20 +405,22 @@ public class ClientLauncher
          deploy(deployment);
          validate();
 
-         ClientContainer client = getBean("ClientContainer", ControllerState.INSTALLED, ClientContainer.class);
-         if(client == null )
-            throw new Exception("ClientContainer bean was not created");
          ClassLoader ccLoader = getBean(classLoaderName, ControllerState.INSTALLED, ClassLoader.class);
          if(ccLoader == null )
             throw new Exception(classLoaderName+" bean was not created");
-         Class<?> mainClass = client.getMainClass();
-         ClassLoader mainClassLoader = mainClass.getClass().getClassLoader();
+         Class<?> clientContainerClass = ccLoader.loadClass(ClientContainer.class.getName());
+         Object client = getBean("ClientContainer", ControllerState.INSTALLED, clientContainerClass);
+         if(client == null )
+            throw new Exception("ClientContainer bean was not created");
+         Method method = clientContainerClass.getMethod("getMainClass");
+         Class<?> mainClass = (Class) method.invoke(client);
+         ClassLoader mainClassLoader = mainClass.getClassLoader();
          if(ccLoader != mainClassLoader)
             throw new Exception(ccLoader+" != "+mainClassLoader);
 
          // Invoke main on the underlying client main class
          Class<?> parameterTypes[] = { args.getClass() };
-         Method method = client.getClass().getDeclaredMethod("invokeMain", parameterTypes);
+         method = clientContainerClass.getDeclaredMethod("invokeMain", parameterTypes);
          method.invoke(client, (Object) args);
 
          undeploy(deployment);
