@@ -88,6 +88,8 @@ public class JDKCheckerFactory
     */
    public static JDKChecker getChecker()
    {
+      if (checker == null)
+         return new AbstractJDKChecker();
       return checker;
    }
 }
