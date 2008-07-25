@@ -31,7 +31,9 @@ import java.lang.reflect.Method;
 public class ClientContainer
 {
    private Class<?> mainClass;
+   @SuppressWarnings("unused")
    private Object metaData;
+   @SuppressWarnings("unused")
    private String applicationClientName;
 
    public ClientContainer(Object metaData, Class<?> mainClass, String applicationClientName)

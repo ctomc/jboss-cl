@@ -6,6 +6,9 @@
   <classpathentry kind="output" path="target/classes"/>
   <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
   <classpathentry kind="var" path="M2_REPO/javax/activation/activation/1.0.2/activation-1.0.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/ant/ant/1.7.0/ant-1.7.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/ant/ant-junit/1.7.0/ant-junit-1.7.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/ant/ant-launcher/1.7.0/ant-launcher-1.7.0.jar"/>
   <classpathentry kind="var" path="M2_REPO/wutka-dtdparser/dtdparser121/1.2.1/dtdparser121-1.2.1.jar"/>
   <classpathentry kind="var" path="M2_REPO/javax/xml/bind/jaxb-api/2.1/jaxb-api-2.1.jar" sourcepath="M2_REPO/javax/xml/bind/jaxb-api/2.1/jaxb-api-2.1-sources.jar"/>
   <classpathentry kind="src" path="/jboss-classloader"/>
@@ -19,7 +22,8 @@
   <classpathentry kind="var" path="M2_REPO/org/jboss/man/jboss-managed/2.0.0.Beta12/jboss-managed-2.0.0.Beta12.jar" sourcepath="M2_REPO/org/jboss/man/jboss-managed/2.0.0.Beta12/jboss-managed-2.0.0.Beta12-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/jboss/jboss-mdr/2.0.0-SNAPSHOT/jboss-mdr-2.0.0-SNAPSHOT.jar" sourcepath="M2_REPO/org/jboss/jboss-mdr/2.0.0-SNAPSHOT/jboss-mdr-2.0.0-SNAPSHOT-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/jboss/man/jboss-metatype/2.0.0.Beta12/jboss-metatype-2.0.0.Beta12.jar" sourcepath="M2_REPO/org/jboss/man/jboss-metatype/2.0.0.Beta12/jboss-metatype-2.0.0.Beta12-sources.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/jboss/jboss-reflect/2.0.0.Beta12/jboss-reflect-2.0.0.Beta12.jar" sourcepath="M2_REPO/org/jboss/jboss-reflect/2.0.0.Beta12/jboss-reflect-2.0.0.Beta12-sources.jar"/>
+  <classpathentry kind="var" path="M2_REPO/jboss/profiler/jvmti/jboss-profiler-jvmti/1.0.0.CR5/jboss-profiler-jvmti-1.0.0.CR5.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/jboss/jboss-reflect/2.0.0-SNAPSHOT/jboss-reflect-2.0.0-SNAPSHOT.jar" sourcepath="M2_REPO/org/jboss/jboss-reflect/2.0.0-SNAPSHOT/jboss-reflect-2.0.0-SNAPSHOT-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/jboss/jbossas/jboss-server-manager/0.1.0.GA/jboss-server-manager-0.1.0.GA.jar" sourcepath="M2_REPO/org/jboss/jbossas/jboss-server-manager/0.1.0.GA/jboss-server-manager-0.1.0.GA-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/jboss/test/jboss-test/1.1.0.GA/jboss-test-1.1.0.GA.jar" sourcepath="M2_REPO/org/jboss/test/jboss-test/1.1.0.GA/jboss-test-1.1.0.GA-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/jboss/jboss-vfs/2.0.0.Beta13/jboss-vfs-2.0.0.Beta13.jar" sourcepath="M2_REPO/org/jboss/jboss-vfs/2.0.0.Beta13/jboss-vfs-2.0.0.Beta13-sources.jar"/>

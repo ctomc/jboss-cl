@@ -27,11 +27,9 @@ import java.util.ArrayList;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
-import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory;
-import org.jboss.kernel.spi.deployment.KernelDeployment;
+import junit.framework.Test;
+
 import org.jboss.test.classloading.vfs.client.support.launcher.ClientLauncher;
-import org.jboss.test.classloading.vfs.client.support.main.Client;
 import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTest;
 
 /**
@@ -42,6 +40,10 @@ import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTes
  */
 public class ClientClassPathUnitTestCase extends VFSClassLoadingMicrocontainerTest
 {
+   public static Test suite()
+   {
+      return suite(ClientClassPathUnitTestCase.class);
+   }
 
    public ClientClassPathUnitTestCase(String name)
    {

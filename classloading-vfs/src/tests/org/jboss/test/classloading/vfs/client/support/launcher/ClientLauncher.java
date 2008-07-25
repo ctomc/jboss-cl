@@ -305,6 +305,7 @@ public class ClientLauncher
       }
    }
    
+   @SuppressWarnings("unused")
    private static void shutdown()
    {
       kernel.getController().shutdown();
@@ -313,6 +314,7 @@ public class ClientLauncher
    /**
     * Undeploy all
     */
+   @SuppressWarnings("unused")
    private static void undeploy()
    {
       log.debug("Undeploying " + deployer.getDeploymentNames());
