@@ -97,7 +97,6 @@ public class ClientClassPathUnitTestCase extends VFSClassLoadingMicrocontainerTe
    public void testClientMainClassPath()
       throws Throwable
    {
-      super.enableTrace("org.jboss");
       URL clientJar = super.getResource("/org/jboss/test/classloading/vfs/client.jar/");
       // This would be handled by the structure deployer
       URL mfURL = new URL(clientJar, "META-INF/MANIFEST.MF");
