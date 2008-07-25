@@ -30,6 +30,7 @@ import org.jboss.beans.metadata.spi.BeanMetaData;
 import org.jboss.beans.metadata.spi.BeanMetaDataFactory;
 import org.jboss.beans.metadata.spi.ValueMetaData;
 import org.jboss.beans.metadata.spi.builder.BeanMetaDataBuilder;
+import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory;
 import org.jboss.dependency.spi.Controller;
@@ -142,6 +143,8 @@ public class ClientLauncher
       if (expected == null)
          throw new IllegalArgumentException("Null expected");
       Object bean = getBean(name, state);
+      if (expected.isInstance(bean) == false)
+         throw new ClassCastException(ClassLoaderUtils.classToString(bean.getClass()) + " is not an instanceof " + ClassLoaderUtils.classToString(expected));
       return expected.cast(bean);
    }
    
