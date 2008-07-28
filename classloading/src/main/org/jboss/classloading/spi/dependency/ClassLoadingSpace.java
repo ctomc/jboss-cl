@@ -40,7 +40,7 @@ import org.jboss.logging.Logger;
  * unjoin - remove a module from the space
  * unresolve - work out the new state after a module splits
  * 
- * TODO JBCL-7 handle split packages
+ * TODO JBCL-25 handle split packages
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
@@ -218,7 +218,7 @@ public class ClassLoadingSpace
          for (String exportedPackage : exportedPackages)
          {
             Module otherModule = modulesByPackage.get(exportedPackage);
-            // TODO JBCL-7 ERRORS
+            // TODO JBCL-22 ERRORS
             if (otherModule != null)
                throw new IllegalStateException(module + " cannot be added because it is exports package " + exportedPackage + " which conflicts with " + otherModule);
          }
@@ -240,7 +240,7 @@ public class ClassLoadingSpace
                   for (RequirementDependencyItem otherDependency : dependencies)
                   {
                      Requirement otherRequirement = otherDependency.getRequirement();
-                     // TODO JBCL-7 ERRORS
+                     // TODO JBCL-22 ERRORS
                      if (requirement.isConsistent(otherRequirement) == false)
                         throw new IllegalStateException(module + " has a requirement " + requirement + " which is inconsistent with " + otherRequirement + " from " + otherModule);
                   }

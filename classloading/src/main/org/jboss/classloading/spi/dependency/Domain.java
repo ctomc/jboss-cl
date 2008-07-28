@@ -232,7 +232,7 @@ public class Domain
             return result;
       }
       
-      // TODO JBCL-7 check for self-dependency/circularity
+      // TODO JBCL-24 check for self-dependency/circularity
       for (Module other : modules)
       {
          List<Capability> capabilities = other.getCapabilities();

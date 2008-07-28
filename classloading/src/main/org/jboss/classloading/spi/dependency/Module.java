@@ -532,7 +532,7 @@ public abstract class Module extends NameAndVersionSupport
    /**
     * Determine the package names
     * 
-    * TODO JBCL-7 Better handling of conflicts for optional packages
+    * TODO JBCL-23 Better handling of conflicts for optional packages
     * @param optional whether to include optional packages
     * @return the package names
     */
