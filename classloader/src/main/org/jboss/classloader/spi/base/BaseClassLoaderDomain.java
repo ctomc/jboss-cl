@@ -1317,7 +1317,7 @@ public abstract class BaseClassLoaderDomain implements Loader
     * 
     * @param classLoader the classloader
     */
-   synchronized void unregisterClassLoader(BaseClassLoader classLoader)
+   void unregisterClassLoader(BaseClassLoader classLoader)
    {
       log.debug(this + " unregisterClassLoader " + classLoader.toString());
 
