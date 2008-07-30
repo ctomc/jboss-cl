@@ -42,6 +42,9 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
    /** The roots */
    private VirtualFile[] roots;
    
+   /** The excluded roots */
+   private VirtualFile[] excludedRoots;
+   
    /** The current root */
    private VirtualFile root;
    
@@ -73,6 +76,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     * Visit the resources
     * 
     * @param roots the roots
+    * @param excludedRoots the excluded roots
     * @param included the included packages
     * @param excluded the excluded packages
     * @param classLoader the classLoader
@@ -80,9 +84,9 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     * @param filter the filter
     * @param recurseFilter the recurse filter
     */
-   public static void visit(VirtualFile[] roots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
+   public static void visit(VirtualFile[] roots, VirtualFile[] excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
    {
-      VFSResourceVisitor vfsVisitor = new VFSResourceVisitor(roots, included, excluded, classLoader, visitor, filter, recurseFilter);
+      VFSResourceVisitor vfsVisitor = new VFSResourceVisitor(roots, excludedRoots, included, excluded, classLoader, visitor, filter, recurseFilter);
       for (VirtualFile root : roots)
       {
          try
@@ -108,7 +112,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     * @param filter the filter
     * @param recurseFilter the recurse filter
     */
-   VFSResourceVisitor(VirtualFile[] roots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
+   VFSResourceVisitor(VirtualFile[] roots, VirtualFile[] excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
    {
       if (roots == null)
          throw new IllegalArgumentException("Null roots");
@@ -118,6 +122,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
          throw new IllegalArgumentException("Null visitor");
 
       this.roots = roots;
+      this.excludedRoots = excludedRoots;
       this.included = included;
       this.excluded = excluded;
       this.classLoader = classLoader;
@@ -191,6 +196,15 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
       {
          if (file.equals(other))
             return false;
+      }
+      // Is it an excluded root?
+      if (excludedRoots != null)
+      {
+         for (VirtualFile other : excludedRoots)
+         {
+            if (file.equals(other))
+               return false;
+         }
       }
       
       // Ok

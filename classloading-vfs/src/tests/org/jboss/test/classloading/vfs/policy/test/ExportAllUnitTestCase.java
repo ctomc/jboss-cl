@@ -52,19 +52,28 @@ public class ExportAllUnitTestCase extends BaseTestCase
 {
    protected void testExportAll(ExportAll exportAll, Map<String, String> expected, String... urls) throws Exception
    {
-      Set<String> empty = Collections.emptySet();
-      testExportAll(exportAll, expected, empty, urls);
+      testExportAll(exportAll, expected, urls, null);
    }
 
    protected void testExportAll(ExportAll exportAll, Map<String, String> expected, Set<String> empty, String... urls) throws Exception
    {
-      testExportAllAbsolute(exportAll, expected, empty, urls);
-      testExportAllFromBase(exportAll, expected, empty, urls);
+      testExportAll(exportAll, expected, empty, urls, null);
+   }
+   protected void testExportAll(ExportAll exportAll, Map<String, String> expected, String[] urls, String[] excluded) throws Exception
+   {
+      Set<String> empty = Collections.emptySet();
+      testExportAll(exportAll, expected, empty, urls, excluded);
    }
 
-   protected void testExportAllCommon(ExportAll exportAll, Map<String, String> expected, Set<String> empty, VirtualFile[] files) throws Exception
+   protected void testExportAll(ExportAll exportAll, Map<String, String> expected, Set<String> empty, String[] urls, String[] excluded) throws Exception
    {
-      VFSClassLoaderPolicy policy = VFSClassLoaderPolicy.createVFSClassLoaderPolicy(files);
+      testExportAllAbsolute(exportAll, expected, empty, urls, excluded);
+      testExportAllFromBase(exportAll, expected, empty, urls, excluded);
+   }
+
+   protected void testExportAllCommon(ExportAll exportAll, Map<String, String> expected, Set<String> empty, VirtualFile[] files, VirtualFile[] excluded) throws Exception
+   {
+      VFSClassLoaderPolicy policy = VFSClassLoaderPolicy.createVFSClassLoaderPolicy(files, excluded);
       policy.setExportAll(exportAll);
       
       String[] packageNames = policy.getPackageNames();
@@ -90,7 +99,7 @@ public class ExportAllUnitTestCase extends BaseTestCase
       }
    }
 
-   protected void testExportAllFromBase(ExportAll exportAll, Map<String, String> expected, Set<String> empty, String... urls) throws Exception
+   protected void testExportAllFromBase(ExportAll exportAll, Map<String, String> expected, Set<String> empty, String[] urls, String[] excluded) throws Exception
    {
       URL baseURL = getResource("/classloader");
       assertNotNull(baseURL);
@@ -119,10 +128,38 @@ public class ExportAllUnitTestCase extends BaseTestCase
             fail("Can't find " + urls[i]);
       }
       
-      testExportAllCommon(exportAll, expected, empty, files);
+      VirtualFile[] excludedFiles = null;
+      if (excluded != null)
+      {
+         excludedFiles = new VirtualFile[excluded.length];
+         for (int i = 0; i < excluded.length; ++i)
+         {
+            try
+            {
+               excludedFiles[i] = base.getChild(excluded[i]);
+            }
+            catch (IOException ignored)
+            {
+            }
+            if (excludedFiles[i] == null)
+            {
+               try
+               {
+                  excludedFiles[i] = files[0].getChild(excluded[i]);
+               }
+               catch (IOException ignored)
+               {
+               }
+            }
+            if (excludedFiles[i] == null)
+               fail("Can't find " + excluded[i]);
+         }
+      }
+      
+      testExportAllCommon(exportAll, expected, empty, files, excludedFiles);
    }
 
-   protected void testExportAllAbsolute(ExportAll exportAll, Map<String, String> expected, Set<String> empty, String... urls) throws Exception
+   protected void testExportAllAbsolute(ExportAll exportAll, Map<String, String> expected, Set<String> empty, String[] urls, String[] excluded) throws Exception
    {
       VirtualFile[] files = new VirtualFile[urls.length];
       for (int i = 0; i < urls.length; ++i)
@@ -142,7 +179,28 @@ public class ExportAllUnitTestCase extends BaseTestCase
          }
       }
       
-      testExportAllCommon(exportAll, expected, empty, files);
+      VirtualFile[] excludedFiles = null;
+      if (excluded != null)
+      {
+         excludedFiles = new VirtualFile[excluded.length];
+         for (int i = 0; i < excluded.length; ++i)
+         {
+            String urlString = "/classloader/" + excluded[i];
+            URL url = getResource(urlString);
+            if (url != null)
+            {
+               excludedFiles[i]= VFS.getRoot(url);
+            }
+            else
+            {
+               excludedFiles[i] = files[0].getChild(excluded[i]);
+               if (excludedFiles[i] == null)
+                  fail("Expected to find resource: " + files[0].getName() + "/" + excluded[i]);
+            }
+         }
+      }
+      
+      testExportAllCommon(exportAll, expected, empty, files, excludedFiles);
    }
    
    public void testExportAllJar1() throws Exception
@@ -289,6 +347,36 @@ public class ExportAllUnitTestCase extends BaseTestCase
 
       testExportAll(ExportAll.ALL, expected, "testjar3", "subjar1.jar");
    }
+   
+   public void testExportAllSimpleExcluded() throws Exception
+   {
+      Map<String,String> expected = makeSimpleMap("testjar1",
+            "",
+            "package1"
+      );
+
+      testExportAll(ExportAll.ALL, expected, new String[] { "testjar1" } , new String[] { "package2" });
+   }
+   
+   public void testExportAllMultipleRootsExcluded() throws Exception
+   {
+      Map<String,String> expected = makeSimpleMap("testjar1",
+            "",
+            "package1"
+      );
+
+      testExportAll(ExportAll.ALL, expected, new String[] { "testjar1", "testjar2" } , new String[] { "package2" });
+   }
+   
+   public void testExportAllMultipleExcluded() throws Exception
+   {
+      Map<String,String> expected = makeSimpleMap("testjar1",
+            ""
+      );
+
+      testExportAll(ExportAll.ALL, expected, new String[] { "testjar1" } , new String[] { "package1", "package2" });
+   }
+   
    public void testJar3Resources()
       throws Exception
    {

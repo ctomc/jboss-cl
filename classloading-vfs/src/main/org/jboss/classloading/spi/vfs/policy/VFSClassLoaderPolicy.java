@@ -71,6 +71,9 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    
    /** The roots */
    private VirtualFile[] roots;
+   
+   /** The excluded roots */
+   private VirtualFile[] excludedRoots;
 
    /** Whether to export all */
    private ExportAll exportAll;
@@ -149,6 +152,33 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    {
       return new VFSClassLoaderPolicy(name, roots);
    }
+   
+   /**
+    * Create a new VFSClassLoaderPolicy.
+    * 
+    * @param roots the roots
+    * @param excludedRoots the excluded roots
+    * @return the classloader policy
+    * @throws IllegalArgumentException for null roots
+    */
+   public static VFSClassLoaderPolicy createVFSClassLoaderPolicy(VirtualFile[] roots, VirtualFile[] excludedRoots)
+   {
+      return new VFSClassLoaderPolicy(roots, excludedRoots);
+   }
+   
+   /**
+    * Create a new VFSClassLoaderPolicy.
+    * 
+    * @param name a name of the policy
+    * @param roots the roots
+    * @param excludedRoots the excluded roots
+    * @return the classloader policy
+    * @throws IllegalArgumentException for null roots
+    */
+   public static VFSClassLoaderPolicy createVFSClassLoaderPolicy(String name, VirtualFile[] roots, VirtualFile[] excludedRoots)
+   {
+      return new VFSClassLoaderPolicy(name, roots, excludedRoots);
+   }
 
    /**
     * Create a new VFSClassLoaderPolicy.
@@ -164,11 +194,36 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    /**
     * Create a new VFSClassLoaderPolicy.
     * 
+    * @param roots the roots
+    * @param excludedRoots the excluded roots
+    * @throws IllegalArgumentException for null roots
+    */
+   public VFSClassLoaderPolicy(VirtualFile[] roots, VirtualFile[] excludedRoots)
+   {
+      this(determineName(roots), roots, excludedRoots);
+   }
+
+   /**
+    * Create a new VFSClassLoaderPolicy.
+    * 
     * @param name the name
     * @param roots the roots
     * @throws IllegalArgumentException for null roots
     */
    public VFSClassLoaderPolicy(String name, VirtualFile[] roots)
+   {
+      this(name, roots, null);
+   }
+
+   /**
+    * Create a new VFSClassLoaderPolicy.
+    * 
+    * @param name the name
+    * @param roots the roots
+    * @param excludedRoots the excluded roots
+    * @throws IllegalArgumentException for null roots
+    */
+   public VFSClassLoaderPolicy(String name, VirtualFile[] roots, VirtualFile[] excludedRoots)
    {
       if (name == null)
          throw new IllegalArgumentException("Null name");
@@ -179,9 +234,18 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          if (root == null)
             throw new IllegalArgumentException("Null root in " + Arrays.asList(roots));
       }
+      if (excludedRoots != null)
+      {
+         for (VirtualFile excludedRoot : excludedRoots)
+         {
+            if (excludedRoot == null)
+               throw new IllegalArgumentException("Null excluded root in " + Arrays.asList(excludedRoots));
+         }
+      }
 
       this.name = name;
       this.roots = roots;
+      this.excludedRoots = excludedRoots;
    }
 
    @Override
@@ -288,7 +352,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       {
          if (exportedPackages == null)
          {
-            Set<String> exported = PackageVisitor.determineAllPackages(roots, exportAll, included, excluded, excludedExport);
+            Set<String> exported = PackageVisitor.determineAllPackages(roots, excludedRoots, exportAll, included, excluded, excludedExport);
             exportedPackages = exported.toArray(new String[exported.size()]);
          }
       }

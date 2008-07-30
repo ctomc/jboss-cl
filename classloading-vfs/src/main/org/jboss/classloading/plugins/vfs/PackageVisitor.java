@@ -47,6 +47,9 @@ public class PackageVisitor extends AbstractVirtualFileFilterWithAttributes impl
 
    /** The roots */
    private VirtualFile[] roots;
+
+   /** The excluded roots */
+   private VirtualFile[] excludedRoots;
    
    /** The current root */
    private VirtualFile root;
@@ -73,15 +76,16 @@ public class PackageVisitor extends AbstractVirtualFileFilterWithAttributes impl
     * Determine the packages
     * 
     * @param roots the roots
+    * @param excludedRoots the excluded roots
     * @param exportAll the exportAll
     * @param included the included packages
     * @param excluded the excluded packages
     * @param excludedExport the excluded export packages
     * @return the packages
     */
-   public static Set<String> determineAllPackages(VirtualFile[] roots, ExportAll exportAll, ClassFilter included, ClassFilter excluded, ClassFilter excludedExport)
+   public static Set<String> determineAllPackages(VirtualFile[] roots, VirtualFile[] excludedRoots, ExportAll exportAll, ClassFilter included, ClassFilter excluded, ClassFilter excludedExport)
    {
-      PackageVisitor visitor = new PackageVisitor(roots, exportAll, included, excluded, excludedExport);
+      PackageVisitor visitor = new PackageVisitor(roots, excludedRoots, exportAll, included, excluded, excludedExport);
       for (VirtualFile root : roots)
       {
          try
@@ -101,17 +105,19 @@ public class PackageVisitor extends AbstractVirtualFileFilterWithAttributes impl
     * Create a new PackageVisitor.
     *
     * @param roots the vfs roots
+    * @param excludedRoots the excluded roots
     * @param exportAll the export all policy
     * @param included the included packages
     * @param excluded the excluded packages
     * @param excludedExport the excluded export packages
     * @throws IllegalArgumentException for a null exportAll policy
     */
-   PackageVisitor(VirtualFile[] roots, ExportAll exportAll, ClassFilter included, ClassFilter excluded, ClassFilter excludedExport)
+   PackageVisitor(VirtualFile[] roots, VirtualFile[] excludedRoots, ExportAll exportAll, ClassFilter included, ClassFilter excluded, ClassFilter excludedExport)
    {
       if (exportAll == null)
          throw new IllegalArgumentException("Null export policy");
       this.roots = roots;
+      this.excludedRoots = excludedRoots;
       this.exportAll = exportAll;
       this.included = included;
       this.excluded = excluded;
@@ -162,6 +168,15 @@ public class PackageVisitor extends AbstractVirtualFileFilterWithAttributes impl
       {
          if (file.equals(other))
             return false;
+      }
+      // Is this an excluded roots?
+      if (excludedRoots != null)
+      {
+         for (VirtualFile other : excludedRoots)
+         {
+            if (file.equals(other))
+               return false;
+         }
       }
       
       // Ok

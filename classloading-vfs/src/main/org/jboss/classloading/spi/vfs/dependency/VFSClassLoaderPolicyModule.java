@@ -116,7 +116,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
       ExportAll exportAll = getExportAll();
       if (exportAll != null)
       {
-         Set<String> exportedPackages = PackageVisitor.determineAllPackages(roots, exportAll, included, excluded, excludedExport);
+         Set<String> exportedPackages = PackageVisitor.determineAllPackages(roots, null, exportAll, included, excluded, excludedExport);
          for (String packageName : exportedPackages)
          {
             capability = factory.createPackage(packageName, version);
@@ -225,7 +225,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
       {
          ClassFilter included = getIncluded();
          ClassFilter excluded = getExcluded();
-         VFSResourceVisitor.visit(roots, included, excluded, classLoader, visitor, filter, recurseFilter);
+         VFSResourceVisitor.visit(roots, null, included, excluded, classLoader, visitor, filter, recurseFilter);
       }
    }
 }
