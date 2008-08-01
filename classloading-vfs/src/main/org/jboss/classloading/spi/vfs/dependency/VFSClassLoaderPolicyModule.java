@@ -248,20 +248,19 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
    {
       try
       {
-         String[] rootURLStrings = new String[urls.length];
-         List<VirtualFile> newRoots = new ArrayList<VirtualFile>(urls.length);
-         for (URL url : urls)
+         String[] urlStrings = new String[urls.length];
+         List<VirtualFile> newRoots = new ArrayList<VirtualFile>(roots.length);
+         for (VirtualFile root : roots)
          {
-            String urlString = stripProtocol(url);
-            for(int i=0; i < roots.length; i++)
+            String rootUrlString = root.toURL().toExternalForm();
+            for(int i=0; i < urls.length; i++)
             {
-               if (rootURLStrings[i] == null)
-                  rootURLStrings[i] = stripProtocol(roots[i].toURL());
+               if (urlStrings[i] == null)
+                  urlStrings[i] = urls[i].toExternalForm();
 
-               if (urlString.startsWith(rootURLStrings[i]))
+               if (rootUrlString.equals(urlStrings[i]))
                {
-                  VirtualFile newRoot = VFS.getRoot(url);
-                  newRoots.add(newRoot);
+                  newRoots.add(root);
                   break;
                }
             }
@@ -272,21 +271,5 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
       {
          throw new RuntimeException("Cannot match urls to roots.", e);
       }
-   }
-
-   /**
-    * Strip the url protocol.
-    *
-    * @param url the url
-    * @return url external form w/o protocol
-    */
-   protected static String stripProtocol(URL url)
-   {
-      if (url == null)
-         throw new IllegalArgumentException("Null url");
-
-      String urlString = url.toExternalForm();
-      int p = urlString.indexOf(":/");
-      return urlString.substring(p + 2);
    }
 }

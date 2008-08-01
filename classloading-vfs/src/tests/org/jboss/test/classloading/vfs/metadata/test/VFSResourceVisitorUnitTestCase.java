@@ -287,7 +287,13 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
    public void testUrlsParameter() throws Exception
    {
       VFSClassLoaderFactory factory = new VFSClassLoaderFactory("test");
-      factory.setRoots(Arrays.asList(System.getProperty("test.dir") + "/support/"));
+      factory.setRoots(
+            Arrays.asList(
+                  System.getProperty("test.dir") + "/support/a",
+                  System.getProperty("test.dir") + "/support/b",
+                  System.getProperty("test.dir") + "/support/c"
+            )
+      );
       KernelDeployment deployment = install(factory);
       try
       {
@@ -300,7 +306,7 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
             }
          };
 
-         URL aURL = new URL(System.getProperty("test.dir") + "/support/a");
+         URL aURL = new URL("vfs" + System.getProperty("test.dir") + "/support/a/");
          Module module = assertModule("test:0.0.0");
          module.visit(visitor, visitor.getFilter(), null, aURL);
 
@@ -316,7 +322,13 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
    public void testUrlsParameters() throws Exception
    {
       VFSClassLoaderFactory factory = new VFSClassLoaderFactory("test");
-      factory.setRoots(Arrays.asList(System.getProperty("test.dir") + "/support/"));
+      factory.setRoots(
+            Arrays.asList(
+                  System.getProperty("test.dir") + "/support/a",
+                  System.getProperty("test.dir") + "/support/b",
+                  System.getProperty("test.dir") + "/support/c"
+            )
+      );
       KernelDeployment deployment = install(factory);
       try
       {
@@ -329,8 +341,8 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
             }
          };
 
-         URL aURL = new URL(System.getProperty("test.dir") + "/support/a");
-         URL bURL = new URL(System.getProperty("test.dir") + "/support/b");
+         URL aURL = new URL("vfs" + System.getProperty("test.dir") + "/support/a/");
+         URL bURL = new URL("vfs" + System.getProperty("test.dir") + "/support/b/");
          Module module = assertModule("test:0.0.0");
          module.visit(visitor, visitor.getFilter(), null, aURL, bURL);
 
