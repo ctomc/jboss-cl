@@ -25,96 +25,49 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-import org.jboss.classloader.plugins.ClassLoaderUtils;
-
 /**
  * ResourceContext.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
- * @version $Revision: 1.1 $
+ * @author <a href="mailto:ales.justin@jboss.com">Ales Justin</a>
  */
-public class ResourceContext
+public interface ResourceContext
 {
-   /** The url of the resource */
-   private URL url;
-   
-   /** The classloader */
-   private ClassLoader classLoader;
-   
-   /** The resource name */
-   private String resourceName;
-   
-   /**
-    * Create a new ResourceContext.
-    * 
-    * @param url the url
-    * @param resourceName the resource name
-    * @param classLoader the classloader
-    */
-   public ResourceContext(URL url, String resourceName, ClassLoader classLoader)
-   {
-      if (url == null)
-         throw new IllegalArgumentException("Null url");
-      if (resourceName == null)
-         throw new IllegalArgumentException("Null resourceName");
-      if (classLoader == null)
-         throw new IllegalArgumentException("Null classloader");
-
-      this.url = url;
-      this.resourceName = resourceName;
-      this.classLoader = classLoader;
-   }
-
    /**
     * Get the url.
     * 
     * @return the url.
     */
-   public URL getUrl()
-   {
-      return url;
-   }
+   URL getUrl();
 
    /**
     * Get the classLoader.
     * 
     * @return the classLoader.
     */
-   public ClassLoader getClassLoader()
-   {
-      return classLoader;
-   }
+   ClassLoader getClassLoader();
 
    /**
     * Get the resourceName.
     * 
     * @return the resourceName.
     */
-   public String getResourceName()
-   {
-      return resourceName;
-   }
-   
+   String getResourceName();
+
    /**
     * Get the class name
     * 
     * @return the class name or null if it is not a class
     */
-   public String getClassName()
-   {
-      return ClassLoaderUtils.resourceNameToClassName(getResourceName());
-   }
-   
+   String getClassName();
+
    /**
     * Whether the resource is a class
     * 
     * @return true when the resource name ends with .class
     */
-   public boolean isClass()
-   {
-      return resourceName.endsWith(".class");
-   }
-   
+   boolean isClass();
+
    /**
     * Load a class
     *
@@ -125,38 +78,21 @@ public class ResourceContext
     * @return the class from resource
     * @throws RuntimeException for any errors during class loading
     */
-   public Class<?> loadClass()
-   {
-      String className = getClassName();
-      try
-      {
-         return classLoader.loadClass(className);
-      }
-      catch (ClassNotFoundException e)
-      {
-         throw new RuntimeException("Unexpected error loading class: " + className, e);
-      }
-   }
-   
+   Class<?> loadClass();
+
    /**
     * Get the input stream for the resource
     * 
     * @return the input stream
     * @throws IOException for any error
     */
-   public InputStream getInputStream() throws IOException
-   {
-      return url.openStream();
-   }
-   
+   InputStream getInputStream() throws IOException;
+
    /**
     * Get the bytes for the resource
     * 
     * @return the byte array
     * @throws IOException for any error
     */
-   public byte[] getBytes() throws IOException
-   {
-      return ClassLoaderUtils.loadBytes(getInputStream());
-   }
+   byte[] getBytes() throws IOException;
 }

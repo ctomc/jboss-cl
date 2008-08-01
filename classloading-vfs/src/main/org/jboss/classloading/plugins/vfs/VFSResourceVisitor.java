@@ -21,6 +21,8 @@
  */
 package org.jboss.classloading.plugins.vfs;
 
+import java.util.List;
+
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
@@ -35,15 +37,16 @@ import org.jboss.virtual.plugins.vfs.helpers.AbstractVirtualFileFilterWithAttrib
  * to determine resources
  * 
  * @author <a href="adrian@jboss.org">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes implements VirtualFileVisitor
 {
    /** The roots */
-   private VirtualFile[] roots;
+   private List<VirtualFile> roots;
    
    /** The excluded roots */
-   private VirtualFile[] excludedRoots;
+   private List<VirtualFile> excludedRoots;
    
    /** The current root */
    private VirtualFile root;
@@ -84,7 +87,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     * @param filter the filter
     * @param recurseFilter the recurse filter
     */
-   public static void visit(VirtualFile[] roots, VirtualFile[] excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
+   public static void visit(List<VirtualFile> roots, List<VirtualFile> excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
    {
       VFSResourceVisitor vfsVisitor = new VFSResourceVisitor(roots, excludedRoots, included, excluded, classLoader, visitor, filter, recurseFilter);
       for (VirtualFile root : roots)
@@ -105,6 +108,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     * Create a new VFSResourceVisitor.
     *
     * @param roots the roots
+    * @param excludedRoots the excluded roots
     * @param included the included packages
     * @param excluded the excluded packages
     * @param classLoader the classloader
@@ -112,7 +116,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     * @param filter the filter
     * @param recurseFilter the recurse filter
     */
-   VFSResourceVisitor(VirtualFile[] roots, VirtualFile[] excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
+   VFSResourceVisitor(List<VirtualFile> roots, List<VirtualFile> excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
    {
       if (roots == null)
          throw new IllegalArgumentException("Null roots");
@@ -177,7 +181,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
          try
          {
             String path = determinePath(file);
-            ResourceContext resource = new ResourceContext(file.toURL(), path, classLoader);
+            ResourceContext resource = new VFSResourceContext(file, path, classLoader);
             if (recurseFilter.accepts(resource) == false)
                return false;
          }
@@ -228,7 +232,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
          if (excluded != null && excluded.matchesResourcePath(path))
             return;
          
-         ResourceContext resource = new ResourceContext(file.toURL(), path, classLoader);
+         ResourceContext resource = new VFSResourceContext(file, path, classLoader);
          
          //Check the filter and visit
          if (filter == null || filter.accepts(resource))

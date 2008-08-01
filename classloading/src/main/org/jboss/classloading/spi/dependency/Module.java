@@ -347,8 +347,9 @@ public abstract class Module extends NameAndVersionSupport
     * @param visitor       the visitor
     * @param filter        the filter
     * @param recurseFilter the recursion filter (null means recurse into everything)
+    * @param urls the urls we should visit
     */
-   public void visit(ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
+   public void visit(ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter, URL... urls)
    {
       throw new UnsupportedOperationException("The module " + getContextName() + " does not support filtering: " + getClass().getName());
    }

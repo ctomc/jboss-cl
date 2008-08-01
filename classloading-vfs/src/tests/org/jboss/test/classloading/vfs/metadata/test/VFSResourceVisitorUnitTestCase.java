@@ -27,8 +27,10 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import junit.framework.Test;
 import org.jboss.classloader.plugins.ClassLoaderUtils;
@@ -275,6 +277,67 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
 
          assertEquals(1, classes.size());
          assertEquals(classes.iterator().next(), A.class.getName());
+      }
+      finally
+      {
+         undeploy(deployment);
+      }
+   }
+
+   public void testUrlsParameter() throws Exception
+   {
+      VFSClassLoaderFactory factory = new VFSClassLoaderFactory("test");
+      factory.setRoots(Arrays.asList(System.getProperty("test.dir") + "/support/"));
+      KernelDeployment deployment = install(factory);
+      try
+      {
+         final Set<String> classes = new HashSet<String>();
+         ResourceVisitor visitor = new ClassVisitor()
+         {
+            public void visit(ResourceContext resource)
+            {
+               classes.add(resource.getResourceName());
+            }
+         };
+
+         URL aURL = new URL(System.getProperty("test.dir") + "/support/a");
+         Module module = assertModule("test:0.0.0");
+         module.visit(visitor, visitor.getFilter(), null, aURL);
+
+         assertEquals(1, classes.size());
+         assertEquals(classes.iterator().next(), A.class.getSimpleName() + ".class");
+      }
+      finally
+      {
+         undeploy(deployment);
+      }
+   }
+
+   public void testUrlsParameters() throws Exception
+   {
+      VFSClassLoaderFactory factory = new VFSClassLoaderFactory("test");
+      factory.setRoots(Arrays.asList(System.getProperty("test.dir") + "/support/"));
+      KernelDeployment deployment = install(factory);
+      try
+      {
+         final Set<String> classes = new TreeSet<String>();
+         ResourceVisitor visitor = new ClassVisitor()
+         {
+            public void visit(ResourceContext resource)
+            {
+               classes.add(resource.getResourceName());
+            }
+         };
+
+         URL aURL = new URL(System.getProperty("test.dir") + "/support/a");
+         URL bURL = new URL(System.getProperty("test.dir") + "/support/b");
+         Module module = assertModule("test:0.0.0");
+         module.visit(visitor, visitor.getFilter(), null, aURL, bURL);
+
+         assertEquals(2, classes.size());
+         Iterator<String> iterator = classes.iterator();
+         assertEquals(iterator.next(), A.class.getSimpleName() + ".class");
+         assertEquals(iterator.next(), B.class.getSimpleName() + ".class");
       }
       finally
       {

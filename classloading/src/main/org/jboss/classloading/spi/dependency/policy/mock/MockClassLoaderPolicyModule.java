@@ -31,6 +31,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.test.support.MockClassLoaderHelper;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
+import org.jboss.classloading.plugins.visitor.DefaultResourceContext;
 import org.jboss.classloading.spi.dependency.policy.ClassLoaderPolicyModule;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
@@ -91,7 +92,7 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
       return classLoader.getResource(path);
    }
 
-   public void visit(ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
+   public void visit(ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter, URL... urls)
    {
       MockClassLoadingMetaData mclmd = getClassLoadingMetaData();
       String[] paths = mclmd.getPaths();
@@ -117,7 +118,7 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
             if (excludedFilter != null && excludedFilter.matchesResourcePath(path))
                continue;
 
-            ResourceContext context = new ResourceContext(getURL(path), path, classLoader);
+            ResourceContext context = new DefaultResourceContext(getURL(path), path, classLoader);
             if (filter == null || filter.accepts(context))
                visitor.visit(context);
          }
