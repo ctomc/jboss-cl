@@ -21,6 +21,8 @@
  */
 package org.jboss.classloading.plugins.vfs;
 
+import java.net.URL;
+
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
@@ -84,22 +86,47 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     * @param visitor the visitor
     * @param filter the filter
     * @param recurseFilter the recurse filter
+    * @param urls the urls
     */
-   public static void visit(VirtualFile[] roots, VirtualFile[] excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
+   public static void visit(VirtualFile[] roots, VirtualFile[] excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter, URL... urls)
    {
       VFSResourceVisitor vfsVisitor = new VFSResourceVisitor(roots, excludedRoots, included, excluded, classLoader, visitor, filter, recurseFilter);
       for (VirtualFile root : roots)
       {
          try
          {
-            vfsVisitor.setRoot(root);
-            root.visit(vfsVisitor);
+            if (urls == null || urls.length == 0 || matchRootWithUrls(root, urls))
+            {
+               vfsVisitor.setRoot(root);
+               root.visit(vfsVisitor);
+            }
          }
          catch (Exception e)
          {
             throw new Error("Error visiting " + root, e);
          }
       }
+   }
+
+   /**
+    * Match root with urls.
+    *
+    * @param root one of the roots
+    * @param urls the urls
+    * @return true if root matches one of the urls
+    * @throws Exception for any error
+    */
+   protected static boolean matchRootWithUrls(VirtualFile root, URL[] urls) throws Exception
+   {
+      URL rootURL = root.toURL();
+      for (URL url : urls)
+      {
+         if (rootURL.equals(url))
+         {
+            return true;
+         }
+      }
+      return false;
    }
 
    /**

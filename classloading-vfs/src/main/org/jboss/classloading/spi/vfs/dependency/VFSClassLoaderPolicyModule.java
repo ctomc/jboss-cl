@@ -23,7 +23,6 @@ package org.jboss.classloading.spi.vfs.dependency;
 
 import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -225,47 +224,9 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
       VirtualFile[] roots = determineVFSRoots();
       if (roots != null && roots.length > 0)
       {
-         if (urls != null && urls.length > 0)
-            roots = matchUrlsWithRoots(urls, roots);
-
-         if (roots != null && roots.length > 0)
-         {
-            ClassFilter included = getIncluded();
-            ClassFilter excluded = getExcluded();
-            VFSResourceVisitor.visit(roots, null, included, excluded, classLoader, visitor, filter, recurseFilter);
-         }
-      }
-   }
-
-   /**
-    * Match urls with roots.
-    *
-    * @param urls the urls
-    * @param roots the old roots
-    * @return new roots
-    */
-   protected static VirtualFile[] matchUrlsWithRoots(URL[] urls, VirtualFile[] roots)
-   {
-      try
-      {
-         List<VirtualFile> newRoots = new ArrayList<VirtualFile>(roots.length);
-         for (VirtualFile root : roots)
-         {
-            URL rootURL = root.toURL();
-            for (URL url : urls)
-            {
-               if (rootURL.equals(url))
-               {
-                  newRoots.add(root);
-                  break;
-               }
-            }
-         }
-         return newRoots.toArray(new VirtualFile[newRoots.size()]);
-      }
-      catch (Exception e)
-      {
-         throw new RuntimeException("Cannot match urls to roots.", e);
+         ClassFilter included = getIncluded();
+         ClassFilter excluded = getExcluded();
+         VFSResourceVisitor.visit(roots, null, included, excluded, classLoader, visitor, filter, recurseFilter, urls);
       }
    }
 }
