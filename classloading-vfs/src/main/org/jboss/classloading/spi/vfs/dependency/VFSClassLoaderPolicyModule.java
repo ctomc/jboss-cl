@@ -248,17 +248,13 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
    {
       try
       {
-         String[] urlStrings = new String[urls.length];
          List<VirtualFile> newRoots = new ArrayList<VirtualFile>(roots.length);
          for (VirtualFile root : roots)
          {
-            String rootUrlString = root.toURL().toExternalForm();
-            for(int i=0; i < urls.length; i++)
+            URL rootURL = root.toURL();
+            for (URL url : urls)
             {
-               if (urlStrings[i] == null)
-                  urlStrings[i] = urls[i].toExternalForm();
-
-               if (rootUrlString.equals(urlStrings[i]))
+               if (rootURL.equals(url))
                {
                   newRoots.add(root);
                   break;
