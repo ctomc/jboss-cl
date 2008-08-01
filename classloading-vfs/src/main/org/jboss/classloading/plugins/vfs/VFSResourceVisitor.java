@@ -21,8 +21,6 @@
  */
 package org.jboss.classloading.plugins.vfs;
 
-import java.util.List;
-
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
@@ -43,10 +41,10 @@ import org.jboss.virtual.plugins.vfs.helpers.AbstractVirtualFileFilterWithAttrib
 public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes implements VirtualFileVisitor
 {
    /** The roots */
-   private List<VirtualFile> roots;
+   private VirtualFile[] roots;
    
    /** The excluded roots */
-   private List<VirtualFile> excludedRoots;
+   private VirtualFile[] excludedRoots;
    
    /** The current root */
    private VirtualFile root;
@@ -87,7 +85,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     * @param filter the filter
     * @param recurseFilter the recurse filter
     */
-   public static void visit(List<VirtualFile> roots, List<VirtualFile> excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
+   public static void visit(VirtualFile[] roots, VirtualFile[] excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
    {
       VFSResourceVisitor vfsVisitor = new VFSResourceVisitor(roots, excludedRoots, included, excluded, classLoader, visitor, filter, recurseFilter);
       for (VirtualFile root : roots)
@@ -116,7 +114,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
     * @param filter the filter
     * @param recurseFilter the recurse filter
     */
-   VFSResourceVisitor(List<VirtualFile> roots, List<VirtualFile> excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
+   VFSResourceVisitor(VirtualFile[] roots, VirtualFile[] excludedRoots, ClassFilter included, ClassFilter excluded, ClassLoader classLoader, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter)
    {
       if (roots == null)
          throw new IllegalArgumentException("Null roots");

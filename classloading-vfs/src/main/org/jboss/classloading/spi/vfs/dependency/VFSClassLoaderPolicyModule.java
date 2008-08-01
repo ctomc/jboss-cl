@@ -24,7 +24,6 @@ package org.jboss.classloading.spi.vfs.dependency;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -226,15 +225,14 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
       VirtualFile[] roots = determineVFSRoots();
       if (roots != null && roots.length > 0)
       {
-         List<VirtualFile> rootsList = Arrays.asList(roots);
          if (urls != null && urls.length > 0)
-            rootsList = matchUrlsWithRoots(urls, rootsList);
+            roots = matchUrlsWithRoots(urls, roots);
 
-         if (rootsList.isEmpty() == false)
+         if (roots != null && roots.length > 0)
          {
             ClassFilter included = getIncluded();
             ClassFilter excluded = getExcluded();
-            VFSResourceVisitor.visit(rootsList, null, included, excluded, classLoader, visitor, filter, recurseFilter);
+            VFSResourceVisitor.visit(roots, null, included, excluded, classLoader, visitor, filter, recurseFilter);
          }
       }
    }
@@ -246,7 +244,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
     * @param roots the old roots
     * @return new roots
     */
-   protected static List<VirtualFile> matchUrlsWithRoots(URL[] urls, List<VirtualFile> roots)
+   protected static VirtualFile[] matchUrlsWithRoots(URL[] urls, VirtualFile[] roots)
    {
       try
       {
@@ -255,10 +253,10 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
          for (URL url : urls)
          {
             String urlString = stripProtocol(url);
-            for(int i=0; i < roots.size(); i++)
+            for(int i=0; i < roots.length; i++)
             {
                if (rootURLStrings[i] == null)
-                  rootURLStrings[i] = stripProtocol(roots.get(i).toURL());
+                  rootURLStrings[i] = stripProtocol(roots[i].toURL());
 
                if (urlString.startsWith(rootURLStrings[i]))
                {
@@ -268,7 +266,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
                }
             }
          }
-         return newRoots;
+         return newRoots.toArray(new VirtualFile[newRoots.size()]);
       }
       catch (Exception e)
       {
