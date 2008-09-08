@@ -32,7 +32,7 @@
   <dependencies>
     <!-- Global dependencies -->
     <dependency>
-      <groupId>org.jboss</groupId>
+      <groupId>org.jboss.integration</groupId>
       <artifactId>jboss-classloading-spi</artifactId>
       <exclusions>
         <exclusion>
