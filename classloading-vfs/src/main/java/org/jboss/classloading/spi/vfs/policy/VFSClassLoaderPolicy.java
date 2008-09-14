@@ -552,9 +552,22 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
             VirtualFile file = root.getChild(path);
             if (file != null)
             {
-               result = new VirtualFileInfo(file, root);
-               vfsCache.put(path, result);
-               return result;
+               // Must either be a file...
+               if (file.isLeaf())
+               {
+                  result = new VirtualFileInfo(file, root);
+                  vfsCache.put(path, result);
+                  return result;
+               }
+               
+               // ... or have a child that is a file
+               for (VirtualFile child : file.getChildren())
+               {
+                  if (!child.isLeaf()) continue;
+                  result = new VirtualFileInfo(file, root);
+                  vfsCache.put(path, result);
+                  return result;
+               }
             }
          }
          catch (Exception ignored)
