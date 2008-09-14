@@ -338,7 +338,7 @@ public class ClientLauncher
     * @param args
     * @throws Throwable
     */
-   @SuppressWarnings("unchecked")
+   @SuppressWarnings({"unchecked", "deprecation"})
    public static void launch(String clientClass, String clientName, String[] cp, String[] args)
       throws Throwable
    {
