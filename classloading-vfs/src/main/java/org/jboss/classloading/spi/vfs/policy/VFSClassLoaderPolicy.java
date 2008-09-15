@@ -619,7 +619,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       }
       try
       {
-         VirtualFile root = findRoot(path);;
+         VirtualFile root = findRoot(path);
          URL codeSourceURL = root.toURL();
          Certificate[] certs = null; // TODO JBMICROCONT-182 determine certificates
          CodeSource cs = new CodeSource(codeSourceURL, certs);
