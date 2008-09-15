@@ -34,7 +34,7 @@
     <version.jboss.logging.spi>2.0.5.GA</version.jboss.logging.spi>
     <version.jboss.classloading.spi>5.0.0.CR2</version.jboss.classloading.spi>
     <version.jboss.vfs>2.0.0.CR1</version.jboss.vfs>
-    <version.jbossxb>2.0.0.CR13</version.jbossxb>
+    <version.jbossxb>2.0.0.CR14</version.jbossxb>
     <version.org.jboss.test>1.1.1.GA</version.org.jboss.test>
     <version.junit>4.4</version.junit>
   </properties>
@@ -99,8 +99,7 @@
           <version>2.4.1</version>
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
-            <!-- Remove when JBCL-43 is addressed -->
-            <testFailureIgnore>true</testFailureIgnore>
+            <!--testFailureIgnore>true</testFailureIgnore-->
             <includes>
               <include>org/jboss/test/**/*TestCase.java</include>
             </includes>
