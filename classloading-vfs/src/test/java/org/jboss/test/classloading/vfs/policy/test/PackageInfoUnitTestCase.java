@@ -45,6 +45,7 @@ public class PackageInfoUnitTestCase extends BaseTestCase
    {
       super(name);
    }
+
    public void testCorrectPackage()
       throws Exception
    {
@@ -58,7 +59,7 @@ public class PackageInfoUnitTestCase extends BaseTestCase
       policy.setExportAll(ExportAll.NON_EMPTY);
       policy.setImportAll(true);
 
-      PackageInformation utilInfo = policy.getPackageInformation("util");
+      PackageInformation utilInfo = policy.getClassPackageInformation("util.Shared", "util");
       /*
       Specification-Title: testear1x.ear/lib/jar1.jar
       Specification-Version: 1.0.1.GA

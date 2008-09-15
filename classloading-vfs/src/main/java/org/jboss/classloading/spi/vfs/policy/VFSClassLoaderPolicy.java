@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.Manifest;
 
+import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.PackageInformation;
@@ -48,7 +49,6 @@ import org.jboss.logging.Logger;
 import org.jboss.util.collection.SoftValueHashMap;
 import org.jboss.virtual.VFSUtils;
 import org.jboss.virtual.VirtualFile;
-import org.jboss.virtual.VirtualFileFilter;
 
 /**
  * VFSClassLoaderPolicy.
@@ -63,9 +63,6 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
 
    /** Tag for no manifest */
    private static final Manifest NO_MANIFEST = new Manifest();
-
-   /** The leaf virtual file filter */
-   private static final VirtualFileFilter LEAF_FILTER = new LeafVirtualFileFilter();
 
    /** A name for the policy */
    private String name;
@@ -556,21 +553,9 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
             VirtualFile file = root.getChild(path);
             if (file != null)
             {
-               // must either be a file ...
-               if (file.isLeaf())
-               {
-                  result = new VirtualFileInfo(file, root);
-                  vfsCache.put(path, result);
-                  return result;
-               }
-               // ... or have a child that is a file
-               List<VirtualFile> children = file.getChildren(LEAF_FILTER);
-               if (children.isEmpty() == false)
-               {
-                  result = new VirtualFileInfo(file, root);
-                  vfsCache.put(path, result);
-                  return result;
-               }
+               result = new VirtualFileInfo(file, root);
+               vfsCache.put(path, result);
+               return result;
             }
          }
          catch (Exception ignored)
@@ -581,9 +566,9 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    }
    
    @Override
-   public PackageInformation getPackageInformation(String packageName)
+   public PackageInformation getClassPackageInformation(String className, String packageName)
    {
-      String path = packageName.replace('.', '/');
+      String path = ClassLoaderUtils.classNameToPath(className);
       VirtualFile root = findRoot(path);
       Manifest manifest = null;
       URL rootURL = null;
@@ -634,7 +619,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       }
       try
       {
-         VirtualFile root = findRoot(path);
+         VirtualFile root = findRoot(path);;
          URL codeSourceURL = root.toURL();
          Certificate[] certs = null; // TODO JBMICROCONT-182 determine certificates
          CodeSource cs = new CodeSource(codeSourceURL, certs);
@@ -705,24 +690,6 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       public VirtualFile getRoot()
       {
          return root;
-      }
-   }
-
-   // accepts only leaves
-   private static class LeafVirtualFileFilter implements VirtualFileFilter
-   {
-      public boolean accepts(VirtualFile file)
-      {
-         try
-         {
-            return file.isLeaf();
-         }
-         catch (IOException e)
-         {
-            // we can return false,
-            // since exception will get ignored any way
-            return false;
-         }
       }
    }
 }

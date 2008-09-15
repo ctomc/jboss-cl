@@ -651,7 +651,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          return;
       
       // Ask the policy for the information
-      PackageInformation pi = policy.getPackageInformation(packageName);
+      PackageInformation pi = policy.getClassPackageInformation(className, packageName);
       
       // Already defined?
       Package pkge = getPackage(packageName);

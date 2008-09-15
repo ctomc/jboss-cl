@@ -206,6 +206,20 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy
    {
       return null;
    }
+   
+   /**
+    * Get the package information for a class<p>
+    * 
+    * The default is to invoke getPackageInformation for the class's package
+    * 
+    * @param className name the class name
+    * @param packageName the package information
+    * @return the information or null if there is none
+    */
+   public PackageInformation getClassPackageInformation(String className, String packageName)
+   {
+      return getPackageInformation(packageName);
+   }
 
    /**
     * Check whether this a request from the jdk if it is return the relevant classloader<p>
