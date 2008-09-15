@@ -38,6 +38,7 @@ import org.jboss.test.classloading.vfs.metadata.test.VFSClassLoaderFactoryUnitTe
 import org.jboss.test.classloading.vfs.metadata.test.VFSResourceVisitorUnitTestCase;
 import org.jboss.test.classloading.vfs.metadata.xml.test.VFSClassLoaderFactoryXMLUnitTestCase;
 import org.jboss.test.classloading.vfs.policy.test.ExportAllUnitTestCase;
+import org.jboss.test.classloading.vfs.policy.test.PackageInfoUnitTestCase;
 
 /**
  * ClassLoading VFS Test Suite.
@@ -79,6 +80,7 @@ public class ClassLoadingVFSTestSuite extends TestSuite
       suite.addTest(UsesPackageUnitTestCase.suite());
       suite.addTest(VFSResourceVisitorUnitTestCase.suite());
       suite.addTest(ClientClassPathUnitTestCase.suite());
+      suite.addTest(PackageInfoUnitTestCase.suite());
 
       return suite;
    }

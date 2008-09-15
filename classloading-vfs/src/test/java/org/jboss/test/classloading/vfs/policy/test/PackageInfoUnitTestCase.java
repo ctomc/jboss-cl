@@ -23,6 +23,9 @@ package org.jboss.test.classloading.vfs.policy.test;
 
 import java.net.URL;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
 import org.jboss.classloader.spi.PackageInformation;
 import org.jboss.classloading.spi.metadata.ExportAll;
 import org.jboss.classloading.spi.vfs.policy.VFSClassLoaderPolicy;
@@ -41,14 +44,7 @@ public class PackageInfoUnitTestCase extends BaseTestCase
    public PackageInfoUnitTestCase(String name)
    {
       super(name);
-      // TODO Auto-generated constructor stub
    }
-
-   /**
-    * Test that non-package directories are not returned as package info
-    * {@link https://jira.jboss.org/jira/browse/JBCL-43}
-    * @throws Exception
-    */
    public void testCorrectPackage()
       throws Exception
    {
@@ -75,5 +71,10 @@ public class PackageInfoUnitTestCase extends BaseTestCase
        */
       assertEquals("testear1x.ear/lib/jar1.jar", utilInfo.specTitle);
       assertEquals("1.0.1.GA", utilInfo.specVersion);
+   }
+
+   public static Test suite()
+   {
+      return new TestSuite(PackageInfoUnitTestCase.class);
    }
 }
