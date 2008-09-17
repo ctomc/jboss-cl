@@ -51,7 +51,7 @@
       </xsd:annotation>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
          <xsd:element name="requirements" type="requirements"/>
-         <xsd:element name="capabilities" type="capabilties"/>
+         <xsd:element name="capabilities" type="capabilities"/>
          <xsd:element name="root" type="xsd:string">
             <xsd:annotation>
                <xsd:documentation>
@@ -63,7 +63,7 @@
             </xsd:annotation>
          </xsd:element>
       </xsd:choice>
-      <xsd:attribute name="name" type="xsd:string" optional="true">
+      <xsd:attribute name="name" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -72,7 +72,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="version" type="version" optional="true">
+      <xsd:attribute name="version" type="version" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -81,7 +81,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="context" type="xsd:string" optional="true">
+      <xsd:attribute name="context" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -93,7 +93,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="domain" type="xsd:string" optional="true">
+      <xsd:attribute name="domain" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -103,7 +103,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="parent-domain" type="xsd:string" optional="true">
+      <xsd:attribute name="parent-domain" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -114,7 +114,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="parent-first" type="xsd:boolean" optional="true">
+      <xsd:attribute name="parent-first" type="xsd:boolean" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -125,7 +125,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="import-all" type="xsd:boolean" optional="true">
+      <xsd:attribute name="import-all" type="xsd:boolean" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -135,7 +135,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="export-all" type="export-all" optional="true">
+      <xsd:attribute name="export-all" type="export-all" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -145,7 +145,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="included" type="xsd:string" optional="true">
+      <xsd:attribute name="included" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -154,7 +154,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="excluded" type="xsd:string" optional="true">
+      <xsd:attribute name="excluded" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -163,7 +163,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="excludedExport" type="xsd:string" optional="true">
+      <xsd:attribute name="excludedExport" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -173,7 +173,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="cache" type="xsd:boolean" optional="true">
+      <xsd:attribute name="cache" type="xsd:boolean" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -182,7 +182,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="blackList" type="xsd:boolean" optional="true">
+      <xsd:attribute name="blackList" type="xsd:boolean" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -191,7 +191,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="system" type="xsd:string" optional="true">
+      <xsd:attribute name="system" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -228,7 +228,7 @@
             ]]>
          </xsd:documentation>
       </xsd:annotation>
-      <xsd:attribute name="name" type="xsd:string" optional="true">
+      <xsd:attribute name="name" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -237,7 +237,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="version" type="version" optional="true">
+      <xsd:attribute name="version" type="version" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -273,7 +273,7 @@
             ]]>
          </xsd:documentation>
       </xsd:annotation>
-      <xsd:attribute name="name" type="xsd:string" optional="true">
+      <xsd:attribute name="name" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -282,7 +282,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="version" type="version" optional="true">
+      <xsd:attribute name="version" type="version" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -291,7 +291,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="from" type="version" optional="true">
+      <xsd:attribute name="from" type="version" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -300,7 +300,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="from-inclusive" type="xsd:boolean" optional="true">
+      <xsd:attribute name="from-inclusive" type="xsd:boolean" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -310,7 +310,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="to" type="version" optional="true">
+      <xsd:attribute name="to" type="version" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -319,7 +319,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="to-inclusive" type="xsd:boolean" optional="true">
+      <xsd:attribute name="to-inclusive" type="xsd:boolean" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -329,7 +329,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="reExport" type="xsd:boolean" optional="true">
+      <xsd:attribute name="reExport" type="xsd:boolean" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -339,7 +339,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="dynamic" type="xsd:boolean" optional="true">
+      <xsd:attribute name="dynamic" type="xsd:boolean" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -349,7 +349,7 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="optional" type="xsd:boolean" optional="true">
+      <xsd:attribute name="optional" type="xsd:boolean" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                <![CDATA[
@@ -360,7 +360,7 @@
       </xsd:attribute>
    </xsd:complexType>
 
-   <xsd:simpleType name="version" base="xsd:string">
+   <xsd:simpleType name="version">
       <xsd:annotation>
          <xsd:documentation>
             <![CDATA[
@@ -368,9 +368,10 @@
             ]]>
          </xsd:documentation>
       </xsd:annotation>
+       <xsd:restriction base="xsd:string"/>
    </xsd:simpleType>
 
-   <xsd:simpleType name="export-all" base="xsd:string">
+   <xsd:simpleType name="export-all">
       <xsd:annotation>
          <xsd:documentation>
             <![CDATA[
@@ -380,5 +381,6 @@
             ]]>
          </xsd:documentation>
       </xsd:annotation>
+      <xsd:restriction base="xsd:string"/>
    </xsd:simpleType>
 </xsd:schema>
