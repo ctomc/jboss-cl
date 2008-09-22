@@ -149,19 +149,16 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
     */
    protected void visitPath(File file, String path, ResourceVisitor visitor, ResourceFilter filter, ClassLoader classLoader, Collection<String> included, ClassFilter includedFilter, Collection<String> excluded, ClassFilter excludedFilter)
    {
-      if (included.isEmpty() == false && included.contains(path) == false)
-         return;
-      if (includedFilter != null && includedFilter.matchesResourcePath(path) == false)
-         return;
-      if (excluded.isEmpty() == false && excluded.contains(path))
-         return;
-      if (excludedFilter != null && excludedFilter.matchesResourcePath(path))
-         return;
+      boolean visit = includePath(path, included, includedFilter, excluded, excludedFilter);
 
       URL url = getURL(path);
-      ResourceContext context = new DefaultResourceContext(url, path, classLoader);
-      if (filter == null || filter.accepts(context))
-         visitor.visit(context);
+      
+      if (visit)
+      {
+         ResourceContext context = new DefaultResourceContext(url, path, classLoader);
+         if (filter == null || filter.accepts(context))
+            visitor.visit(context);
+      }
 
       if (file == null)
          file = getFile(url);
@@ -181,6 +178,30 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
             visitPath(child, childPath, visitor, filter, classLoader, included, includedFilter, excluded, excludedFilter);
          }
       }
+   }
+
+   /**
+    * Should we include path in visit.
+    *
+    * @param path the path
+    * @param included the included
+    * @param includedFilter the included filter
+    * @param excluded the excluded
+    * @param excludedFilter the excluded filter
+    * @return true if path should be included in visit
+    */
+   protected boolean includePath(String path, Collection<String> included, ClassFilter includedFilter, Collection<String> excluded, ClassFilter excludedFilter)
+   {
+      if (included.isEmpty() == false && included.contains(path) == false)
+         return false;
+      if (includedFilter != null && includedFilter.matchesResourcePath(path) == false)
+         return false;
+      if (excluded.isEmpty() == false && excluded.contains(path))
+         return false;
+      if (excludedFilter != null && excludedFilter.matchesResourcePath(path))
+         return false;
+
+      return true;
    }
 
    @Override
