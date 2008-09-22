@@ -21,7 +21,9 @@
 */
 package org.jboss.classloading.spi.dependency.policy.mock;
 
+import java.io.File;
 import java.net.URL;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -92,6 +94,24 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
       return classLoader.getResource(path);
    }
 
+   /**
+    * Get file from path's url.
+    *
+    * @param url the path's url
+    * @return path's file
+    */
+   protected File getFile(URL url)
+   {
+      try
+      {
+         return new File(url.toURI());
+      }
+      catch (URISyntaxException e)
+      {
+         throw new RuntimeException(e);
+      }
+   }
+
    public void visit(ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter, URL... urls)
    {
       MockClassLoadingMetaData mclmd = getClassLoadingMetaData();
@@ -109,18 +129,56 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
 
          for (String path : paths)
          {
-            if (included.isEmpty() == false && included.contains(path) == false)
-               continue;
-            if (includedFilter != null && includedFilter.matchesResourcePath(path) == false)
-               continue;
-            if (excluded.isEmpty() == false && excluded.contains(path))
-               continue;
-            if (excludedFilter != null && excludedFilter.matchesResourcePath(path))
-               continue;
+            visitPath(null, path, visitor, filter, classLoader, included, includedFilter, excluded, excludedFilter);
+         }
+      }
+   }
 
-            ResourceContext context = new DefaultResourceContext(getURL(path), path, classLoader);
-            if (filter == null || filter.accepts(context))
-               visitor.visit(context);
+   /**
+    * Visit path.
+    *
+    * @param file the current path file
+    * @param path the path
+    * @param visitor the visitor
+    * @param filter the filter
+    * @param classLoader the classloader
+    * @param included the included
+    * @param includedFilter the included filter
+    * @param excluded the excluded
+    * @param excludedFilter the excluded filter
+    */
+   protected void visitPath(File file, String path, ResourceVisitor visitor, ResourceFilter filter, ClassLoader classLoader, Collection<String> included, ClassFilter includedFilter, Collection<String> excluded, ClassFilter excludedFilter)
+   {
+      if (included.isEmpty() == false && included.contains(path) == false)
+         return;
+      if (includedFilter != null && includedFilter.matchesResourcePath(path) == false)
+         return;
+      if (excluded.isEmpty() == false && excluded.contains(path))
+         return;
+      if (excludedFilter != null && excludedFilter.matchesResourcePath(path))
+         return;
+
+      URL url = getURL(path);
+      ResourceContext context = new DefaultResourceContext(url, path, classLoader);
+      if (filter == null || filter.accepts(context))
+         visitor.visit(context);
+
+      if (file == null)
+         file = getFile(url);
+      
+      if (file.isFile())
+         return;
+
+      File[] files = file.listFiles();
+      if (files != null && files.length > 0)
+      {
+         if (path.endsWith("/") == false)
+            path += "/";
+
+         for (File child : files)
+         {
+            String childPath = path + child.getName();
+            visitPath(child, childPath, visitor, filter, classLoader, included, includedFilter, excluded, excludedFilter);
          }
       }
    }

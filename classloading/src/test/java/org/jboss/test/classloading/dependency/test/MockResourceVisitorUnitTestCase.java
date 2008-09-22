@@ -46,6 +46,13 @@ public class MockResourceVisitorUnitTestCase extends AbstractMockClassLoaderUnit
 {
    private static String[] paths = new String[]
    {
+      ClassLoaderUtils.packageNameToPath(A.class.getName()),
+      ClassLoaderUtils.packageNameToPath(B.class.getName()),
+      ClassLoaderUtils.packageNameToPath(C.class.getName()),
+   };
+
+   private static String[] classes = new String[]
+   {
       ClassLoaderUtils.classNameToPath(A.class),
       ClassLoaderUtils.classNameToPath(B.class),
       ClassLoaderUtils.classNameToPath(C.class),
@@ -103,7 +110,7 @@ public class MockResourceVisitorUnitTestCase extends AbstractMockClassLoaderUnit
 
          module.visit(visitor);
 
-         Set<String> resources = new HashSet<String>(Arrays.asList(paths));
+         Set<String> resources = new HashSet<String>(Arrays.asList(classes));
          resources.remove(ClassLoaderUtils.classNameToPath(C.class));
          assertEquals(resources, visitor.getResources());
       }

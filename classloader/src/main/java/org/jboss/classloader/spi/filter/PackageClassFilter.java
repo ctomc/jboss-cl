@@ -87,8 +87,8 @@ public class PackageClassFilter extends PatternClassFilter
             // Base package - it is a match if there is no / in the path
             patterns[i] = "[^/]*";
          else
-            // Replace the dots with slashs and match non slashes after that
-            patterns[i] = packageNames[i].replace(".", "/") + "/[^/]+";
+            // Replace the dots with slashs and match non slashes after that, '/' at the end is optional
+            patterns[i] = packageNames[i].replace(".", "/") + "(/|/[^/]*)?";
       }
       return patterns;
    }

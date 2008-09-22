@@ -36,7 +36,7 @@ public class MockFilteredResourceVisitor extends MockResourceVisitor
       {
          public boolean accepts(ResourceContext resource)
          {
-            return resource.getResourceName().contains("C.class") == false;
+            return resource.isClass() && resource.getResourceName().contains("C.class") == false;
          }
       };
    }

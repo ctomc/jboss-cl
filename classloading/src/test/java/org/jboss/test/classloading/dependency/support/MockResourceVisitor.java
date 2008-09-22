@@ -21,9 +21,10 @@
 */
 package org.jboss.test.classloading.dependency.support;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
+import org.jboss.classloading.spi.visitor.ClassFilter;
 import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
@@ -37,7 +38,7 @@ public class MockResourceVisitor implements ResourceVisitor
 
    public ResourceFilter getFilter()
    {
-      return null;
+      return ClassFilter.INSTANCE;
    }
 
    public void visit(ResourceContext resource)
