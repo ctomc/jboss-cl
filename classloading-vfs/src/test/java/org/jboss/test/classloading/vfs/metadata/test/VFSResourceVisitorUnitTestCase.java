@@ -28,19 +28,21 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.ArrayList;
 
 import junit.framework.Test;
 import org.jboss.classloader.plugins.ClassLoaderUtils;
+import org.jboss.classloading.plugins.visitor.FederatedResourceVisitor;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory;
 import org.jboss.classloading.spi.visitor.ClassVisitor;
 import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
-import org.jboss.classloading.plugins.visitor.FederatedResourceVisitor;
 import org.jboss.kernel.spi.deployment.KernelDeployment;
 import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTest;
 import org.jboss.test.classloading.vfs.metadata.support.a.A;
@@ -365,7 +367,7 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
       KernelDeployment deployment = install(factory);
       try
       {
-         final Set<String> classes = new HashSet<String>();
+         final List<String> classes = new ArrayList<String>();
          ResourceVisitor visitor = new ClassVisitor()
          {
             public void visit(ResourceContext resource)
