@@ -408,6 +408,45 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
       }
    }
 
+   public void testFederatedMixed() throws Exception
+   {
+      VFSClassLoaderFactory factory = new VFSClassLoaderFactory("test");
+      factory.setRoots(Arrays.asList(System.getProperty("test.dir") + "/support/"));
+      KernelDeployment deployment = install(factory);
+      try
+      {
+         final List<String> classes = new ArrayList<String>();
+         ResourceVisitor visitor = new ClassVisitor()
+         {
+            public void visit(ResourceContext resource)
+            {
+               classes.add(resource.getResourceName());
+            }
+         };
+         ResourceFilter rfA = new ResourceFilter()
+         {
+            public boolean accepts(ResourceContext resource)
+            {
+               return "a".equals(resource.getResourceName());
+            }
+         };
+         FederatedResourceVisitor fedRV = new FederatedResourceVisitor(
+               new ResourceVisitor[]{visitor, visitor},
+               null,
+               new ResourceFilter[]{rfA, null}
+         );
+
+         Module module = assertModule("test:0.0.0");
+         module.visit(fedRV, fedRV.getFilter(), fedRV.getRecurseFilter());
+
+         assertEquals(4, classes.size()); // A, A, B, C
+      }
+      finally
+      {
+         undeploy(deployment);
+      }
+   }
+
    protected void visitModule()
    {
       Module module = assertModule("test:0.0.0");
