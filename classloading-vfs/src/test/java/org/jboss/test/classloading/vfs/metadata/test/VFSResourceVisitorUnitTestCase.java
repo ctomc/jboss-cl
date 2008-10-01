@@ -40,6 +40,7 @@ import org.jboss.classloading.spi.visitor.ClassVisitor;
 import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
+import org.jboss.classloading.plugins.visitor.FederatedResourceVisitor;
 import org.jboss.kernel.spi.deployment.KernelDeployment;
 import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTest;
 import org.jboss.test.classloading.vfs.metadata.support.a.A;
@@ -350,6 +351,54 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
          Iterator<String> iterator = classes.iterator();
          assertEquals(iterator.next(), A.class.getSimpleName() + ".class");
          assertEquals(iterator.next(), B.class.getSimpleName() + ".class");
+      }
+      finally
+      {
+         undeploy(deployment);
+      }
+   }
+
+   public void testFederated() throws Exception
+   {
+      VFSClassLoaderFactory factory = new VFSClassLoaderFactory("test");
+      factory.setRoots(Arrays.asList(System.getProperty("test.dir") + "/support/"));
+      KernelDeployment deployment = install(factory);
+      try
+      {
+         final Set<String> classes = new HashSet<String>();
+         ResourceVisitor visitor = new ClassVisitor()
+         {
+            public void visit(ResourceContext resource)
+            {
+               classes.add(resource.getResourceName());
+            }
+         };
+         ResourceFilter rfA = new ResourceFilter()
+         {
+            public boolean accepts(ResourceContext resource)
+            {
+               return "a".equals(resource.getResourceName());
+            }
+         };
+         ResourceFilter rfB = new ResourceFilter()
+         {
+            public boolean accepts(ResourceContext resource)
+            {
+               return "b".equals(resource.getResourceName());
+            }
+         };
+         FederatedResourceVisitor fedRV = new FederatedResourceVisitor(
+               new ResourceVisitor[]{visitor, visitor},
+               null,
+               new ResourceFilter[]{rfA, rfB}
+         );
+
+         Module module = assertModule("test:0.0.0");
+         module.visit(fedRV, fedRV.getFilter(), fedRV.getRecurseFilter());
+
+         assertEquals(2, classes.size());
+         assertTrue(classes.contains("a/A.class"));
+         assertTrue(classes.contains("b/B.class"));
       }
       finally
       {
