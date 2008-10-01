@@ -21,32 +21,37 @@
 */
 package org.jboss.test.classloading.dependency.support;
 
-import java.util.regex.Pattern;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.jboss.classloading.spi.visitor.ResourceContext;
+import org.jboss.classloading.plugins.visitor.FederatedResourceVisitor;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
+import org.jboss.classloading.spi.visitor.ResourceVisitor;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.com">Ales Justin</a>
  */
-public class MockFilteredResourceVisitor extends MockResourceVisitor
+public class MockFederatedResourceVisitor extends FederatedResourceVisitor implements ResourcesAdapter
 {
-   private Pattern excludePattern;
+   private ResourceVisitor[] tmp;
+   private Set<String> resources = new HashSet<String>();
 
-   public MockFilteredResourceVisitor(String excludeString)
+   public MockFederatedResourceVisitor(ResourceVisitor[] visitors, ResourceFilter[] filters, ResourceFilter[] recurseFilters)
    {
-      this.excludePattern = Pattern.compile(excludeString);
+      super(visitors, filters, recurseFilters);
+      tmp = visitors;
    }
 
-   @Override
-   public ResourceFilter getFilter()
+   public Set<String> getResources()
    {
-      return new ResourceFilter()
+      for (ResourceVisitor rv : tmp)
       {
-         public boolean accepts(ResourceContext resource)
+         if (rv instanceof ResourcesAdapter)
          {
-            return resource.isClass() && excludePattern.matcher(resource.getResourceName()).find() == false;
+            ResourcesAdapter ra = (ResourcesAdapter)rv;
+            resources.addAll(ra.getResources());
          }
-      };
+      }
+      return resources;
    }
 }

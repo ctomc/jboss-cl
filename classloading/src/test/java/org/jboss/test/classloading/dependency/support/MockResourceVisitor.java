@@ -27,12 +27,11 @@ import java.util.Set;
 import org.jboss.classloading.spi.visitor.ClassFilter;
 import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
-import org.jboss.classloading.spi.visitor.ResourceVisitor;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.com">Ales Justin</a>
  */
-public class MockResourceVisitor implements ResourceVisitor
+public class MockResourceVisitor implements ResourcesAdapter
 {
    private Set<String> resources = new HashSet<String>();
 

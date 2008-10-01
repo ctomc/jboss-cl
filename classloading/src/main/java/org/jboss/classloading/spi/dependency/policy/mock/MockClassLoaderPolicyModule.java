@@ -129,7 +129,7 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
 
          for (String path : paths)
          {
-            visitPath(null, path, visitor, filter, classLoader, included, includedFilter, excluded, excludedFilter);
+            visitPath(null, path, visitor, filter, recurseFilter, classLoader, included, includedFilter, excluded, excludedFilter, null);
          }
       }
    }
@@ -141,13 +141,15 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
     * @param path the path
     * @param visitor the visitor
     * @param filter the filter
+    * @param recurseFilter the recurse filter
     * @param classLoader the classloader
     * @param included the included
     * @param includedFilter the included filter
     * @param excluded the excluded
     * @param excludedFilter the excluded filter
+    * @param context the current context
     */
-   protected void visitPath(File file, String path, ResourceVisitor visitor, ResourceFilter filter, ClassLoader classLoader, Collection<String> included, ClassFilter includedFilter, Collection<String> excluded, ClassFilter excludedFilter)
+   protected void visitPath(File file, String path, ResourceVisitor visitor, ResourceFilter filter, ResourceFilter recurseFilter, ClassLoader classLoader, Collection<String> included, ClassFilter includedFilter, Collection<String> excluded, ClassFilter excludedFilter, ResourceContext context)
    {
       boolean visit = includePath(path, included, includedFilter, excluded, excludedFilter);
 
@@ -155,7 +157,8 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
       
       if (visit)
       {
-         ResourceContext context = new DefaultResourceContext(url, path, classLoader);
+         if (context == null)
+            context = new DefaultResourceContext(url, path, classLoader);
          if (filter == null || filter.accepts(context))
             visitor.visit(context);
       }
@@ -175,7 +178,11 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
          for (File child : files)
          {
             String childPath = path + child.getName();
-            visitPath(child, childPath, visitor, filter, classLoader, included, includedFilter, excluded, excludedFilter);
+            ResourceContext childContext = new DefaultResourceContext(getURL(childPath), childPath, classLoader);
+            if (recurseFilter == null || recurseFilter.accepts(childContext))
+            {
+               visitPath(child, childPath, visitor, filter, recurseFilter, classLoader, included, includedFilter, excluded, excludedFilter, childContext);
+            }
          }
       }
    }

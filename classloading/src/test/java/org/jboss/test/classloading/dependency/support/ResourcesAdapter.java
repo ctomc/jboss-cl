@@ -21,32 +21,14 @@
 */
 package org.jboss.test.classloading.dependency.support;
 
-import java.util.regex.Pattern;
+import java.util.Set;
 
-import org.jboss.classloading.spi.visitor.ResourceContext;
-import org.jboss.classloading.spi.visitor.ResourceFilter;
+import org.jboss.classloading.spi.visitor.ResourceVisitor;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.com">Ales Justin</a>
  */
-public class MockFilteredResourceVisitor extends MockResourceVisitor
+public interface ResourcesAdapter extends ResourceVisitor
 {
-   private Pattern excludePattern;
-
-   public MockFilteredResourceVisitor(String excludeString)
-   {
-      this.excludePattern = Pattern.compile(excludeString);
-   }
-
-   @Override
-   public ResourceFilter getFilter()
-   {
-      return new ResourceFilter()
-      {
-         public boolean accepts(ResourceContext resource)
-         {
-            return resource.isClass() && excludePattern.matcher(resource.getResourceName()).find() == false;
-         }
-      };
-   }
+   Set<String> getResources();
 }
