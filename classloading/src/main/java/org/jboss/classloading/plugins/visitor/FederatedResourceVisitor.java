@@ -21,9 +21,11 @@
 */
 package org.jboss.classloading.plugins.visitor;
 
-import org.jboss.classloading.spi.visitor.ResourceVisitor;
-import org.jboss.classloading.spi.visitor.ResourceFilter;
+import java.util.Arrays;
+
 import org.jboss.classloading.spi.visitor.ResourceContext;
+import org.jboss.classloading.spi.visitor.ResourceFilter;
+import org.jboss.classloading.spi.visitor.ResourceVisitor;
 
 /**
  * Federated resource visitor.
@@ -35,13 +37,16 @@ public class FederatedResourceVisitor implements ResourceVisitor
    private ResourceVisitor[] visitors;
    private ResourceFilter[] filters;
    private ResourceFilter[] recurseFilters;
+
+   private ResourceFilter filter;
+   private ResourceFilter recurseFilter;
    private boolean[] recurseFlags;
    private boolean[] filterFlags;
 
    public FederatedResourceVisitor(ResourceVisitor[] visitors)
    {
-      if (visitors == null)
-         throw new IllegalArgumentException("Null visitors");
+      if (visitors == null || visitors.length == 0)
+         throw new IllegalArgumentException("Null or empty visitors: " + Arrays.toString(visitors));
       this.visitors = visitors;
    }
 
@@ -57,8 +62,12 @@ public class FederatedResourceVisitor implements ResourceVisitor
       if (recurseFilters == null || recurseFilters.length == 0)
          return null;
 
-      recurseFlags = new boolean[recurseFilters.length];
-      return new FederatedRecurseFilter();
+      if (recurseFilter == null)
+      {
+         recurseFlags = new boolean[recurseFilters.length];
+         recurseFilter = new FederatedRecurseFilter();
+      }
+      return recurseFilter;
    }
 
    public ResourceFilter getFilter()
@@ -66,15 +75,19 @@ public class FederatedResourceVisitor implements ResourceVisitor
       if (filters != null && filters.length == 0)
          return null;
 
-      if (filters == null)
+      if (filter == null)
       {
-         filters = new ResourceFilter[visitors.length];
-         for (int i =0; i < visitors.length; i++)
-            filters[i] = visitors[i].getFilter();
-      }
+         if (filters == null)
+         {
+            filters = new ResourceFilter[visitors.length];
+            for (int i =0; i < visitors.length; i++)
+               filters[i] = visitors[i].getFilter();
+         }
 
-      filterFlags = new boolean[filters == null ? 0 : filters.length];           
-      return new FederatedResourceFilter();
+         filterFlags = new boolean[filters == null ? 0 : filters.length];
+         filter = new FederatedResourceFilter();
+      }
+      return filter;
    }
 
    public void visit(ResourceContext resource)
