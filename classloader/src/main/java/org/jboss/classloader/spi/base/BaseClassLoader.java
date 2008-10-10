@@ -345,9 +345,9 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          log.trace(this + " already loaded class " + ClassLoaderUtils.classToString(result));
       return result;
    }
-   
+
    @Override
-   protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
+   protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
    {
       boolean trace = log.isTraceEnabled();
       if (trace)
@@ -367,29 +367,34 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          result = Class.forName(name, true, this);
          if (trace)
             log.trace(this + " resolved array "  + ClassLoaderUtils.classToString(result));
+         if (result != null)
+            return result;
       }
       
-      // Not already loaded use the domain
-      if (result == null)
-         result = loadClassFromDomain(name, trace);
-      
-      // Still not found
-      if (result == null)
+      synchronized (this)
       {
-         if (trace)
-            log.trace(this + " class not found " + name);
-         throw new ClassNotFoundException(name + " from " + toLongString());
+         // Not already loaded use the domain
+         if (result == null)
+            result = loadClassFromDomain(name, trace);
+         
+         // Still not found
+         if (result == null)
+         {
+            if (trace)
+               log.trace(this + " class not found " + name);
+            throw new ClassNotFoundException(name + " from " + toLongString());
+         }
+         
+         // Link the class if requested
+         if (resolve)
+         {
+            if (trace)
+               log.trace(this + " resolveClass " + ClassLoaderUtils.classToString(result));
+            resolveClass(result);
+         }
+         
+         return result;
       }
-      
-      // Link the class if requested
-      if (resolve)
-      {
-         if (trace)
-            log.trace(this + " resolveClass " + ClassLoaderUtils.classToString(result));
-         resolveClass(result);
-      }
-      
-      return result;
    }
 
    @Override
