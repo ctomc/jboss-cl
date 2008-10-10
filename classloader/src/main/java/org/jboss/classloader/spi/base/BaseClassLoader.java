@@ -367,9 +367,9 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          result = Class.forName(name, true, this);
          if (trace)
             log.trace(this + " resolved array "  + ClassLoaderUtils.classToString(result));
-         if (result != null)
-            return result;
       }
+      if (result != null)
+         return result;
       
       synchronized (this)
       {
