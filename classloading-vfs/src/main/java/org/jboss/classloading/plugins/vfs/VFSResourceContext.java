@@ -22,6 +22,8 @@
 package org.jboss.classloading.plugins.vfs;
 
 import java.net.URL;
+import java.io.InputStream;
+import java.io.IOException;
 
 import org.jboss.classloading.plugins.visitor.AbstractResourceContext;
 import org.jboss.virtual.VirtualFile;
@@ -54,5 +56,10 @@ public class VFSResourceContext extends AbstractResourceContext
       {
          throw new RuntimeException(e);
       }
+   }
+
+   public InputStream getInputStream() throws IOException
+   {
+      return file.openStream();
    }
 }
