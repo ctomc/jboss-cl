@@ -171,6 +171,16 @@ public class VFSClassLoaderFactory extends ClassLoadingMetaData implements BeanM
       this.roots = roots;
    }
 
+   /**
+    * Get module class.
+    *
+    * @return the module class.
+    */
+   protected Class<? extends VFSClassLoaderPolicyModule> getModuleClass()
+   {
+      return VFSClassLoaderPolicyModule.class;     
+   }
+
    @XmlTransient
    public List<BeanMetaData> getBeans()
    {
@@ -181,7 +191,7 @@ public class VFSClassLoaderFactory extends ClassLoadingMetaData implements BeanM
       String moduleName = contextName + "$MODULE";
       
       // Create the module
-      BeanMetaDataBuilder builder = BeanMetaDataBuilder.createBuilder(moduleName, VFSClassLoaderPolicyModule.class.getName());
+      BeanMetaDataBuilder builder = BeanMetaDataBuilder.createBuilder(moduleName, getModuleClass().getName());
       builder.addConstructorParameter(VFSClassLoaderFactory.class.getName(), this);
       builder.addConstructorParameter(String.class.getName(), moduleName);
       builder.addPropertyMetaData("roots", roots);
