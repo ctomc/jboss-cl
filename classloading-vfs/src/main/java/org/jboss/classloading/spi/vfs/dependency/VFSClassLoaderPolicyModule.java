@@ -167,7 +167,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
             try
             {
                URI uri = new URI(root);
-               vfsRoots[i] = VFS.getRoot(uri);
+               vfsRoots[i] = getVirtualFile(uri);
             }
             catch (RuntimeException e)
             {
@@ -181,6 +181,18 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
          this.vfsRoots = vfsRoots;
       }
       return vfsRoots;
+   }
+
+   /**
+    * Get virtual file for uri.
+    *
+    * @param uri the uri
+    * @return virtual file for uri
+    * @throws Exception for any error
+    */
+   protected VirtualFile getVirtualFile(URI uri) throws Exception
+   {
+      return VFS.getRoot(uri);
    }
 
    @Override
