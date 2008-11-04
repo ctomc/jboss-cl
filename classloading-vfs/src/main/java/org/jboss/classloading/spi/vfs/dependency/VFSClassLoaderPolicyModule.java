@@ -59,7 +59,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
    
    /** Our cached vfs roots */
    private VirtualFile[] vfsRoots;
-   
+
    /**
     * Create a new VFSClassLoaderPolicyModule.
     * 
@@ -192,7 +192,10 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
     */
    protected VirtualFile getVirtualFile(URI uri) throws Exception
    {
-      return VFS.getCachedFile(uri);
+      if (isCacheable())
+         return VFS.getCachedFile(uri);
+      else
+         return VFS.getRoot(uri);
    }
 
    @Override
