@@ -29,7 +29,7 @@
   
   <properties>
     <version.jboss.man>2.0.0.CR2</version.jboss.man>
-    <version.jboss.microcontainer>2.0.0.CR4</version.jboss.microcontainer>
+    <version.jboss.microcontainer>2.0.0.CR5</version.jboss.microcontainer>
     <version.jboss.common.core>2.2.9.GA</version.jboss.common.core>
     <version.jboss.logging.spi>2.0.5.GA</version.jboss.logging.spi>
     <version.jboss.classloading.spi>5.0.0.CR2</version.jboss.classloading.spi>
