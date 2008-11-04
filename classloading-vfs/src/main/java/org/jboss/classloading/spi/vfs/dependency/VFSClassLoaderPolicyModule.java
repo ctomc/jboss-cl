@@ -192,7 +192,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
     */
    protected VirtualFile getVirtualFile(URI uri) throws Exception
    {
-      return VFS.getRoot(uri);
+      return VFS.getCachedFile(uri);
    }
 
    @Override
