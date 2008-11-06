@@ -33,6 +33,7 @@ import java.security.ProtectionDomain;
  * ClassLoaderUtils.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class ClassLoaderUtils
@@ -144,12 +145,7 @@ public class ClassLoaderUtils
    {
       try
       {
-         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-         byte[] tmp = new byte[1024];
-         int read = 0;
-         while ( (read = is.read(tmp)) >= 0 )
-            baos.write(tmp, 0, read);
-         return baos.toByteArray();
+         return readBytes(is);
       }
       catch (IOException e)
       {
@@ -179,12 +175,7 @@ public class ClassLoaderUtils
    {
       try
       {
-         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-         byte[] tmp = new byte[1024];
-         int read = 0;
-         while ( (read = is.read(tmp)) >= 0 )
-            baos.write(tmp, 0, read);
-         return baos.toByteArray();
+         return readBytes(is);
       }
       finally
       {
@@ -198,7 +189,31 @@ public class ClassLoaderUtils
          }
       }
    }
-   
+
+   /**
+    * Read bytes.
+    * Doesn't close inputstream.
+    *
+    * @param is the input stream
+    * @return the bytes
+    * @throws IOException for any error
+    * @throws IllegalArgumentException for null is parameter
+    */
+   protected static final byte[] readBytes(final InputStream is) throws IOException
+   {
+      if (is == null)
+         throw new IllegalArgumentException("Null input stream.");
+
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      byte[] tmp = new byte[1024];
+      int read ;
+      while ((read = is.read(tmp)) >= 0)
+      {
+         baos.write(tmp, 0, read);
+      }
+      return baos.toByteArray();
+   }
+
    /**
     * Formats the class as a string
     * 
