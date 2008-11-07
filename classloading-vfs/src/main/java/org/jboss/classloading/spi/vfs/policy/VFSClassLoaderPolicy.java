@@ -53,7 +53,8 @@ import org.jboss.virtual.VirtualFile;
 /**
  * VFSClassLoaderPolicy.
  * 
- * @author <a href="adrian@jboss.org">Adrian Brock</a>
+ * @author <a href="adrian@jboss.org">Adrian Brock</a> 
+ * @author <a href="anil.saldhana@jboss.org">Anil Saldhana</a>
  * @version $Revision: 1.1 $
  */
 public class VFSClassLoaderPolicy extends ClassLoaderPolicy
@@ -106,6 +107,11 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    /** Cache of virtual file information by path */
    @SuppressWarnings("unchecked")
    private Map<String, VirtualFileInfo> vfsCache = Collections.synchronizedMap(new SoftValueHashMap());
+   
+   /**
+    * Constant representing the URL file protocol
+    */
+   private static final String FILE_PROTOCOL = "file";
    
    /**
     * Determine a name from the roots
@@ -620,9 +626,18 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       try
       {
          VirtualFile root = findRoot(path);
-         URL codeSourceURL = root.toURL();
+         URL codeSourceURL = root.toURL(); 
+         
+         /**
+          * JBCL-64:Currently we are just dealing with the root
+          * So we will use the file equivalent of the root
+          */ 
+         URL modifiedURL = new URL(FILE_PROTOCOL,
+               codeSourceURL.getHost(), codeSourceURL.getPort(),
+               codeSourceURL.getFile());
+         
          Certificate[] certs = null; // TODO JBMICROCONT-182 determine certificates
-         CodeSource cs = new CodeSource(codeSourceURL, certs);
+         CodeSource cs = new CodeSource(modifiedURL, certs);
          PermissionCollection permissions = Policy.getPolicy().getPermissions(cs);
          return new ProtectionDomain(cs, permissions);
       }
