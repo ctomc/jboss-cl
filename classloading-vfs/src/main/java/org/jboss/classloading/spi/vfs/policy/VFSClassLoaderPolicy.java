@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.security.CodeSource;
+import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.Policy;
 import java.security.ProtectionDomain;
@@ -54,6 +55,7 @@ import org.jboss.virtual.VirtualFile;
  * VFSClassLoaderPolicy.
  * 
  * @author <a href="adrian@jboss.org">Adrian Brock</a> 
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @author <a href="anil.saldhana@jboss.org">Anil Saldhana</a>
  * @version $Revision: 1.1 $
  */
@@ -109,8 +111,11 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    private Map<String, VirtualFileInfo> vfsCache = Collections.synchronizedMap(new SoftValueHashMap());
    
    /** A generator that is capable of providing Java Security Manager friendly CodeSource */
-   private CodeSourceGenerator codeSourceGenerator = new FileProtocolCodeSourceGenerator();
-   
+   private CodeSourceGenerator codeSourceGenerator = DefaultCodeSourceGenerator.INSTANCE;
+
+   /** Code source permission */
+   private static final Permission csgPermission = new RuntimePermission(VFSClassLoaderPolicy.class.getName() + ".setCodeSourceGenerator");
+
    /**
     * Determine a name from the roots
     * 
@@ -512,16 +517,18 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    }
 
    /**
-    * Set a CodeSource Generator
-    * @param csg
+    * Set a CodeSource Generator.
+    *
+    * @param csg the code soruce generator
     */
    public void setCodeSourceGenerator(final CodeSourceGenerator csg)
    {
-      String perm = "org.jboss.classloading.spi.vfs.policy.VFSClassLoaderPolicy.setCodeSourceGenerator";
-      RuntimePermission rtp = new RuntimePermission(perm); 
+      if (csg == null)
+         throw new IllegalArgumentException("Null code source generator.");
+
       SecurityManager sm = System.getSecurityManager();
       if(sm != null)
-         sm.checkPermission(rtp);
+         sm.checkPermission(csgPermission);
       
       codeSourceGenerator = csg; 
    }

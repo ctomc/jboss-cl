@@ -26,21 +26,16 @@ import java.security.CodeSource;
 import java.security.cert.Certificate;
 
 /**
- * JBCL-64: Generates a CodeSource from a vfs URL
- * with the substitution of file as protocol
+ * Default code source generator.
  *
- * @author Anil.Saldhana@redhat.com
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  */
-public class FileProtocolCodeSourceGenerator implements CodeSourceGenerator
+public class DefaultCodeSourceGenerator implements CodeSourceGenerator
 {
-   /**
-    * Constant representing the URL file protocol
-    */
-   private static final String FILE_PROTOCOL = "file";
+   public static final CodeSourceGenerator INSTANCE = new DefaultCodeSourceGenerator();
    
    public CodeSource getCodeSource(URL url, Certificate[] certs) throws Exception
    {
-      URL codesourceURL = new URL(FILE_PROTOCOL, url.getHost(), url.getPort(), url.getFile());
-      return new CodeSource(codesourceURL, certs);
-   } 
+      return new CodeSource(url, certs);
+   }
 }

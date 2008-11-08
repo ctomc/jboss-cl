@@ -21,24 +21,24 @@
  */
 package org.jboss.classloading.spi.vfs.policy;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.cert.Certificate;
 
 /**
  * Generates a CodeSource for a VFS URL
+ *
  * @author Anil.Saldhana@redhat.com
- * @since Nov 8, 2008
  */
 public interface CodeSourceGenerator
 {
    /**
-    * Generate a CodeSource for the vfs url
-    * @param vfsURL
-    * @param certs
-    * @return
-    * @throws MalformedURLException
+    * Generate a CodeSource for the vfs url.
+    * 
+    * @param url the vfs url
+    * @param certs the certificates
+    * @return new code source
+    * @throws Exception for any error
     */
-   CodeSource getCodeSource(URL vfsURL, Certificate[] certs) throws MalformedURLException;
+   CodeSource getCodeSource(URL url, Certificate[] certs) throws Exception;
 }
