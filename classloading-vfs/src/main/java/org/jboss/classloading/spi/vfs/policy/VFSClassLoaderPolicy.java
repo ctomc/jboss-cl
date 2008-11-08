@@ -108,10 +108,8 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    @SuppressWarnings("unchecked")
    private Map<String, VirtualFileInfo> vfsCache = Collections.synchronizedMap(new SoftValueHashMap());
    
-   /**
-    * Constant representing the URL file protocol
-    */
-   private static final String FILE_PROTOCOL = "file";
+   /** A generator that is capable of providing Java Security Manager friendly CodeSource */
+   private CodeSourceGenerator codeSourceGenerator = new FileProtocolCodeSourceGenerator();
    
    /**
     * Determine a name from the roots
@@ -186,6 +184,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    {
       return new VFSClassLoaderPolicy(name, roots, excludedRoots);
    }
+   
 
    /**
     * Create a new VFSClassLoaderPolicy.
@@ -513,6 +512,21 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    }
 
    /**
+    * Set a CodeSource Generator
+    * @param csg
+    */
+   public void setCodeSourceGenerator(final CodeSourceGenerator csg)
+   {
+      String perm = "org.jboss.classloading.spi.vfs.policy.VFSClassLoaderPolicy.setCodeSourceGenerator";
+      RuntimePermission rtp = new RuntimePermission(perm); 
+      SecurityManager sm = System.getSecurityManager();
+      if(sm != null)
+         sm.checkPermission(rtp);
+      
+      codeSourceGenerator = csg; 
+   }
+   
+   /**
     * Find a child from a path
     * 
     * @param path the path
@@ -626,18 +640,10 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       try
       {
          VirtualFile root = findRoot(path);
-         URL codeSourceURL = root.toURL(); 
-         
-         /**
-          * JBCL-64:Currently we are just dealing with the root
-          * So we will use the file equivalent of the root
-          */ 
-         URL modifiedURL = new URL(FILE_PROTOCOL,
-               codeSourceURL.getHost(), codeSourceURL.getPort(),
-               codeSourceURL.getFile());
+         URL codeSourceURL = root.toURL();  
          
          Certificate[] certs = null; // TODO JBMICROCONT-182 determine certificates
-         CodeSource cs = new CodeSource(modifiedURL, certs);
+         CodeSource cs = codeSourceGenerator.getCodeSource(codeSourceURL, certs);
          PermissionCollection permissions = Policy.getPolicy().getPermissions(cs);
          return new ProtectionDomain(cs, permissions);
       }
