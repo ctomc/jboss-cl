@@ -30,9 +30,12 @@ import java.security.cert.Certificate;
  * with the substitution of file as protocol
  *
  * @author Anil.Saldhana@redhat.com
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  */
 public class FileProtocolCodeSourceGenerator implements CodeSourceGenerator
 {
+   public static final CodeSourceGenerator INSTANCE = new FileProtocolCodeSourceGenerator();
+
    /**
     * Constant representing the URL file protocol
     */
