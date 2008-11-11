@@ -648,11 +648,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       try
       {
          VirtualFile root = findRoot(path);
-         URL codeSourceURL;
-         if(isUseRealURL())
-            codeSourceURL = VFSUtils.getRealURL(root);
-         else
-            codeSourceURL = root.toURL();
+         URL codeSourceURL = isUseRealURL() ? VFSUtils.getRealURL(root) : root.toURL();
 
          if (log.isTraceEnabled())
             log.trace("getProtectionDomain:className="+ className + " path="+ path + " codeSourceURL=" + codeSourceURL);
