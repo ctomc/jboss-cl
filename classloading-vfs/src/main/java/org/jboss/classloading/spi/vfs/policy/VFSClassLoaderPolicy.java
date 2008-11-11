@@ -109,8 +109,8 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    @SuppressWarnings("unchecked")
    private Map<String, VirtualFileInfo> vfsCache = Collections.synchronizedMap(new SoftValueHashMap());
    
-   /** JBCL-64: CodeSource should use read vfs url **/
-   private boolean useRealURL = false;
+   /** JBCL-64, JBVFS-77: CodeSource should use real url **/
+   private boolean useRealURL = true;
 
    /**
     * Determine a name from the roots
@@ -253,8 +253,6 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       this.name = name;
       this.roots = roots;
       this.excludedRoots = excludedRoots;
-      
-      this.useRealURL = Boolean.valueOf(SecurityActions.getProperty("vfs.codesource.useRealURL", "true"));
    }
 
    @Override
@@ -491,13 +489,23 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          }
       }
       return null;
-   } 
+   }
 
+   /**
+    * Do we use real url.
+    *
+    * @return true if real url should be used
+    */
    public boolean isUseRealURL()
    {
       return useRealURL;
    }
 
+   /**
+    * Set use real url flag.
+    *
+     * @param useRealURL the real url flag
+    */
    public void setUseRealURL(boolean useRealURL)
    {
       this.useRealURL = useRealURL;
@@ -632,20 +640,24 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       VirtualFile clazz = findChild(path);
       if (clazz == null)
       {
-         log.trace("Unable to determine class file for " + className);
+         if (log.isTraceEnabled())
+            log.trace("Unable to determine class file for " + className);
+
          return null;
       }
       try
       {
          VirtualFile root = findRoot(path);
-         URL codeSourceURL = root.toURL(); 
-         
-         log.trace("getProtectionDomain:className="+ className + 
-               " path="+ path + " codeSourceURL=" + codeSourceURL);
-         
-         Certificate[] certs = null; // TODO JBCL-67 determine certificates 
-         if(this.useRealURL)
-            codeSourceURL = VFSUtils.getRealURL(codeSourceURL);
+         URL codeSourceURL;
+         if(isUseRealURL())
+            codeSourceURL = VFSUtils.getRealURL(root);
+         else
+            codeSourceURL = root.toURL();
+
+         if (log.isTraceEnabled())
+            log.trace("getProtectionDomain:className="+ className + " path="+ path + " codeSourceURL=" + codeSourceURL);
+
+         Certificate[] certs = null; // TODO JBCL-67 determine certificates
          CodeSource cs = new CodeSource(codeSourceURL, certs);
          PermissionCollection permissions = Policy.getPolicy().getPermissions(cs);
          return new ProtectionDomain(cs, permissions);
