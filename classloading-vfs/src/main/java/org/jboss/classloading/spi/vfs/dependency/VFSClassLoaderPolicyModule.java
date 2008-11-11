@@ -209,6 +209,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
    {
       VirtualFile[] roots = determineVFSRoots();
       VFSClassLoaderPolicy policy = VFSClassLoaderPolicy.createVFSClassLoaderPolicy(getContextName(), roots);
+      
       String[] packageNames = getPackageNames();
       policy.setExportedPackages(packageNames);
       policy.setIncluded(getIncluded());
@@ -243,5 +244,5 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
          ClassFilter excluded = getExcluded();
          VFSResourceVisitor.visit(roots, null, included, excluded, classLoader, visitor, filter, recurseFilter, urls);
       }
-   }
+   } 
 }

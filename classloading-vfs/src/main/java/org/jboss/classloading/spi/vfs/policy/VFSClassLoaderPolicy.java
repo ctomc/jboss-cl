@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.security.CodeSource;
-import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.Policy;
 import java.security.ProtectionDomain;
@@ -110,11 +109,8 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    @SuppressWarnings("unchecked")
    private Map<String, VirtualFileInfo> vfsCache = Collections.synchronizedMap(new SoftValueHashMap());
    
-   /** A generator that is capable of providing Java Security Manager friendly CodeSource */
-   private CodeSourceGenerator codeSourceGenerator = DefaultCodeSourceGenerator.INSTANCE;
-
-   /** Code source permission */
-   private static final Permission csgPermission = new RuntimePermission(VFSClassLoaderPolicy.class.getName() + ".setCodeSourceGenerator");
+   /** JBCL-64: CodeSource should use read vfs url **/
+   private boolean useRealURL = false;
 
    /**
     * Determine a name from the roots
@@ -257,6 +253,8 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       this.name = name;
       this.roots = roots;
       this.excludedRoots = excludedRoots;
+      
+      this.useRealURL = Boolean.valueOf(SecurityActions.getProperty("vfs.codesource.useRealURL", "true"));
    }
 
    @Override
@@ -493,6 +491,16 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          }
       }
       return null;
+   } 
+
+   public boolean isUseRealURL()
+   {
+      return useRealURL;
+   }
+
+   public void setUseRealURL(boolean useRealURL)
+   {
+      this.useRealURL = useRealURL;
    }
 
    @Override
@@ -514,24 +522,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
             log.debug("Error getting resources for " + root, e);
          }
       }
-   }
-
-   /**
-    * Set a CodeSource Generator.
-    *
-    * @param csg the code soruce generator
-    */
-   public void setCodeSourceGenerator(final CodeSourceGenerator csg)
-   {
-      if (csg == null)
-         throw new IllegalArgumentException("Null code source generator.");
-
-      SecurityManager sm = System.getSecurityManager();
-      if(sm != null)
-         sm.checkPermission(csgPermission);
-      
-      codeSourceGenerator = csg; 
-   }
+   } 
    
    /**
     * Find a child from a path
@@ -647,10 +638,15 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       try
       {
          VirtualFile root = findRoot(path);
-         URL codeSourceURL = root.toURL();  
+         URL codeSourceURL = root.toURL(); 
          
-         Certificate[] certs = null; // TODO JBCL-67 determine certificates
-         CodeSource cs = codeSourceGenerator.getCodeSource(codeSourceURL, certs);
+         log.trace("getProtectionDomain:className="+ className + 
+               " path="+ path + " codeSourceURL=" + codeSourceURL);
+         
+         Certificate[] certs = null; // TODO JBCL-67 determine certificates 
+         if(this.useRealURL)
+            codeSourceURL = VFSUtils.getRealURL(codeSourceURL);
+         CodeSource cs = new CodeSource(codeSourceURL, certs);
          PermissionCollection permissions = Policy.getPolicy().getPermissions(cs);
          return new ProtectionDomain(cs, permissions);
       }

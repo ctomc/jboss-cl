@@ -21,21 +21,24 @@
  */
 package org.jboss.classloading.spi.vfs.policy;
 
-import java.net.URL;
-import java.security.CodeSource;
-import java.security.cert.Certificate;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 /**
- * Default code source generator.
- *
- * @author <a href="ales.justin@jboss.org">Ales Justin</a>
+ * Privileged Blocks
+ * @author Anil.Saldhana@redhat.com
+ * @since Nov 10, 2008
  */
-public class DefaultCodeSourceGenerator implements CodeSourceGenerator
-{
-   public static final CodeSourceGenerator INSTANCE = new DefaultCodeSourceGenerator();
-   
-   public CodeSource getCodeSource(URL url, Certificate[] certs) throws Exception
+class SecurityActions
+{   
+   static String getProperty(final String key, final String defaultValue)
    {
-      return new CodeSource(url, certs);
-   }
+      return AccessController.doPrivileged(new PrivilegedAction<String>()
+      {
+         public String run()
+         {
+            return System.getProperty(key, defaultValue);
+         }
+      }); 
+   } 
 }
