@@ -162,7 +162,7 @@ public class PackageVisitor extends AbstractVirtualFileFilterWithAttributes impl
       // This is our current root
       if (file.equals(root))
          return true;
-
+      
       // Some other root, it will be handled later
       for (VirtualFile other : roots)
       {
