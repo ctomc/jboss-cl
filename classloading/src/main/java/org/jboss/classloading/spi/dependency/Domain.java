@@ -174,7 +174,7 @@ public class Domain
       if (module == null)
          throw new IllegalArgumentException("Null module");
 
-      log.debug(this + " add module " + module);
+      log.debug(this + " remove module " + module);
       
       modulesByName.remove(module.getContextName());
       modules.remove(module);
