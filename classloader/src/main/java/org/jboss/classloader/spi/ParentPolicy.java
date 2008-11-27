@@ -40,8 +40,11 @@ public class ParentPolicy
    /** Standard Java Delegation for java classes */
    public static final ParentPolicy BEFORE_BUT_JAVA_ONLY = new ParentPolicy(ClassFilter.JAVA_ONLY, ClassFilter.NOTHING, "BEFORE_BUT_JAVA_ONLY");
 
-   /** Java classes before, everything else after */
+   /** Java and Javax classes before, everything else after */
    public static final ParentPolicy AFTER_BUT_JAVA_BEFORE = new ParentPolicy(ClassFilter.JAVA_ONLY, ClassFilter.EVERYTHING, "AFTER_BUT_JAVA_BEFORE");
+
+   /** Java classes before, everything else after */
+   public static final ParentPolicy AFTER_BUT_ONLY_JAVA_BEFORE = new ParentPolicy(ClassFilter.NOTHING_BUT_JAVA, ClassFilter.EVERYTHING, "AFTER_BUT_JAVA_BEFORE");
    
    /** The before filter */
    private ClassFilter beforeFilter;

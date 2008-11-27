@@ -290,7 +290,7 @@ public abstract class Module extends NameAndVersionSupport
       if (isJ2seClassLoadingCompliance())
          return ParentPolicy.BEFORE;
       else
-         return ParentPolicy.AFTER_BUT_JAVA_BEFORE;
+         return ParentPolicy.AFTER_BUT_ONLY_JAVA_BEFORE;
    }
    
    /**

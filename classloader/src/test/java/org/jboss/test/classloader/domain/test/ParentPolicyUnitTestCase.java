@@ -21,6 +21,8 @@
  */
 package org.jboss.test.classloader.domain.test;
 
+import javax.swing.MutableComboBoxModel;
+
 import junit.framework.Test;
 
 import org.jboss.classloader.spi.ClassLoaderDomain;
@@ -138,10 +140,11 @@ public class ParentPolicyUnitTestCase extends AbstractClassLoaderTestWithSecurit
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", ParentPolicy.AFTER_BUT_JAVA_BEFORE, null);
       
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
-      policy.setPathsAndPackageNames(ClassLoaderDomain.class);
+      policy.setPathsAndPackageNames(ClassLoaderDomain.class, MutableComboBoxModel.class);
       ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
       
       assertLoadClass(Object.class, classLoader, null, true);
+      assertLoadClass(MutableComboBoxModel.class, classLoader, null, true);
       assertLoadClass(ClassLoaderDomain.class, classLoader);
       assertPackage(ClassLoaderDomain.class, classLoader);
    }
@@ -152,9 +155,41 @@ public class ParentPolicyUnitTestCase extends AbstractClassLoaderTestWithSecurit
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", ParentPolicy.AFTER_BUT_JAVA_BEFORE, null);
       
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
+      policy.setPathsAndPackageNames(MutableComboBoxModel.class);
       ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
       
       assertLoadClass(Object.class, classLoader, null, true);
+      assertLoadClass(MutableComboBoxModel.class, classLoader, null, true);
+      assertLoadClass(ClassLoaderDomain.class, classLoader, null, true);
+      assertPackage(ClassLoaderDomain.class, classLoader);
+   }
+   
+   public void testAfterButOnlyJavaBeforeNotReached() throws Exception
+   {
+      ClassLoaderSystem system = createClassLoaderSystem();
+      ClassLoaderDomain domain = system.createAndRegisterDomain("test", ParentPolicy.AFTER_BUT_ONLY_JAVA_BEFORE, null);
+      
+      MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
+      policy.setPathsAndPackageNames(ClassLoaderDomain.class);
+      ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
+      
+      assertLoadClass(Object.class, classLoader, null, true);
+      assertLoadClass(MutableComboBoxModel.class, classLoader, null, true);
+      assertLoadClass(ClassLoaderDomain.class, classLoader);
+      assertPackage(ClassLoaderDomain.class, classLoader);
+   }
+   
+   public void testAfterButOnlyJavaBeforeReached() throws Exception
+   {
+      ClassLoaderSystem system = createClassLoaderSystem();
+      ClassLoaderDomain domain = system.createAndRegisterDomain("test", ParentPolicy.AFTER_BUT_ONLY_JAVA_BEFORE, null);
+      
+      MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
+      policy.setPathsAndPackageNames(MutableComboBoxModel.class);
+      ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
+      
+      assertLoadClass(Object.class, classLoader, null, true);
+      assertLoadClass(MutableComboBoxModel.class, classLoader, classLoader);
       assertLoadClass(ClassLoaderDomain.class, classLoader, null, true);
       assertPackage(ClassLoaderDomain.class, classLoader);
    }
