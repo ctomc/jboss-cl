@@ -326,11 +326,6 @@ public class ClassLoadingSpace
                      if (this != space)
                         space.joinAndResolve(this);
                   }
-                  else
-                  {
-                     if (dependency.isResolved())
-                        log.warn(module + " resolved " + dependency.getRequirement() + " to " + otherModule + " which has import-all=true. Cannot check its consistency.");
-                  }
                }
             }
          }
