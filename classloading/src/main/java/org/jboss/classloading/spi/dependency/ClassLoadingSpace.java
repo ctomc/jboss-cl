@@ -321,10 +321,9 @@ public class ClassLoadingSpace
                {
                   // Do we need to join with another classloading space?
                   ClassLoadingSpace space = otherModule.getClassLoadingSpace();
-                  if (space != null)
+                  if (space != null && space != this)
                   {
-                     if (this != space)
-                        space.joinAndResolve(this);
+                     space.joinAndResolve(this);
                   }
                }
             }
