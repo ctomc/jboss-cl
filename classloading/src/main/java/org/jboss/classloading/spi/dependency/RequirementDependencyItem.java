@@ -26,6 +26,7 @@ import org.jboss.dependency.plugins.AbstractDependencyItem;
 import org.jboss.dependency.spi.Controller;
 import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerState;
+import org.jboss.logging.Logger;
 import org.jboss.util.JBossStringBuilder;
 
 /**
@@ -36,6 +37,9 @@ import org.jboss.util.JBossStringBuilder;
  */
 public class RequirementDependencyItem extends AbstractDependencyItem
 {
+   /** The log */
+   private static final Logger log = Logger.getLogger(RequirementDependencyItem.class);
+   
    /** The module */
    private Module module;
    
@@ -94,6 +98,8 @@ public class RequirementDependencyItem extends AbstractDependencyItem
             setIDependOn(context.getName());
             addDependsOnMe(controller, context);
             setResolved(true);
+            if (module.getClassLoadingSpace() == null)
+               log.warn(getModule() + " resolved " + getRequirement() + " to " + module + " which has import-all=true. Cannot check its consistency.");
          }
          else
          {

@@ -328,7 +328,8 @@ public class ClassLoadingSpace
                   }
                   else
                   {
-                     log.warn(module + " resolved " + dependency.getRequirement() + " to " + otherModule + " which has import-all=true. Cannot check its consistency.");
+                     if (dependency.isResolved())
+                        log.warn(module + " resolved " + dependency.getRequirement() + " to " + otherModule + " which has import-all=true. Cannot check its consistency.");
                   }
                }
             }
