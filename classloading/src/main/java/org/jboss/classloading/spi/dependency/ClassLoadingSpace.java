@@ -321,8 +321,15 @@ public class ClassLoadingSpace
                {
                   // Do we need to join with another classloading space?
                   ClassLoadingSpace space = otherModule.getClassLoadingSpace();
-                  if (this != space)
-                     space.joinAndResolve(this);
+                  if (space != null)
+                  {
+                     if (this != space)
+                        space.joinAndResolve(this);
+                  }
+                  else
+                  {
+                     log.warn(module + " resolved " + dependency.getRequirement() + " to " + otherModule + " which has import-all=true. Cannot check its consistency.");
+                  }
                }
             }
          }

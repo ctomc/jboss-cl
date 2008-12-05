@@ -343,4 +343,42 @@ public class ConflictingRequirementUnitTestCase extends AbstractMockClassLoaderU
       }
       assertNoClassLoader(contextA1);
    }
+   
+   public void testRequirementReferencesImportAll() throws Exception
+   {
+      ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+      MockClassLoadingMetaData a1 = new MockClassLoadingMetaData("a", "1.0.0");
+      a1.setPathsAndPackageNames(A.class);
+      a1.setImportAll(true);
+      KernelControllerContext contextA1 = install(a1);
+      try
+      {
+         ClassLoader clA1 = assertClassLoader(contextA1);
+         assertLoadClass(A.class, clA1);
+         assertLoadClassFail(B.class, clA1);
+         assertLoadClassFail(C.class, clA1);
+
+         MockClassLoadingMetaData b1 = new MockClassLoadingMetaData("b", "1.0.0");
+         b1.getRequirements().addRequirement(factory.createRequireModule("a", new VersionRange("1.0.0", "2.0.0")));
+         b1.setPathsAndPackageNames(B.class);
+         KernelControllerContext contextB1 = install(b1);
+         try
+         {
+            ClassLoader clB1 = assertClassLoader(contextB1);
+            assertLoadClass(B.class, clB1);
+            assertLoadClass(A.class, clB1, clA1);
+            assertLoadClassFail(C.class, clB1);
+         }
+         finally
+         {
+            uninstall(contextB1);
+         }
+         assertNoClassLoader(contextB1);
+      }
+      finally
+      {
+         uninstall(contextA1);
+      }
+      assertNoClassLoader(contextA1);
+   }
 }
