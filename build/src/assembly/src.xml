@@ -1,11 +1,9 @@
 <assembly>
   <id>src</id>
   <formats>
-    <!--<format>tar.gz</format>-->
     <format>zip</format>
   </formats>
   <fileSets>
-    <!-- Include everything from the root of the project except the target dirs -->
     <fileSet>
       <directory>..</directory>
       <outputDirectory></outputDirectory>

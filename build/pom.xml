@@ -1,17 +1,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <groupId>org.jboss.cl</groupId>
-    <artifactId>jboss-cl</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <artifactId>jboss-cl-parent</artifactId>
+    <version>2.2.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jboss.cl</groupId>
-  <artifactId>jboss-cl-dist</artifactId>
-  <version>2.0.0-SNAPSHOT</version>
+  <artifactId>jboss-cl</artifactId>
   <packaging>pom</packaging>
-  <name>JBoss ClassLoader Distribution Build</name>
+  <name>JBoss ClassLoader Distribution</name>
   <url>http://www.jboss.com/products/jbossmc</url>
-  <description>JBoss ClassLoader Distribution Build</description>
+  <description>JBoss ClassLoader Distribution</description>
 
   <build>
     <plugins>
@@ -21,11 +20,27 @@
         <configuration>
           <descriptors>
             <descriptor>src/assembly/dist.xml</descriptor>
+            <descriptor>src/assembly/dist-with-deps.xml</descriptor>
             <descriptor>src/assembly/src.xml</descriptor>
           </descriptors>
         </configuration>
       </plugin>
     </plugins>
   </build>
+  
+  <dependencies>
+    <dependency>
+      <groupId>org.jboss.cl</groupId>
+      <artifactId>jboss-classloader</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.cl</groupId>
+      <artifactId>jboss-classloading</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.cl</groupId>
+      <artifactId>jboss-classloading-vfs</artifactId>
+    </dependency>
+  </dependencies>
   
 </project>
