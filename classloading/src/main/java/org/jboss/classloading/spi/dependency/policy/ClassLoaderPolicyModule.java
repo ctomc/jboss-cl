@@ -21,12 +21,17 @@
 */
 package org.jboss.classloading.spi.dependency.policy;
 
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+
 import org.jboss.classloader.plugins.loader.ClassLoaderToLoaderAdapter;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.Loader;
 import org.jboss.classloader.spi.ParentPolicy;
+import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.LazyFilteredDelegateLoader;
 import org.jboss.classloading.spi.dependency.Domain;
 import org.jboss.classloading.spi.dependency.Module;
@@ -67,7 +72,45 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    {
       super(classLoadingMetaData, contextName);
    }
-   
+
+   @Override
+   protected ClassLoader getClassLoaderForClass(final String className) throws ClassNotFoundException
+   {
+      if (classLoader == null)
+         throw new IllegalStateException("No classloader for module " + this);
+      
+      if (classLoader instanceof BaseClassLoader == false)
+         return super.getClassLoaderForClass(className);
+      
+      final BaseClassLoader bcl = (BaseClassLoader) classLoader;
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+      {
+         try
+         {
+            return AccessController.doPrivileged(new PrivilegedExceptionAction<ClassLoader>()
+            {
+               public ClassLoader run() throws Exception
+               {
+                  return bcl.findClassLoader(className); 
+               }
+            });
+         }
+         catch (PrivilegedActionException e)
+         {
+            Throwable t = e.getCause();
+            if (t instanceof ClassNotFoundException)
+               throw (ClassNotFoundException) t;
+            if (t instanceof Error)
+               throw (Error) t;
+            if (t instanceof RuntimeException)
+               throw (RuntimeException) t;
+            throw new RuntimeException("Error during findClassLoader for " + className, e);
+         }
+      }
+      return bcl.findClassLoader(className); 
+   }
+
    /**
     * Register the classloader policy with a classloader system
     *
@@ -88,6 +131,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       ClassLoader result = system.registerClassLoaderPolicy(domainName, parentPolicy, parentName, getPolicy());
       this.system = system;
       this.classLoader = result;
+      registerModuleClassLoader(this, result);
       return result;
    }
    
@@ -111,6 +155,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       Loader loader = new ClassLoaderToLoaderAdapter(parent);
       ClassLoader result = registerClassLoaderPolicy(system, loader); 
       this.classLoader = result;
+      registerModuleClassLoader(this, result);
       return result;
    }
    
@@ -134,6 +179,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       ClassLoader result = system.registerClassLoaderPolicy(domainName, parentPolicy, loader, getPolicy());
       this.system = system;
       this.classLoader = result;
+      registerModuleClassLoader(this, result);
       return result;
    }
 
@@ -154,6 +200,8 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    {
       if (system != null && policy != null)
          system.unregisterClassLoaderPolicy(policy);
+      if (classLoader != null)
+         unregisterModuleClassLoader(this, classLoader);
       classLoader = null;
       system = null;
       policy = null;
@@ -165,12 +213,8 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
     * @return the policy
     */
    protected abstract ClassLoaderPolicy determinePolicy();
-   
-   /**
-    * Get the classloader
-    * 
-    * @return the classloader
-    */
+
+   @Override
    protected ClassLoader getClassLoader()
    {
       return classLoader;

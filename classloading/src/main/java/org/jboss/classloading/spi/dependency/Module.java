@@ -21,12 +21,18 @@
  */
 package org.jboss.classloading.spi.dependency;
 
+import java.io.IOException;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.spi.ClassLoaderSystem;
@@ -53,6 +59,9 @@ import org.jboss.dependency.spi.ControllerState;
  */
 public abstract class Module extends NameAndVersionSupport
 {
+   /** The modules by classloader */
+   private static Map<ClassLoader, Module> modulesByClassLoader = new ConcurrentHashMap<ClassLoader, Module>();
+   
    /** The context name */
    private String contextName;
    
@@ -73,6 +82,40 @@ public abstract class Module extends NameAndVersionSupport
    
    /** The requirements */
    private List<RequirementDependencyItem> requirementDependencies;
+
+   /**
+    * Register a classloader for a module
+    * 
+    * @param module the module
+    * @param classLoader the classloader
+    * @throws IllegalArgumentException for a null parameter
+    */
+   protected static void registerModuleClassLoader(Module module, ClassLoader classLoader)
+   {
+      if (module == null)
+         throw new IllegalArgumentException("Null module");
+      if (classLoader == null)
+         throw new IllegalArgumentException("Null classloader");
+
+      modulesByClassLoader.put(classLoader, module);
+   }
+
+   /**
+    * Register a classloader for a module
+    * 
+    * @param module the module
+    * @param classLoader the classloader
+    * @throws IllegalArgumentException for a null parameter
+    */
+   protected static void unregisterModuleClassLoader(Module module, ClassLoader classLoader)
+   {
+      if (module == null)
+         throw new IllegalArgumentException("Null module");
+      if (classLoader == null)
+         throw new IllegalArgumentException("Null classloader");
+
+      modulesByClassLoader.remove(classLoader);
+   }
    
    /**
     * Create a new Module with the default version
@@ -313,6 +356,112 @@ public abstract class Module extends NameAndVersionSupport
       return true;
    }
 
+   /**
+    * Find the module that loads a class
+    * 
+    * @param className the class name
+    * @return the module or null if the class is not loaded by a registered module classloader
+    * @throws ClassNotFoundException when the class is not found
+    * @throws IllegalStateException when the module is not associated with a classloader
+    */
+   public Module getModuleForClass(String className) throws ClassNotFoundException
+   {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPermission(new RuntimePermission("getClassLoader"));
+
+      ClassLoader cl = getClassLoaderForClass(className);
+
+      // Determine the module (if any) for the classloader 
+      if (cl != null)
+         return modulesByClassLoader.get(cl);
+      // Unknown
+      return null;
+   }
+
+   /**
+    * Get the classloader for a class name 
+    * 
+    * @param className the class name
+    * @return the class
+    * @throws ClassNotFoundException when the class is not found
+    * @throws IllegalStateException when the module is not associated with a classloader
+    */
+   protected ClassLoader getClassLoaderForClass(String className) throws ClassNotFoundException
+   {
+      // Determine the classloader for this class
+      final Class<?> clazz = loadClass(className);
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+      {
+         return AccessController.doPrivileged(new PrivilegedAction<ClassLoader>()
+         {
+            public ClassLoader run()
+            {
+               return clazz.getClassLoader(); 
+            }
+        });
+      }
+      return clazz.getClassLoader();
+   }
+
+   /**
+    * Load a class for this module 
+    * 
+    * @param className the class name
+    * @return the class
+    * @throws ClassNotFoundException when the class is not found
+    * @throws IllegalStateException when the module is not associated with a classloader
+    */
+   public Class<?> loadClass(String className) throws ClassNotFoundException
+   {
+      ClassLoader classLoader = getClassLoader();
+      if (classLoader == null)
+         throw new IllegalStateException("No classloader for this module " + this);
+      return classLoader.loadClass(className);
+   }
+
+   /**
+    * Get a resource for this module 
+    * 
+    * @param resourceName the resource name
+    * @return the class
+    * @throws IllegalStateException when the module is not associated with a classloader
+    */
+   public URL getResource(String resourceName) 
+   {
+      ClassLoader classLoader = getClassLoader();
+      if (classLoader == null)
+         throw new IllegalStateException("No classloader for this module " + this);
+      return classLoader.getResource(resourceName);
+   }
+
+   /**
+    * Get resources for this module 
+    * 
+    * @param resourceName the resource name
+    * @return the class
+    * @throws IOException for an error
+    * @throws IllegalStateException when the module is not associated with a classloader
+    */
+   public Enumeration<URL> getResources(String resourceName) throws IOException
+   {
+      ClassLoader classLoader = getClassLoader();
+      if (classLoader == null)
+         throw new IllegalStateException("No classloader for this module " + this);
+      return classLoader.getResources(resourceName);
+   }
+
+   /**
+    * Get the classloader for this module
+    * 
+    * @return the classloader
+    */
+   protected ClassLoader getClassLoader()
+   {
+      return null;
+   }
+   
    /**
     * Visit the resources in this module
     * using the filter defined on the visitor

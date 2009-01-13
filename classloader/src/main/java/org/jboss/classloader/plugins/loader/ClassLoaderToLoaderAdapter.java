@@ -33,6 +33,7 @@ import java.util.Enumeration;
 import java.util.Set;
 
 import org.jboss.classloader.spi.Loader;
+import org.jboss.classloader.spi.base.BaseClassLoaderSource;
 import org.jboss.logging.Logger;
 
 /**
@@ -41,13 +42,10 @@ import org.jboss.logging.Logger;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public class ClassLoaderToLoaderAdapter implements Loader
+public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements Loader
 {
    /** The log */
    private static final Logger log = Logger.getLogger(ClassLoaderToLoaderAdapter.class);
-   
-   /** The classloader */
-   private ClassLoader classLoader;
    
    /** The access control context of the creator of this adapter */
    private AccessControlContext accessControlContext;
@@ -94,14 +92,13 @@ public class ClassLoaderToLoaderAdapter implements Loader
     */
    public ClassLoaderToLoaderAdapter(ClassLoader classLoader)
    {
-      if (classLoader == null)
-         throw new IllegalArgumentException("Null classLoader");
-      this.classLoader = classLoader;
+      super(classLoader);
       accessControlContext = AccessController.getContext();
    }
 
    public URL getResource(final String name)
    {
+      final ClassLoader classLoader = getClassLoader();
       URL url;
       SecurityManager sm = System.getSecurityManager();
       if (sm != null)
@@ -132,6 +129,7 @@ public class ClassLoaderToLoaderAdapter implements Loader
 
    public void getResources(final String name, Set<URL> urls) throws IOException
    {
+      final ClassLoader classLoader = getClassLoader();
       Enumeration<URL> enumeration;
       SecurityManager sm = System.getSecurityManager();
       if (sm != null)
@@ -168,6 +166,7 @@ public class ClassLoaderToLoaderAdapter implements Loader
 
    public Class<?> loadClass(String className)
    {
+      final ClassLoader classLoader = getClassLoader();
       try
       {
          return Class.forName(className, false, classLoader);
@@ -180,6 +179,7 @@ public class ClassLoaderToLoaderAdapter implements Loader
 
    public Package getPackage(String name)
    {
+      final ClassLoader classLoader = getClassLoader();
       if  (getPackage == null)
          return null;
 
@@ -196,6 +196,7 @@ public class ClassLoaderToLoaderAdapter implements Loader
 
    public void getPackages(Set<Package> packages)
    {
+      final ClassLoader classLoader = getClassLoader();
       if  (getPackages == null)
          return;
 
@@ -212,6 +213,6 @@ public class ClassLoaderToLoaderAdapter implements Loader
    @Override
    public String toString()
    {
-      return classLoader.toString();
+      return getClassLoader().toString();
    }
 }

@@ -48,6 +48,7 @@ import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.DelegateLoader;
+import org.jboss.classloader.spi.Loader;
 import org.jboss.classloader.spi.PackageInformation;
 import org.jboss.classloading.spi.RealClassLoader;
 import org.jboss.logging.Logger;
@@ -344,6 +345,42 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       if (result != null && trace)
          log.trace(this + " already loaded class " + ClassLoaderUtils.classToString(result));
       return result;
+   }
+
+   /**
+    * Find the classloader for a class but don't load the class
+    * 
+    * @param className the class name
+    * @return the classloader
+    * @throws ClassNotFoundException if the class is not found
+    * @throws IllegalStateException if the classloader is not installed
+    * @throws SecurityException if the called doesn't have the getClassLoader runtime permission
+    */
+   public ClassLoader findClassLoader(String className) throws ClassNotFoundException
+   {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPermission(new RuntimePermission("getClassLoader"));
+
+      BaseClassLoaderPolicy basePolicy = policy;
+      BaseClassLoaderDomain domain = basePolicy.getClassLoaderDomain();
+      if (domain == null)
+         throw new IllegalStateException(this + " classLoader is not connected to a domain (probably undeployed?) for class " + getName());
+
+      ClassLoaderUtils.checkClassName(className);
+      String path = ClassLoaderUtils.classNameToPath(className);
+      
+      Loader loader = domain.findLoader(path);
+      if (loader == null)
+         throw new ClassNotFoundException("Class " + className + " not found from " + this);
+      
+      // This is a bit ugly but we can't abstract this behind an interface because
+      // that would make the methods public
+      if (loader instanceof BaseClassLoaderSource)
+         return ((BaseClassLoaderSource) loader).getClassLoader();
+      if (loader instanceof BaseDelegateLoader)
+         return ((BaseDelegateLoader) loader).getPolicy().getClassLoader();
+      return null;
    }
 
    @Override
