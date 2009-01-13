@@ -304,6 +304,7 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param classLoader the classloader
     * @param name the class resource name
     * @param allExports whether we should look at all exports
+    * @param findInParent should we try the parent
     * @return the loader
     */
    Loader findLoader(BaseClassLoader classLoader, String name, boolean allExports, boolean findInParent)
@@ -567,9 +568,8 @@ public abstract class BaseClassLoaderDomain implements Loader
     * Load packages from the domain
     * 
     * @param classLoader the classloader
-    * @param name the package name
-    * @param allExports whether we should look at all exports
     * @param packages the packages to add to
+    * @param allExports whether we should look at all exports
     */
    void getPackages(BaseClassLoader classLoader, Set<Package> packages, boolean allExports)
    {
