@@ -180,12 +180,12 @@ public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements
    public Package getPackage(String name)
    {
       final ClassLoader classLoader = getClassLoader();
-      if  (getPackage == null)
+      if (getPackage == null)
          return null;
 
       try
       {
-         return (Package) getPackage.invoke(classLoader, new Object[] { name });
+         return (Package) getPackage.invoke(classLoader, name);
       }
       catch (Exception e)
       {
@@ -197,7 +197,7 @@ public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements
    public void getPackages(Set<Package> packages)
    {
       final ClassLoader classLoader = getClassLoader();
-      if  (getPackages == null)
+      if (getPackages == null)
          return;
 
       try
