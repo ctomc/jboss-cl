@@ -370,7 +370,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       ClassLoaderUtils.checkClassName(className);
       String path = ClassLoaderUtils.classNameToPath(className);
       
-      Loader loader = domain.findLoader(path);
+      Loader loader = domain.findLoader(this, path, basePolicy.isImportAll(), true);
       if (loader == null)
          throw new ClassNotFoundException("Class " + className + " not found from " + this);
       

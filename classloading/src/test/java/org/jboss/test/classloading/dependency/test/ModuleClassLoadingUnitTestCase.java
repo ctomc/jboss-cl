@@ -118,6 +118,61 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
       assertNoClassLoader(contextA);
    }
    
+   public void testLoadClassFromOtherModuleDuplicates() throws Exception
+   {
+      ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+      MockClassLoadingMetaData a1 = new MockClassLoadingMetaData("a", "1.0.0");
+      a1.getCapabilities().addCapability(factory.createModule("ModuleA", "1.0.0"));
+      a1.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
+      a1.setPathsAndPackageNames(A.class);
+      KernelControllerContext contextA1 = install(a1);
+      try
+      {
+         ClassLoader clA1 = assertClassLoader(contextA1);
+         Module moduleA1 = assertModule(contextA1);
+
+         MockClassLoadingMetaData a2 = new MockClassLoadingMetaData("a", "2.0.0");
+         a2.getCapabilities().addCapability(factory.createModule("ModuleA", "2.0.0"));
+         a2.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
+         a2.setPathsAndPackageNames(A.class);
+         KernelControllerContext contextA2 = install(a2);
+         try
+         {
+            ClassLoader clA2 = assertClassLoader(contextA2);
+            Module moduleA2 = assertModule(contextA2);
+
+            MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+            b.getRequirements().addRequirement(factory.createRequireModule("ModuleA", new VersionRange("2.0.0")));
+            b.setPathsAndPackageNames(B.class);
+            KernelControllerContext contextB = install(b);
+            try
+            {
+               assertClassLoader(contextB);
+               Module moduleB = assertModule(contextB);
+               Class<?> result = moduleB.loadClass(A.class.getName());
+               assertEquals(clA2, result.getClassLoader());
+               
+               Module other = moduleB.getModuleForClass(A.class.getName());
+               assertEquals(moduleA2, other);
+            }
+            finally
+            {
+               uninstall(contextB);
+            }
+         }
+         finally
+         {
+            uninstall(contextA2);
+         }
+         assertNoClassLoader(contextA2);
+      }
+      finally
+      {
+         uninstall(contextA1);
+      }
+      assertNoClassLoader(contextA1);
+   }
+   
    public void testLoadClassNotFound() throws Exception
    {
       MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
