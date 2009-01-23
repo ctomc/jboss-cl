@@ -27,6 +27,7 @@ import java.util.Enumeration;
 import junit.framework.Test;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
+import org.jboss.classloading.spi.dependency.ClassLoading;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
@@ -71,6 +72,8 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
          
          Module other = moduleA.getModuleForClass(A.class.getName());
          assertEquals(moduleA, other);
+         
+         assertEquals(moduleA, ClassLoading.getModuleForClassLoader(clA));
       }
       finally
       {
@@ -92,19 +95,24 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
          ClassLoader clA = assertClassLoader(contextA);
          Module moduleA = assertModule(contextA);
 
+         assertEquals(moduleA, ClassLoading.getModuleForClassLoader(clA));
+
          MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
          b.getRequirements().addRequirement(factory.createRequireModule("ModuleA"));
          b.setPathsAndPackageNames(B.class);
          KernelControllerContext contextB = install(b);
          try
          {
-            assertClassLoader(contextB);
+            ClassLoader clB = assertClassLoader(contextB);
             Module moduleB = assertModule(contextB);
             Class<?> result = moduleB.loadClass(A.class.getName());
             assertEquals(clA, result.getClassLoader());
             
             Module other = moduleB.getModuleForClass(A.class.getName());
             assertEquals(moduleA, other);
+
+            assertEquals(moduleA, ClassLoading.getModuleForClassLoader(clA));
+            assertEquals(moduleB, ClassLoading.getModuleForClassLoader(clB));
          }
          finally
          {
@@ -131,6 +139,8 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
          ClassLoader clA1 = assertClassLoader(contextA1);
          Module moduleA1 = assertModule(contextA1);
 
+         assertEquals(moduleA1, ClassLoading.getModuleForClassLoader(clA1));
+
          MockClassLoadingMetaData a2 = new MockClassLoadingMetaData("a", "2.0.0");
          a2.getCapabilities().addCapability(factory.createModule("ModuleA", "2.0.0"));
          a2.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
@@ -141,19 +151,26 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
             ClassLoader clA2 = assertClassLoader(contextA2);
             Module moduleA2 = assertModule(contextA2);
 
+            assertEquals(moduleA1, ClassLoading.getModuleForClassLoader(clA1));
+            assertEquals(moduleA2, ClassLoading.getModuleForClassLoader(clA2));
+
             MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
             b.getRequirements().addRequirement(factory.createRequireModule("ModuleA", new VersionRange("2.0.0")));
             b.setPathsAndPackageNames(B.class);
             KernelControllerContext contextB = install(b);
             try
             {
-               assertClassLoader(contextB);
+               ClassLoader clB = assertClassLoader(contextB);
                Module moduleB = assertModule(contextB);
                Class<?> result = moduleB.loadClass(A.class.getName());
                assertEquals(clA2, result.getClassLoader());
                
                Module other = moduleB.getModuleForClass(A.class.getName());
                assertEquals(moduleA2, other);
+
+               assertEquals(moduleA1, ClassLoading.getModuleForClassLoader(clA1));
+               assertEquals(moduleA2, ClassLoading.getModuleForClassLoader(clA2));
+               assertEquals(moduleB, ClassLoading.getModuleForClassLoader(clB));
             }
             finally
             {
@@ -268,6 +285,8 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
             assertNull(moduleA.getModuleForClass(Object.class.getName()));
             moduleB.loadClass(Object.class.getName());
             assertNull(moduleB.getModuleForClass(Object.class.getName()));
+            
+            assertNull(ClassLoading.getModuleForClassLoader(Object.class.getClassLoader()));
          }
          finally
          {
@@ -355,7 +374,6 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
             assertLoadClass(B.class, clB);
             assertLoadClass(A.class, clB, clA);
             
-            //Modules do not get the same corresponding module as when trying to load classes 
             Module moduleA = assertModule(contextA);
             Module moduleB = assertModule(contextB);
             Module result = moduleB.getModuleForClass(A.class.getName());
@@ -418,7 +436,6 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
             assertLoadClass(B.class, clB);
             assertLoadClass(A.class, clB, clA2);
             
-            //Modules do not get the same corresponding module as when trying to load classes 
             Module moduleA2 = assertModule(contextA2);
             Module moduleB = assertModule(contextB);
             Module result = moduleB.getModuleForClass(A.class.getName());
@@ -481,7 +498,6 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
             assertLoadClass(B.class, clB);
             assertLoadClass(A.class, clB, clA2);
             
-            //Modules do not get the same corresponding module as when trying to load classes 
             Module moduleA2 = assertModule(contextA2);
             Module moduleB = assertModule(contextB);
             Module result = moduleB.getModuleForClass(A.class.getName());

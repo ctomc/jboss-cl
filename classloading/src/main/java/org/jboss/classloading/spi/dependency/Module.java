@@ -357,6 +357,25 @@ public abstract class Module extends NameAndVersionSupport
    }
 
    /**
+    * Find the module for a classloader
+    * 
+    * @param className the classloader
+    * @return the module or null if the classloader does not correspond to a registered module classloader
+    */
+   static Module getModuleForClassLoader(ClassLoader cl)
+   {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPermission(new RuntimePermission("getClassLoader"));
+      
+      // Determine the module (if any) for the classloader 
+      if (cl != null)
+         return modulesByClassLoader.get(cl);
+      // Unknown
+      return null;
+   }
+   
+   /**
     * Find the module that loads a class
     * 
     * @param className the class name

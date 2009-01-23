@@ -129,4 +129,15 @@ public class ClassLoading
          throw new IllegalArgumentException("Null domain name");
       return new Domain(this, domainName, parentDomainName, parentFirst);
    }
+   
+   /**
+    * Find the module for a classloader
+    * 
+    * @param className the classloader
+    * @return the module or null if the classloader does not correspond to a registered module classloader
+    */
+   public static Module getModuleForClassLoader(ClassLoader loader)
+   {
+      return Module.getModuleForClassLoader(loader);
+   }
 }
