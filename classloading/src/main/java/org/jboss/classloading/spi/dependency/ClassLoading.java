@@ -133,11 +133,22 @@ public class ClassLoading
    /**
     * Find the module for a classloader
     * 
-    * @param className the classloader
+    * @param loader the classloader
     * @return the module or null if the classloader does not correspond to a registered module classloader
     */
    public static Module getModuleForClassLoader(ClassLoader loader)
    {
       return Module.getModuleForClassLoader(loader);
+   }
+   
+   /**
+    * Find the classloader for a module
+    * 
+    * @param module the module
+    * @return the classloader or null if the module does not correspond to a registered classloader module
+    */
+   public static ClassLoader getClassLoaderForModule(Module module)
+   {
+      return Module.getClassLoaderForModule(module);
    }
 }

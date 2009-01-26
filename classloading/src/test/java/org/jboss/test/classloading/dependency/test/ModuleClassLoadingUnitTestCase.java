@@ -74,6 +74,7 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
          assertEquals(moduleA, other);
          
          assertEquals(moduleA, ClassLoading.getModuleForClassLoader(clA));
+         assertEquals(clA, ClassLoading.getClassLoaderForModule(moduleA));
       }
       finally
       {
@@ -113,6 +114,8 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
 
             assertEquals(moduleA, ClassLoading.getModuleForClassLoader(clA));
             assertEquals(moduleB, ClassLoading.getModuleForClassLoader(clB));
+            assertEquals(clA, ClassLoading.getClassLoaderForModule(moduleA));
+            assertEquals(clB, ClassLoading.getClassLoaderForModule(moduleB));
          }
          finally
          {
@@ -171,6 +174,9 @@ public class ModuleClassLoadingUnitTestCase extends AbstractMockClassLoaderUnitT
                assertEquals(moduleA1, ClassLoading.getModuleForClassLoader(clA1));
                assertEquals(moduleA2, ClassLoading.getModuleForClassLoader(clA2));
                assertEquals(moduleB, ClassLoading.getModuleForClassLoader(clB));
+               assertEquals(clA1, ClassLoading.getClassLoaderForModule(moduleA1));
+               assertEquals(clA2, ClassLoading.getClassLoaderForModule(moduleA2));
+               assertEquals(clB, ClassLoading.getClassLoaderForModule(moduleB));
             }
             finally
             {
