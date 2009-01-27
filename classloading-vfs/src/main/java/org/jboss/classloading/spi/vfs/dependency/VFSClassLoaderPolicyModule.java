@@ -193,9 +193,9 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
    protected VirtualFile getVirtualFile(URI uri) throws Exception
    {
       if (isCacheable())
-         return VFS.getCachedFile(uri);
-      else
          return VFS.getRoot(uri);
+      else
+         return VFS.createNewRoot(uri);
    }
 
    @Override
