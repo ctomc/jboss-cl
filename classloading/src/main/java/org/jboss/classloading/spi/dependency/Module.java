@@ -61,7 +61,6 @@ public abstract class Module extends NameAndVersionSupport
 {
    /** The modules by classloader */
    private static Map<ClassLoader, Module> modulesByClassLoader = new ConcurrentHashMap<ClassLoader, Module>();
-   private static Map<Module, ClassLoader> classLoadersByModule = new ConcurrentHashMap<Module, ClassLoader>();
    
    /** The context name */
    private String contextName;
@@ -99,7 +98,6 @@ public abstract class Module extends NameAndVersionSupport
          throw new IllegalArgumentException("Null classloader");
 
       modulesByClassLoader.put(classLoader, module);
-      classLoadersByModule.put(module, classLoader);
    }
 
    /**
@@ -117,7 +115,6 @@ public abstract class Module extends NameAndVersionSupport
          throw new IllegalArgumentException("Null classloader");
 
       modulesByClassLoader.remove(classLoader);
-      classLoadersByModule.remove(module);
    }
    
    /**
@@ -364,6 +361,7 @@ public abstract class Module extends NameAndVersionSupport
     * 
     * @param cl the classloader
     * @return the module or null if the classloader does not correspond to a registered module classloader
+    * @throws SecurityException if the caller doesn't have <code>new RuntimePermision("getClassLoader")</code>
     */
    static Module getModuleForClassLoader(ClassLoader cl)
    {
@@ -374,25 +372,6 @@ public abstract class Module extends NameAndVersionSupport
       // Determine the module (if any) for the classloader 
       if (cl != null)
          return modulesByClassLoader.get(cl);
-      // Unknown
-      return null;
-   }
-   
-   /**
-    * Find the classloader for a module
-    * 
-    * @param module the module
-    * @return the classloader or null if the module does not correspond to a registered classloader module
-    */
-   static ClassLoader getClassLoaderForModule(Module module)
-   {
-      SecurityManager sm = System.getSecurityManager();
-      if (sm != null)
-         sm.checkPermission(new RuntimePermission("getClassLoader"));
-      
-      // Determine the module (if any) for the classloader 
-      if (module != null)
-         return classLoadersByModule.get(module);
       // Unknown
       return null;
    }

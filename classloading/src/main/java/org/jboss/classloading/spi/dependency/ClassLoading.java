@@ -135,6 +135,7 @@ public class ClassLoading
     * 
     * @param loader the classloader
     * @return the module or null if the classloader does not correspond to a registered module classloader
+    * @throws SecurityException if the caller doesn't have <code>new RuntimePermision("getClassLoader")</code>
     */
    public static Module getModuleForClassLoader(ClassLoader loader)
    {
@@ -146,9 +147,16 @@ public class ClassLoading
     * 
     * @param module the module
     * @return the classloader or null if the module does not correspond to a registered classloader module
+    * @throws SecurityException if the caller doesn't have <code>new RuntimePermision("getClassLoader")</code>
     */
    public static ClassLoader getClassLoaderForModule(Module module)
    {
-      return Module.getClassLoaderForModule(module);
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPermission(new RuntimePermission("getClassLoader"));
+      
+      if (module == null)
+         return null;
+      return module.getClassLoader();
    }
 }
