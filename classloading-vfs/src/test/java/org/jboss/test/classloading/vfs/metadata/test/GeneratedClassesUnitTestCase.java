@@ -89,11 +89,11 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
       ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
       String dynamicClassRoot = getDynamicClassRoot();
       VFSClassLoaderFactory a = new VFSClassLoaderFactory("a");
-      a.setExportAll(ExportAll.NON_EMPTY);
       a.setImportAll(true);
       a.getRoots().add(getRoot(A.class));
       a.getRoots().add(dynamicClassRoot);
       a.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
+      a.getCapabilities().addCapability(factory.createPackage(info.getPackageName()));
       KernelDeployment depA = install(a);
 
       VFSClassLoaderFactory b = new VFSClassLoaderFactory("b");
@@ -160,6 +160,11 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
       public String getClassname()
       {
          return classname;
+      }
+      
+      public String getPackageName()
+      {
+         return ClassLoaderUtils.getClassPackageName(classname);
       }
 
       public String getResourceName()
