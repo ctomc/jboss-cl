@@ -776,7 +776,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       }
       finally
       {
-         unlock(trace);
+         unlock(trace, true);
       }
    }
 
@@ -925,10 +925,12 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Unlock
+    * 
+    * @param rescheduleTasks whether to reschedule tasks
     */
-   void unlock()
+   void unlock(boolean rescheduleTasks)
    {
-      unlock(log.isTraceEnabled());
+      unlock(log.isTraceEnabled(), rescheduleTasks);
    }
 
    /**
@@ -1032,8 +1034,9 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
     * Unlock
     * 
     * @param trace whether trace is enabled
+    * @param rescheduleTasks whether to reschedule tasks
     */
-   private void unlock(boolean trace)
+   private void unlock(boolean trace, boolean rescheduleTasks)
    {
       Thread thread = Thread.currentThread();
       if (trace)
@@ -1045,7 +1048,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       
          if (lock.getHoldCount() == 0)
          {
-            ClassLoaderManager.unregisterLoaderThread(this, thread);
+            ClassLoaderManager.unregisterLoaderThread(this, thread, rescheduleTasks);
             notifyAll();
          }
       }

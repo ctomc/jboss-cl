@@ -90,12 +90,13 @@ public class ClassLoaderManager
     * 
     * @param classLoader the classloader
     * @param thread the thread owning the classloader
+    * @param rescheduleTasks whether to reschedule tasks
     */
-   public static void unregisterLoaderThread(BaseClassLoader classLoader, Thread thread)
+   public static void unregisterLoaderThread(BaseClassLoader classLoader, Thread thread, boolean rescheduleTasks)
    {
       boolean trace = log.isTraceEnabled();
       if (trace)
-         log.trace("unregisterLoaderThread, classloader=" + classLoader + " thread=" + thread);
+         log.trace("unregisterLoaderThread, classloader=" + classLoader + " thread=" + thread + " rescheduleTasks=" + rescheduleTasks);
 
       // Unregister as the owning thread and notify any waiting threads
       synchronized (loadClassThreads)
@@ -105,26 +106,29 @@ public class ClassLoaderManager
       }
 
       // Any ThreadTasks associated with this thread must be reassigned
-      List<ThreadTask> taskList = loadTasksByThread.get(thread);
-      if (taskList != null)
+      if (rescheduleTasks)
       {
-         synchronized (taskList)
+         List<ThreadTask> taskList = loadTasksByThread.get(thread);
+         if (taskList != null)
          {
-            while (taskList.isEmpty() == false)
+            synchronized (taskList)
             {
-               ThreadTask threadTask = taskList.remove(0);
-               ClassLoadingTask loadTask = threadTask.getLoadTask();
-               Thread requestingThread = loadTask.getRequestingThread();
-               if( trace )
-                  log.trace("Reassigning task: " + threadTask+" to " + requestingThread);
-               threadTask.setThread(null);
-               // Insert the task into the front of requestingThread task list
-               List<ThreadTask> toTaskList = loadTasksByThread.get(requestingThread);
-               synchronized (toTaskList)
+               while (taskList.isEmpty() == false)
                {
-                  toTaskList.add(0, threadTask);
-                  loadTask.nextEvent();
-                  toTaskList.notify();
+                  ThreadTask threadTask = taskList.remove(0);
+                  ClassLoadingTask loadTask = threadTask.getLoadTask();
+                  Thread requestingThread = loadTask.getRequestingThread();
+                  if( trace )
+                     log.trace("Reassigning task: " + threadTask+" to " + requestingThread);
+                  threadTask.setThread(null);
+                  // Insert the task into the front of requestingThread task list
+                  List<ThreadTask> toTaskList = loadTasksByThread.get(requestingThread);
+                  synchronized (toTaskList)
+                  {
+                     toTaskList.add(0, threadTask);
+                     loadTask.nextEvent();
+                     toTaskList.notify();
+                  }
                }
             }
          }
@@ -286,7 +290,7 @@ public class ClassLoaderManager
       {
          // Release any lock on the classloader
          if (threadTask.isReleaseInNextTask())
-            threadTask.getClassLoader().unlock();
+            threadTask.getClassLoader().unlock(false);
       }
 
       // If the ThreadTasks are complete mark the ClassLoadingTask finished
