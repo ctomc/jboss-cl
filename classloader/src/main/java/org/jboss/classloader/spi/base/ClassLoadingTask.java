@@ -118,7 +118,7 @@ class ClassLoadingTask
     * 
     * @return the loadedClass.
     */
-   Class<?> getLoadedClass()
+   synchronized Class<?> getLoadedClass()
    {
       return loadedClass;
    }
@@ -128,7 +128,7 @@ class ClassLoadingTask
     * 
     * @return the loadException.
     */
-   Throwable getLoadException()
+   synchronized Throwable getLoadException()
    {
       return loadException;
    }
@@ -211,7 +211,7 @@ class ClassLoadingTask
     * 
     * @return the threadTaskCount.
     */
-   int getThreadTaskCount()
+   synchronized int getThreadTaskCount()
    {
       return threadTaskCount;
    }
