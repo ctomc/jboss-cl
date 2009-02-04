@@ -42,7 +42,7 @@ import org.jboss.logging.Logger;
 class ClassLoadingTask
 {
    /** The log */
-   protected static Logger log = Logger.getLogger("org.jboss.detailed.classloader.ClassLoadinTask");
+   protected static Logger log = Logger.getLogger("org.jboss.detailed.classloader.ClassLoadingTask");
 
    /**
     * TaskState.
