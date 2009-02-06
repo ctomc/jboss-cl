@@ -285,6 +285,19 @@ public class ClassLoaderInformation
          resourceBlackList.put(name, name);
    }
    
+   /**
+    * Cleans the entry with the given name from the blackList
+    *
+    * @param name the name of the resource to clear from the blackList
+    */
+   public void clearBlackList(String name)
+   {
+      if (classBlackList != null)
+         classBlackList.remove(name);
+      if (resourceBlackList != null)
+         resourceBlackList.remove(name);
+   }
+   
    @Override
    public String toString()
    {

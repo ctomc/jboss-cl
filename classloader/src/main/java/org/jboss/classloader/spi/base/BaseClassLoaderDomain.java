@@ -91,6 +91,9 @@ public abstract class BaseClassLoaderDomain implements Loader
       globalClassBlackList.clear();
       globalResourceCache.clear();
       globalResourceBlackList.clear();
+
+      for (ClassLoaderInformation info : classLoaders)
+         info.flushCaches();
    }
 
    public int getClassBlackListSize()
@@ -1430,6 +1433,11 @@ public abstract class BaseClassLoaderDomain implements Loader
       {
          globalResourceBlackList.remove(name);
       }
+
+      // Need to clear the import caches as well
+      List<ClassLoaderInformation> infos = classLoaders;
+      for (ClassLoaderInformation info : infos)
+         info.clearBlackList(name);
    }
    
 }

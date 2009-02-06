@@ -30,10 +30,12 @@ import java.util.concurrent.CountDownLatch;
 
 import junit.framework.Test;
 
+import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.ParentPolicy;
+import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.test.classloader.AbstractClassLoaderTestWithSecurity;
@@ -306,5 +308,32 @@ public class DelegateUnitTestCase extends AbstractClassLoaderTestWithSecurity
          threadA.doJoin();
          threadB.doJoin();
       }
+   }
+   
+   public void testFlushOnImports() throws Exception
+   {
+      ClassLoaderSystem system = createClassLoaderSystemWithModifiedBootstrap();
+
+      MockClassLoaderPolicy pa = createMockClassLoaderPolicy("A");
+      pa.setPaths(TestA1.class);
+      pa.setExcluded(TestA1.class);
+      ClassLoader a = system.registerClassLoaderPolicy(pa);
+
+      MockClassLoaderPolicy pb = createMockClassLoaderPolicy("B");
+      pb.setPaths(TestB1.class);
+      List<DelegateLoader> delegates = new ArrayList<DelegateLoader>();
+      delegates.add(new FilteredDelegateLoader(pa));
+      pb.setDelegates(delegates);
+      ClassLoader b = system.registerClassLoaderPolicy(pb);
+      
+      assertLoadClassFail(TestA1.class, a);
+      assertLoadClassFail(TestA1.class, b);
+      
+      pa.setExcluded(new String[0]);
+      String testA1Path = ClassLoaderUtils.classNameToPath(TestA1.class.getName());
+      ((BaseClassLoader) a).clearBlackList(testA1Path);
+      
+      assertLoadClass(TestA1.class, a);
+      assertLoadClass(TestA1.class, b, a);
    }
 }
