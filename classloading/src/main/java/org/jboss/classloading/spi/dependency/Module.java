@@ -925,6 +925,9 @@ public abstract class Module extends NameAndVersionSupport
     */
    public void reset()
    {
+      ClassLoader classLoader = getClassLoader();
+      if (classLoader != null)
+         unregisterModuleClassLoader(this, classLoader);
       this.capabilities = null;
       this.requirements = null;
    }
