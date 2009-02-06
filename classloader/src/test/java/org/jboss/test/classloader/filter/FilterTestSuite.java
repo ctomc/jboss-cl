@@ -28,6 +28,7 @@ import junit.textui.TestRunner;
 import org.jboss.test.classloader.filter.test.CombiningFilterUnitTestCase;
 import org.jboss.test.classloader.filter.test.FilterUnitTestCase;
 import org.jboss.test.classloader.filter.test.PackageFilterUnitTestCase;
+import org.jboss.test.classloader.filter.test.RecursivePackageFilterUnitTestCase;
 
 /**
  * Filter Test Suite.
@@ -58,6 +59,7 @@ public class FilterTestSuite extends TestSuite
 
       suite.addTest(FilterUnitTestCase.suite());
       suite.addTest(PackageFilterUnitTestCase.suite());
+      suite.addTest(RecursivePackageFilterUnitTestCase.suite());
       suite.addTest(CombiningFilterUnitTestCase.suite());
       
       return suite;
