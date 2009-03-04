@@ -954,6 +954,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       }
       catch (InterruptedException ignored)
       {
+         interrupted = true;
       }
       finally
       {
@@ -1017,6 +1018,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
             }
             catch (InterruptedException ignored)
             {
+               interrupted = true;
             }
          }
       }

@@ -147,15 +147,7 @@ public class ClassLoaderManager
    {
       while (task.getThreadTaskCount() != 0)
       {
-         try
-         {
-            nextTask(thread, task);
-         }
-         catch(InterruptedException e)
-         {
-            task.setLoadError(e);
-            break;
-         }
+         nextTask(thread, task);
       }
 
       Class<?> loadedClass = task.getLoadedClass();
@@ -186,127 +178,134 @@ public class ClassLoaderManager
     * 
     * @param thread the thread
     * @param task the task
-    * @throws InterruptedException if it is interrupted
     */
-   private static void nextTask(Thread thread, ClassLoadingTask task) throws InterruptedException
+   private static void nextTask(Thread thread, ClassLoadingTask task)
    {
-      boolean trace = log.isTraceEnabled();
-      if (trace)
-         log.trace("Next task thread=" + thread + " task=" + task);
-      
-      List<ThreadTask> taskList = loadTasksByThread.get(thread);
-      synchronized (taskList)
-      {
-         // There may not be any ThreadTasks
-         while (taskList.isEmpty() && task.getThreadTaskCount() != 0 )
-         {
-            /* There are no more tasks for the calling thread to execute, so the
-            calling thread must wait until the task.threadTaskCount reaches 0
-             */
-            if (trace)
-               log.trace("Begin nextTask(WAIT_ON_EVENT), task="+task);
-            try
-            {
-               task.waitOnEvent();
-               taskList.wait();
-            }
-            catch(InterruptedException e)
-            {
-               if( trace )
-                  log.trace("nextTask(WAIT_ON_EVENT), interrupted, task="+task, e);
-               // Abort this task t
-               throw e;
-            }
-            if (trace)
-               log.trace("nextTask(WAIT_ON_EVENT), notified, task="+task);
-         }
-
-         if (trace)
-            log.trace("Continue nextTask(" + taskList.size()+"), task="+task);
-
-         // See if the task is complete
-         if (task.getThreadTaskCount() == 0)
-         {
-            task.finish();
-            log.trace("End nextTask(FINISHED), task="+task);
-            return;
-         }
-      }
-
-      ThreadTask threadTask = taskList.remove(0);
-      ClassLoadingTask loadTask = threadTask.getLoadTask();
-      if (trace)
-         log.trace("Begin nextTask(" + taskList.size() + "), loadTask=" + loadTask);
-
+      boolean intr = Thread.interrupted();
       try
       {
-         Thread taskThread = threadTask.getThread();
-         if (taskThread == null)
-         {
-            /* This is a task that has been reassigned back to the original
-            requesting thread ClassLoadingTask, so a new ThreadTask must
-            be scheduled.
-            */
-            if (trace)
-               log.trace("Rescheduling threadTask=" + threadTask);
-            scheduleTask(loadTask, threadTask.getLoader(), true);
-         }
-         else
-         {
-            if (trace)
-               log.trace("Running threadTask=" + threadTask);
-            threadTask.run();
-         }
-      }
-      catch (Throwable e)
-      {
+         boolean trace = log.isTraceEnabled();
          if (trace)
-            log.trace("Run failed with exception", e);
-         boolean retry = e instanceof ClassCircularityError || e.getClass().equals(LinkageError.class);
-         if (retry && loadTask.incrementNumCCE() < MAX_CCE)
+            log.trace("Next task thread=" + thread + " task=" + task);
+
+         List<ThreadTask> taskList = loadTasksByThread.get(thread);
+         synchronized (taskList)
          {
-            /* Reschedule this task after all existing tasks to allow the
-            current load tasks which are conflicting to complete.
-            */
-            try
+            // There may not be any ThreadTasks
+            while (taskList.isEmpty() && task.getThreadTaskCount() != 0 )
             {
-               // Reschedule and update the loadTask.threadTaskCount
+               /* There are no more tasks for the calling thread to execute, so the
+               calling thread must wait until the task.threadTaskCount reaches 0
+                */
+               if (trace)
+                  log.trace("Begin nextTask(WAIT_ON_EVENT), task="+task);
+               try
+               {
+                  task.waitOnEvent();
+                  taskList.wait();
+                  if (trace)
+                     log.trace("nextTask(WAIT_ON_EVENT), notified, task="+task);
+               }
+               catch(InterruptedException e)
+               {
+                  if( trace )
+                     log.trace("nextTask(WAIT_ON_EVENT), interrupted, task="+task, e);
+                  intr = true;
+               }
+            }
+
+            if (trace)
+               log.trace("Continue nextTask(" + taskList.size()+"), task="+task);
+
+            // See if the task is complete
+            if (task.getThreadTaskCount() == 0)
+            {
+               task.finish();
+               log.trace("End nextTask(FINISHED), task="+task);
+               return;
+            }
+         }
+
+         ThreadTask threadTask = taskList.remove(0);
+         ClassLoadingTask loadTask = threadTask.getLoadTask();
+         if (trace)
+            log.trace("Begin nextTask(" + taskList.size() + "), loadTask=" + loadTask);
+
+         try
+         {
+            Thread taskThread = threadTask.getThread();
+            if (taskThread == null)
+            {
+               /* This is a task that has been reassigned back to the original
+               requesting thread ClassLoadingTask, so a new ThreadTask must
+               be scheduled.
+               */
+               if (trace)
+                  log.trace("Rescheduling threadTask=" + threadTask);
                scheduleTask(loadTask, threadTask.getLoader(), true);
             }
-            catch (Throwable ex)
+            else
             {
-               loadTask.setLoadError(ex);
-               log.warn("Failed to reschedule task after CCE", ex);
+               if (trace)
+                  log.trace("Running threadTask=" + threadTask);
+               threadTask.run();
             }
-            if (trace)
-               log.trace("Post CCE state, loadTask=" + loadTask);
          }
-         else
+         catch (Throwable e)
          {
-            loadTask.setLoadError(e);
+            if (trace)
+               log.trace("Run failed with exception", e);
+            boolean retry = e instanceof ClassCircularityError || e.getClass().equals(LinkageError.class);
+            if (retry && loadTask.incrementNumCCE() < MAX_CCE)
+            {
+               /* Reschedule this task after all existing tasks to allow the
+               current load tasks which are conflicting to complete.
+               */
+               try
+               {
+                  // Reschedule and update the loadTask.threadTaskCount
+                  scheduleTask(loadTask, threadTask.getLoader(), true);
+               }
+               catch (Throwable ex)
+               {
+                  loadTask.setLoadError(ex);
+                  log.warn("Failed to reschedule task after CCE", ex);
+               }
+               if (trace)
+                  log.trace("Post CCE state, loadTask=" + loadTask);
+            }
+            else
+            {
+               loadTask.setLoadError(e);
+            }
          }
+         finally
+         {
+            // Release any lock on the classloader
+            if (threadTask.isReleaseInNextTask())
+               threadTask.getClassLoader().unlock(false);
+         }
+
+         // If the ThreadTasks are complete mark the ClassLoadingTask finished
+         if (loadTask.getThreadTaskCount() == 0)
+         {
+            List<ThreadTask> loadTaskThreadTasks = loadTasksByThread.get(loadTask.getRequestingThread());
+            synchronized (loadTaskThreadTasks)
+            {
+               if( trace )
+                  log.trace("Notifying task of thread completion, loadTask:"+loadTask);
+               task.finish();
+               loadTaskThreadTasks.notify();
+            }
+         }
+         if (trace)
+            log.trace("End nextTask(" + taskList.size()+ "), loadTask=" + loadTask);
       }
       finally
       {
-         // Release any lock on the classloader
-         if (threadTask.isReleaseInNextTask())
-            threadTask.getClassLoader().unlock(false);
+         if (intr)
+            Thread.currentThread().interrupt();
       }
-
-      // If the ThreadTasks are complete mark the ClassLoadingTask finished
-      if (loadTask.getThreadTaskCount() == 0)
-      {
-         List<ThreadTask> loadTaskThreadTasks = loadTasksByThread.get(loadTask.getRequestingThread());
-         synchronized (loadTaskThreadTasks)
-         {
-            if( trace )
-               log.trace("Notifying task of thread completion, loadTask:"+loadTask);
-            task.finish();
-            loadTaskThreadTasks.notify();
-         }
-      }
-      if (trace)
-         log.trace("End nextTask(" + taskList.size()+ "), loadTask=" + loadTask);
    }
 
    /** 
@@ -391,6 +390,7 @@ public class ClassLoaderManager
                   }
                   catch (InterruptedException ignored)
                   {
+                     interrupted = true;
                   }
                   thread = loadClassThreads.get(classLoader);
                }
