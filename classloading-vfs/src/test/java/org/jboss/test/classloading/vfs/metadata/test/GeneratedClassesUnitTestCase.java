@@ -92,7 +92,6 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
       a.getRoots().add(getRoot(A.class));
       a.getRoots().add(dynamicClassRoot);
       a.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
-      //a.getCapabilities().addCapability(factory.createPackage(info.getPackageName()));
       KernelDeployment depA = install(a);
 
       VFSClassLoaderFactory b = new VFSClassLoaderFactory("b");
