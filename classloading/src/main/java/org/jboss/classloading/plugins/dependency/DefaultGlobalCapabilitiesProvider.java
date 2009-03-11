@@ -19,13 +19,12 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */ 
-package org.jboss.test.classloading.vfs.metadata.support2;
+package org.jboss.classloading.plugins.dependency;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.classloading.plugins.metadata.PackageCapability;
 import org.jboss.classloading.spi.dependency.GlobalCapabilitiesProvider;
+import org.jboss.classloading.spi.metadata.CapabilitiesMetaData;
 import org.jboss.classloading.spi.metadata.Capability;
 
 /**
@@ -33,24 +32,17 @@ import org.jboss.classloading.spi.metadata.Capability;
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  * @version $Revision: 1.1 $
  */
-public class MockGlobalCapabilitiesProvider implements GlobalCapabilitiesProvider
+public class DefaultGlobalCapabilitiesProvider implements GlobalCapabilitiesProvider
 {
    List<Capability> capabilities;
    
-   public void setCapabilities(List<Capability> capabilities)
+   public void setGlobalCapabilities(CapabilitiesMetaData capabilitiesMetaData)
    {
-      this.capabilities = capabilities;
+      capabilities = capabilitiesMetaData.getCapabilities();
    }
    
    public List<Capability> getCapabilities()
    {
-      if (capabilities == null)
-      {
-         capabilities = new ArrayList<Capability>();
-         capabilities.add(new PackageCapability("newpackage"));
-      }
-      
       return capabilities;
-   }
-   
+   }   
 }

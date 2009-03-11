@@ -26,11 +26,17 @@ import java.util.List;
 import org.jboss.classloading.spi.metadata.Capability;
 
 /**
+ * Used in ClassLoadings in/uncallback to obtain capabilities that should be
+ * used for all loaders.
  * 
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  * @version $Revision: 1.1 $
  */
 public interface GlobalCapabilitiesProvider
 {
+   /**
+    * Gets the global capabilites
+    * @return A list of the global capabilities
+    */
    List<Capability> getCapabilities();
 }

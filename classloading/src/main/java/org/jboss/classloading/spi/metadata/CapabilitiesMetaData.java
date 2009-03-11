@@ -28,6 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.classloading.plugins.metadata.ModuleCapability;
@@ -40,6 +41,7 @@ import org.jboss.classloading.plugins.metadata.PackageCapability;
  * @version $Revision: 1.1 $
  */
 @XmlType(name="capabilties", propOrder= {"capabilities"})
+@XmlRootElement(name="capabilities", namespace="urn:jboss:classloading:1.0")
 public class CapabilitiesMetaData implements Serializable, Cloneable
 {
    /** The serialVersionUID */
