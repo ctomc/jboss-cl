@@ -82,7 +82,7 @@ public abstract class Module extends NameAndVersionSupport
    
    /** The requirements */
    private List<RequirementDependencyItem> requirementDependencies;
-
+   
    /**
     * Register a classloader for a module
     * 
@@ -355,7 +355,7 @@ public abstract class Module extends NameAndVersionSupport
    {
       return true;
    }
-
+   
    /**
     * Find the module for a classloader
     * 
@@ -656,6 +656,9 @@ public abstract class Module extends NameAndVersionSupport
       // Use the defaults
       if (capabilities == null)
          capabilities = defaultCapabilities();
+
+      //Add global capabilities
+      capabilities = getDomain().mergeGlobalCapabilities(capabilities);
       
       // Cache it
       this.capabilities = capabilities;

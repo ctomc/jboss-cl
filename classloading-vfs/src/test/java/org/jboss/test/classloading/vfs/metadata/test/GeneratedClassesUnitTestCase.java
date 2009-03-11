@@ -50,8 +50,8 @@ import org.jboss.virtual.plugins.context.memory.MemoryContextFactory;
  */
 public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerTest
 {
-   final static GeneratedClassInfo DEFAULT_PACKAGE = new GeneratedClassInfo("DefaultGeneratedClass");
    final static GeneratedClassInfo NEW_PACKAGE  = new GeneratedClassInfo("newpackage.GeneratedClass");
+   final static GeneratedClassInfo OTHER_PACKAGE  = new GeneratedClassInfo("otherpackage.GeneratedClass");
    final static GeneratedClassInfo EXISTING_PACKAGE  = new GeneratedClassInfo("org.jboss.test.classloading.vfs.metadata.support.a.GeneratedClass");
    static
    {
@@ -70,21 +70,20 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
 
    public void testImportAllGenerateClassInExistingPackage() throws Exception
    {
-      runImportAllGenerateClass(EXISTING_PACKAGE);
+      runImportAllGenerateClass(EXISTING_PACKAGE, true);
    }
    
-   public void testImportAllGenerateClassInDefaultPackage() throws Exception
+   public void testImportAllGenerateClassInGlobalIncludedPackage() throws Exception
    {
-      runImportAllGenerateClass(DEFAULT_PACKAGE);      
+      runImportAllGenerateClass(NEW_PACKAGE, true);
    }
    
-   public void testImportAllGenerateClassInNewPackage() throws Exception
+   public void testImportAllGenerateClassInOtherPackage() throws Exception
    {
-      runImportAllGenerateClass(NEW_PACKAGE);
+      runImportAllGenerateClass(OTHER_PACKAGE, false);
    }
    
-   
-   private void runImportAllGenerateClass(GeneratedClassInfo info) throws Exception
+   private void runImportAllGenerateClass(GeneratedClassInfo info, boolean expectSuccess) throws Exception
    {
       ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
       String dynamicClassRoot = getDynamicClassRoot();
@@ -93,7 +92,7 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
       a.getRoots().add(getRoot(A.class));
       a.getRoots().add(dynamicClassRoot);
       a.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
-      a.getCapabilities().addCapability(factory.createPackage(info.getPackageName()));
+      //a.getCapabilities().addCapability(factory.createPackage(info.getPackageName()));
       KernelDeployment depA = install(a);
 
       VFSClassLoaderFactory b = new VFSClassLoaderFactory("b");
@@ -114,8 +113,24 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
          Class<?> clazz = generateClass(clA, dynamicClassRoot, info);
          Class<?> clazzA = assertLoadClass(info.getClassname(), clA);
          assertSame(clazz, clazzA);
-         Class<?> clazzB = assertLoadClass(info.getClassname(), clB, clA);
-         assertSame(clazz, clazzB);
+         
+         try
+         {
+            Class<?> clazzB = assertLoadClass(info.getClassname(), clB, clA);
+            
+            if (!expectSuccess)
+            {
+               fail("Should not have been able to load " + info.getClassname());
+            }
+            assertSame(clazz, clazzB);
+         }
+         catch(Throwable t)
+         {
+            if (expectSuccess)
+            {
+               fail("Should have been able to load class" + info.getClassname() + " " + t);
+            }
+         }
       }
       finally
       {
@@ -180,6 +195,8 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
       private void loadClassBytes()
       {
          InputStream in = this.getClass().getClassLoader().getResourceAsStream("classes/" + resourceName);
+         
+         assertNotNull("Could not find inputstream for " + resourceName, in);
          try
          {
             ByteArrayOutputStream out = new ByteArrayOutputStream();

@@ -207,6 +207,16 @@ public class Domain
    }
    
    /**
+    * Merges the capabilities provided by our global capabilities provider with the passed in capabilities
+    * @param capabilities The capabilities list into which we want to add the global capabilities
+    * @return The passed in capabilities with the global capabilities merged in
+    */
+   List<Capability> mergeGlobalCapabilities(List<Capability> capabilities)
+   {
+      return classLoading.mergeGlobalCapabilities(capabilities);
+   }
+   
+   /**
     * Resolve a requirement to a module
     * 
     * @param module the module

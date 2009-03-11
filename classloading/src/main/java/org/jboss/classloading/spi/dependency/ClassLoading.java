@@ -21,10 +21,14 @@
  */
 package org.jboss.classloading.spi.dependency;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.classloader.spi.ClassLoaderSystem;
+import org.jboss.classloading.spi.metadata.Capability;
+import org.jboss.util.collection.ConcurrentSet;
 
 /**
  * ClassLoading.
@@ -39,6 +43,8 @@ public class ClassLoading
    
    /** The classloading domains by name */
    private Map<String, Domain> domains = new ConcurrentHashMap<String, Domain>();
+   
+   private final Set<GlobalCapabilitiesProvider> globalCapabilitiesProviders = new ConcurrentSet<GlobalCapabilitiesProvider>();
    
    /**
     * Add a module
@@ -70,7 +76,33 @@ public class ClassLoading
          throw new IllegalArgumentException("Null module");
       module.release();
    }
-
+   
+   /**
+    * Add a global capabilities provider
+    * @param provider the provider
+    * @throws IllegalArgumentException for a null provider
+    */
+   public void addGlobalCapabilitiesProvider(GlobalCapabilitiesProvider provider)
+   {
+      if (provider == null)
+         throw new IllegalArgumentException("Null global capabilities provider");
+      
+      globalCapabilitiesProviders.add(provider);
+   }
+   
+   /**
+    * Remove a global capabilities provider
+    * @param provider the provider
+    * @throws IllegalArgumentException for a null provider
+    */
+   public void removeGlobalCapabilitiesProvider(GlobalCapabilitiesProvider provider)
+   {
+      if (provider == null)
+         throw new IllegalArgumentException("Null global capabilities provider");
+      
+      globalCapabilitiesProviders.remove(provider);
+   }
+   
    /**
     * Get or create the domain
     * 
@@ -158,5 +190,25 @@ public class ClassLoading
       if (module == null)
          return null;
       return module.getClassLoader();
+   }
+   
+   /**
+    * Merges the capabilities provided by our global capabilities provider with the passed in capabilities
+    * @param capabilities The capabilities list into which we want to add the global capabilities
+    * @return The passed in capabilities with the global capabilities merged in
+    */
+   List<Capability> mergeGlobalCapabilities(List<Capability> capabilities)
+   {
+      if (capabilities == null)
+         throw new IllegalArgumentException("Null capabilities");
+      
+      if (globalCapabilitiesProviders != null && globalCapabilitiesProviders.size() > 0)
+      {
+         for (GlobalCapabilitiesProvider provider : globalCapabilitiesProviders)
+         {
+            capabilities.addAll(provider.getCapabilities());
+         }
+      }
+      return capabilities;
    }
 }
