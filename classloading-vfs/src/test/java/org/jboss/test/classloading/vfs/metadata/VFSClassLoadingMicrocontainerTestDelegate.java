@@ -41,20 +41,12 @@ public class VFSClassLoadingMicrocontainerTestDelegate extends MicrocontainerTes
 
    protected void deploy() throws Exception
    {
-      enableTrace("org.jboss.xb");
       String common = "/org/jboss/test/classloading/vfs/metadata/Common.xml";
       URL url = getClass().getResource(common);
       if (url == null)
          throw new IllegalStateException(common + " not found");
       deploy(url);
 
-      try
-      {
-         super.deploy();
-      }
-      catch(Exception e)
-      {
-         e.printStackTrace();
-      }
+      super.deploy();
    }
 }
