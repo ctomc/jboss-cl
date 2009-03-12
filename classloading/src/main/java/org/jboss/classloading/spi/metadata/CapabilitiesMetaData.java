@@ -40,7 +40,7 @@ import org.jboss.classloading.plugins.metadata.PackageCapability;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-@XmlType(name="capabilties", propOrder= {"capabilities"})
+@XmlType(name="capabilities", propOrder= {"capabilities"})
 @XmlRootElement(name="capabilities", namespace="urn:jboss:classloading:1.0")
 public class CapabilitiesMetaData implements Serializable, Cloneable
 {
