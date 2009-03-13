@@ -25,6 +25,16 @@
       </xsd:annotation>
    </xsd:element>
 
+   <xsd:element name="capabilities" type="capabilities">
+      <xsd:annotation>
+         <xsd:documentation>
+            <![CDATA[
+            The capabilities for use in other schemas
+            ]]>
+         </xsd:documentation>
+      </xsd:annotation>
+   </xsd:element>
+
    <xsd:complexType name="classloadingType">
       <xsd:annotation>
          <xsd:documentation>
