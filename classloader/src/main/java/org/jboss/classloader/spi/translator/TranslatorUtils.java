@@ -63,7 +63,7 @@ public class TranslatorUtils
    }
 
    /**
-    * Apply translators on policy shutdown.
+    * Apply translators on classloader unregister / policy shutdown.
     *
     * @param translators the translators
     * @param classLoader the policy's classloader
