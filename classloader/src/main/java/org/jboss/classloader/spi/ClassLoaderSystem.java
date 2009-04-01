@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 
 import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
@@ -38,6 +39,7 @@ import javax.management.ObjectName;
 
 import org.jboss.classloader.plugins.system.ClassLoaderSystemBuilder;
 import org.jboss.classloader.spi.base.BaseClassLoaderSystem;
+import org.jboss.classloader.spi.translator.TranslatorUtils;
 import org.jboss.logging.Logger;
 import org.jboss.util.loading.Translator;
 
@@ -45,6 +47,7 @@ import org.jboss.util.loading.Translator;
  * ClassLoaderSystem.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements ClassLoaderSystemMBean, MBeanRegistration
@@ -64,8 +67,8 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
    /** The registered domains by name */
    private Map<String, ClassLoaderDomain> registeredDomains = new HashMap<String, ClassLoaderDomain>();
 
-   /** Any translator */
-   private Translator translator;
+   /** Any translators */
+   private List<Translator> translators;
    
    /** Whether the system is shutdown */
    private boolean shutdown = false;
@@ -514,29 +517,35 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
     * Get the translator.
     * 
     * @return the translator.
+    * @deprecated use translator list
     */
+   @Deprecated
    public Translator getTranslator()
    {
-      return translator;
+      if (translators == null || translators.isEmpty())
+         return null;
+
+      return translators.get(0);
    }
 
    /**
     * Set the translator.
     * 
     * @param translator the translator.
+    * @deprecated use translator list
     */
+   @Deprecated
    public void setTranslator(Translator translator)
    {
       log.debug(this + " set translator to " + translator);
-      this.translator = translator;
+      translators = Collections.singletonList(translator);
    }
 
    @Override
    protected byte[] transform(ClassLoader classLoader, String className, byte[] byteCode, ProtectionDomain protectionDomain) throws Exception
    {
-      if (translator != null)
-         return translator.transform(classLoader, className, null, protectionDomain, byteCode);
-      return super.transform(classLoader, className, byteCode, protectionDomain);
+      byte[] result = TranslatorUtils.applyTranslatorsOnTransform(translators, classLoader, className, byteCode, protectionDomain);
+      return super.transform(classLoader, className, result, protectionDomain);
    }
 
    @Override
@@ -544,8 +553,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
    {
       try
       {
-         if (translator != null)
-            translator.unregisterClassLoader(classLoader);
+         TranslatorUtils.applyTranslatorsAtUnregister(translators, classLoader);
       }
       catch (Throwable t)
       {
@@ -680,5 +688,61 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
       if (shutdown)
          builder.append("SHUTDOWN! ");
       super.toLongString(builder);
+   }
+
+
+   /**
+    * Get the policy's translators.
+    *
+    * @return the translators
+    */
+   public List<Translator> getTranslators()
+   {
+      if (translators == null || translators.isEmpty())
+         return Collections.emptyList();
+      else
+         return Collections.unmodifiableList(translators);
+   }
+
+   /**
+    * Set the translators.
+    *
+    * @param translators the translators
+    */
+   public synchronized void setTranslators(List<Translator> translators)
+   {
+      this.translators = translators;
+   }
+
+   /**
+    * Add the translator.
+    *
+    * @param translator the translator to add
+    * @throws IllegalArgumentException for null translator
+    */
+   public synchronized void addTranslator(Translator translator)
+   {
+      if (translator == null)
+         throw new IllegalArgumentException("Null translator");
+
+      if (translators == null)
+         translators = new ArrayList<Translator>();
+
+      translators.add(translator);
+   }
+
+   /**
+    * Remove the translator.
+    *
+    * @param translator the translator to remove
+    * @throws IllegalArgumentException for null translator
+    */
+   public synchronized void removeTranslator(Translator translator)
+   {
+      if (translator == null)
+         throw new IllegalArgumentException("Null translator");
+
+      if (translators != null)
+         translators.remove(translator);
    }
 }

@@ -24,13 +24,16 @@ package org.jboss.classloader.spi.base;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-
 import javax.management.ObjectName;
 
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.DelegateLoader;
+import org.jboss.classloader.spi.translator.TranslatorUtils;
 import org.jboss.logging.Logger;
+import org.jboss.util.loading.Translator;
 
 /**
  * Base ClassLoader policy.<p>
@@ -39,6 +42,7 @@ import org.jboss.logging.Logger;
  * package access to the protected methods.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public abstract class BaseClassLoaderPolicy
@@ -54,7 +58,10 @@ public abstract class BaseClassLoaderPolicy
 
    /** The access control context for this policy */
    private AccessControlContext access;
-   
+
+   /** The translators */
+   private List<Translator> translators;
+
    /**
     * Create a new BaseClassLoaderPolicy.
     * 
@@ -147,10 +154,17 @@ public abstract class BaseClassLoaderPolicy
     */
    protected byte[] transform(String className, byte[] byteCode, ProtectionDomain protectionDomain) throws Exception
    {
+      byte[] result = byteCode;
+
       BaseClassLoaderDomain domain = getClassLoaderDomain();
       if (domain != null)
-         return domain.transform(getClassLoader(), className, byteCode, protectionDomain);
-      return byteCode;
+         result = domain.transform(getClassLoader(), className, result, protectionDomain);
+
+      ClassLoader classLoader = getClassLoaderUnchecked();
+      if (classLoader != null)
+         result = TranslatorUtils.applyTranslatorsOnTransform(translators, classLoader, className, result, protectionDomain);
+
+      return result;
    }
 
    /**
@@ -322,6 +336,7 @@ public abstract class BaseClassLoaderPolicy
       log.debug(toString() + " shutdown!");
       BaseClassLoader classLoader = this.classLoader;
       this.classLoader = null;
+      TranslatorUtils.applyTranslatorsAtUnregister(translators, classLoader);
       classLoader.shutdownClassLoader();
    }
    
@@ -336,5 +351,60 @@ public abstract class BaseClassLoaderPolicy
        {
           domain.clearBlackList(name);
        }
+   }
+
+   /**
+    * Get the policy's translators.
+    *
+    * @return the translators
+    */
+   public List<Translator> getTranslators()
+   {
+      if (translators == null || translators.isEmpty())
+         return Collections.emptyList();
+      else
+         return Collections.unmodifiableList(translators);
+   }
+
+   /**
+    * Set the translators.
+    *
+    * @param translators the translators
+    */
+   public synchronized void setTranslators(List<Translator> translators)
+   {
+      this.translators = translators;
+   }
+
+   /**
+    * Add the translator.
+    *
+    * @param translator the translator to add
+    * @throws IllegalArgumentException for null translator
+    */
+   public synchronized void addTranslator(Translator translator)
+   {
+      if (translator == null)
+         throw new IllegalArgumentException("Null translator");
+
+      if (translators == null)
+         translators = new ArrayList<Translator>();
+
+      translators.add(translator);
+   }
+
+   /**
+    * Remove the translator.
+    *
+    * @param translator the translator to remove
+    * @throws IllegalArgumentException for null translator
+    */
+   public synchronized void removeTranslator(Translator translator)
+   {
+      if (translator == null)
+         throw new IllegalArgumentException("Null translator");
+
+      if (translators != null)
+         translators.remove(translator);
    }
 }
