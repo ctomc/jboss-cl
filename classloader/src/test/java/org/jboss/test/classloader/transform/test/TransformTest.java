@@ -42,7 +42,7 @@ public abstract class TransformTest extends AbstractClassLoaderTest
    {
       ClassLoaderSystem system = createClassLoaderSystemWithModifiedBootstrap();
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
-      policy.setPaths("org/jboss/test/classloader/transform");
+      policy.setPaths("org/jboss/test/classloader/transform/support");
       prepareTransform(system, policy);
 
       ClassLoader cl = system.registerClassLoaderPolicy(policy);
