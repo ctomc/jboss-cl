@@ -84,8 +84,6 @@ public class ClassLoading
       }
       catch (Exception e)
       {
-         log.error("Exception while registering module: " + e);
-
          for (ModuleRegistry mr : added)
          {
             try
@@ -96,6 +94,11 @@ public class ClassLoading
             {
             }
          }
+
+         module.release();
+
+         // re-throw
+         throw new IllegalArgumentException("Exception while registering Module.", e);
       }
    }
    
