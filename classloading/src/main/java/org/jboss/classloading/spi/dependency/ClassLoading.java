@@ -21,6 +21,7 @@
  */
 package org.jboss.classloading.spi.dependency;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,27 +29,36 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloading.spi.metadata.Capability;
+import org.jboss.logging.Logger;
 import org.jboss.util.collection.ConcurrentSet;
 
 /**
  * ClassLoading.
  *
  * @author <a href="adrian@jboss.org">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class ClassLoading
 {
+   /** The log */
+   private static final Logger log = Logger.getLogger(ClassLoading.class);
+
    /** An empty default domain */
    private Domain EMPTY_DOMAIN = new Domain(this, ClassLoaderSystem.DEFAULT_DOMAIN_NAME, null, true);
    
    /** The classloading domains by name */
-   private Map<String, Domain> domains = new ConcurrentHashMap<String, Domain>();
-   
+   private final Map<String, Domain> domains = new ConcurrentHashMap<String, Domain>();
+
+   /** The global capabilities provider */
    private final Set<GlobalCapabilitiesProvider> globalCapabilitiesProviders = new ConcurrentSet<GlobalCapabilitiesProvider>();
-   
+
+   /** The module registries */
+   private final Set<ModuleRegistry> moduleRegistries = new ConcurrentSet<ModuleRegistry>();
+
    /**
     * Add a module
-    * 
+    *
     * @param module the module
     * @throws IllegalArgumentException for a null module
     */
@@ -62,6 +72,31 @@ public class ClassLoading
       String parentDomainName = module.getDeterminedParentDomainName();
       Domain domain = getDomain(domainName, parentDomainName, parentFirst);
       domain.addModule(module);
+
+      Set<ModuleRegistry> added = new HashSet<ModuleRegistry>();
+      try
+      {
+         for (ModuleRegistry mr : moduleRegistries)
+         {
+            mr.addModule(module);
+            added.add(mr);
+         }
+      }
+      catch (Exception e)
+      {
+         log.error("Exception while registering module: " + e);
+
+         for (ModuleRegistry mr : added)
+         {
+            try
+            {
+               mr.removeModule(module);
+            }
+            catch (Exception ignored)
+            {
+            }
+         }
+      }
    }
    
    /**
@@ -74,6 +109,19 @@ public class ClassLoading
    {
       if (module == null)
          throw new IllegalArgumentException("Null module");
+
+      for (ModuleRegistry mr : moduleRegistries)
+      {
+         try
+         {
+            mr.removeModule(module);
+         }
+         catch (Exception e)
+         {
+            log.warn("Exception unregistering module, registry: " + mr + ", cause: " + e);
+         }
+      }
+
       module.release();
    }
    
@@ -210,5 +258,27 @@ public class ClassLoading
          }
       }
       return capabilities;
+   }
+
+   /**
+    * Add module registry.
+    *
+    * @param moduleRegistry the module registry
+    * @return see Set#add
+    */
+   public boolean addModuleRegistry(ModuleRegistry moduleRegistry)
+   {
+      return moduleRegistries.add(moduleRegistry);
+   }
+
+   /**
+    * Add module registry.
+    *
+    * @param moduleRegistry the module registry
+    * @return see Set#remove
+    */
+   public boolean removeModuleRegistry(ModuleRegistry moduleRegistry)
+   {
+      return moduleRegistries.remove(moduleRegistry);
    }
 }
