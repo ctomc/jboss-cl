@@ -273,7 +273,7 @@ public class ClassLoading
    }
 
    /**
-    * Add module registry.
+    * Remove module registry.
     *
     * @param moduleRegistry the module registry
     * @return see Set#remove
