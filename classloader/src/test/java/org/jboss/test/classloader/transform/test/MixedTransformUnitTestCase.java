@@ -30,7 +30,7 @@ import org.jboss.test.classloader.transform.support.AuthorTranslator;
 import org.jboss.test.classloader.transform.support.LocaleTranslator;
 
 /**
- * Per policy transformation tests.
+ * Mixed transformation tests.
  *
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */

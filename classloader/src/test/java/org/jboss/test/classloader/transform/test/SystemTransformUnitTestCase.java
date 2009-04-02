@@ -29,7 +29,7 @@ import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.test.classloader.transform.support.LocaleTranslator;
 
 /**
- * Per policy transformation tests.
+ * Per system transformation tests.
  *
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
