@@ -94,10 +94,8 @@ public class ClassLoading
             {
             }
          }
-
          module.release();
 
-         // re-throw
          throw new IllegalArgumentException("Exception while registering Module.", e);
       }
    }
