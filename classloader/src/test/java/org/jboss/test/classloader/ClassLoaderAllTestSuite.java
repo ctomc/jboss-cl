@@ -24,7 +24,6 @@ package org.jboss.test.classloader;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
-
 import org.jboss.test.classloader.bootstrap.BootstrapTestSuite;
 import org.jboss.test.classloader.delegate.DelegateTestSuite;
 import org.jboss.test.classloader.domain.ClassLoaderDomainTestSuite;
@@ -35,11 +34,13 @@ import org.jboss.test.classloader.old.OldTestSuite;
 import org.jboss.test.classloader.policy.test.ClassLoaderPolicyUnitTestCase;
 import org.jboss.test.classloader.resources.ResourceTestSuite;
 import org.jboss.test.classloader.system.ClassLoaderSystemTestSuite;
+import org.jboss.test.classloader.transform.TransformTestSuite;
 
 /**
  * ClassLoader All Test Suite.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 37459 $
  */
 public class ClassLoaderAllTestSuite extends TestSuite
@@ -73,7 +74,8 @@ public class ClassLoaderAllTestSuite extends TestSuite
       suite.addTest(ResourceTestSuite.suite());
       suite.addTest(JMXTestSuite.suite());
       suite.addTest(JUnitTestSuite.suite());
-      
+      suite.addTest(TransformTestSuite.suite());
+
       return suite;
    }
 }

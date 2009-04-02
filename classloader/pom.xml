@@ -71,6 +71,7 @@
     </dependency>
     
     <!-- Test dependencies -->
+    
     <dependency>
       <groupId>org.jboss.test</groupId>
       <artifactId>jboss-test</artifactId>
@@ -83,5 +84,11 @@
       <optional>true</optional>
     </dependency>
     
-  </dependencies>  
+    <dependency>
+      <groupId>javassist</groupId>
+      <artifactId>javassist</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+  </dependencies>
 </project>
