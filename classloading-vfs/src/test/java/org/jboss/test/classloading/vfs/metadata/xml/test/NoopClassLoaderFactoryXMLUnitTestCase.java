@@ -22,12 +22,12 @@
 package org.jboss.test.classloading.vfs.metadata.xml.test;
 
 import junit.framework.Test;
+import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory10;
 import org.jboss.test.classloading.vfs.metadata.xml.AbstractJBossXBTest;
 import org.jboss.test.classloading.vfs.metadata.xml.support.NoopClassLoaderFactory;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
+import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SingletonSchemaResolverFactory;
-import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory10;
 
 /**
  * NoopClassLoaderFactoryXMLUnitTestCase.
@@ -50,9 +50,9 @@ public class NoopClassLoaderFactoryXMLUnitTestCase extends AbstractJBossXBTest
    {
       SingletonSchemaResolverFactory factory = SingletonSchemaResolverFactory.getInstance();
       SchemaBindingResolver resolver = factory.getSchemaBindingResolver();
-      DefaultSchemaResolver dsr = assertInstanceOf(resolver, DefaultSchemaResolver.class);
-      dsr.removeClassBinding("urn:jboss:classloader:1.0");
-      dsr.addClassBinding("urn:jboss:classloader:1.0", clazz);
+      MultiClassSchemaResolver mcsr = assertInstanceOf(resolver, MultiClassSchemaResolver.class);
+      mcsr.removeLocationToClassMapping("urn:jboss:classloader:1.0");
+      mcsr.mapLocationToClass("urn:jboss:classloader:1.0", clazz);
    }
 
    @Override
