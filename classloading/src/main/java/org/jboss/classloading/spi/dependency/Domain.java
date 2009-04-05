@@ -34,6 +34,7 @@ import org.jboss.logging.Logger;
  * Domain.
  * 
  * @author <a href="adrian@jboss.org">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class Domain
@@ -175,15 +176,15 @@ public class Domain
          throw new IllegalArgumentException("Null module");
 
       log.debug(this + " remove module " + module);
-      
-      modulesByName.remove(module.getContextName());
-      modules.remove(module);
-      module.setDomain(null);
-      module.removeDependencies();
-      
+
       ClassLoadingSpace space = module.getClassLoadingSpace();
       if (space != null)
          space.split(module);
+
+      module.removeDependencies();
+      modules.remove(module);
+      modulesByName.remove(module.getContextName());
+      module.setDomain(null);
    }
 
    /**
