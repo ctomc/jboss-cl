@@ -25,7 +25,7 @@ import junit.framework.Test;
 import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory10;
 import org.jboss.test.classloading.vfs.metadata.xml.AbstractJBossXBTest;
 import org.jboss.test.classloading.vfs.metadata.xml.support.NoopClassLoaderFactory;
-import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
+import org.jboss.xb.binding.resolver.MutableSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SingletonSchemaResolverFactory;
 
@@ -50,9 +50,9 @@ public class NoopClassLoaderFactoryXMLUnitTestCase extends AbstractJBossXBTest
    {
       SingletonSchemaResolverFactory factory = SingletonSchemaResolverFactory.getInstance();
       SchemaBindingResolver resolver = factory.getSchemaBindingResolver();
-      MultiClassSchemaResolver mcsr = assertInstanceOf(resolver, MultiClassSchemaResolver.class);
-      mcsr.removeLocationToClassMapping("urn:jboss:classloader:1.0");
-      mcsr.mapLocationToClass("urn:jboss:classloader:1.0", clazz);
+      MutableSchemaResolver msr = assertInstanceOf(resolver, MutableSchemaResolver.class);
+      msr.removeLocationToClassMapping("urn:jboss:classloader:1.0");
+      msr.mapLocationToClass("urn:jboss:classloader:1.0", clazz);
    }
 
    @Override
