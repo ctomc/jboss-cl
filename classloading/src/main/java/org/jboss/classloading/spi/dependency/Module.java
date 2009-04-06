@@ -658,7 +658,7 @@ public abstract class Module extends NameAndVersionSupport
          capabilities = defaultCapabilities();
 
       //Add global capabilities
-      capabilities = getDomain().mergeGlobalCapabilities(capabilities);
+      capabilities = checkDomain().mergeGlobalCapabilities(capabilities);
       
       // Cache it
       this.capabilities = capabilities;
