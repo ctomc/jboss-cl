@@ -242,9 +242,10 @@ public class ClassLoading
    }
    
    /**
-    * Merges the capabilities provided by our global capabilities provider with the passed in capabilities
-    * @param capabilities The capabilities list into which we want to add the global capabilities
-    * @return The passed in capabilities with the global capabilities merged in
+    * Merges the capabilities provided by our global capabilities provider with the passed in capabilities.
+    *
+    * @param capabilities the capabilities list into which we want to add the global capabilities
+    * @return the passed in capabilities with the global capabilities merged in
     */
    List<Capability> mergeGlobalCapabilities(List<Capability> capabilities)
    {
