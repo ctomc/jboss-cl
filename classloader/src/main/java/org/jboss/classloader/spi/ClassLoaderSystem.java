@@ -538,7 +538,11 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
    public void setTranslator(Translator translator)
    {
       log.debug(this + " set translator to " + translator);
-      translators = Collections.singletonList(translator);
+
+      if (translator != null)
+         translators = Collections.singletonList(translator);
+      else
+         translators = null;
    }
 
    @Override

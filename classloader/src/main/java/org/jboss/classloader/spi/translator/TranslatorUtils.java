@@ -54,9 +54,20 @@ public class TranslatorUtils
       if (translators == null || translators.isEmpty())
          return byteCode;
 
+      boolean trace = log.isTraceEnabled();
+
       byte[] result = byteCode;
       for (Translator translator : translators)
       {
+         // sanity check
+         if (translator == null)
+         {
+            if (trace)
+               log.trace("Null translator, classLoader: " + classLoader + ", className: " + className);
+
+            continue;
+         }
+
          result = translator.transform(classLoader, className, null, protectionDomain, result);
       }
       return result;
@@ -72,11 +83,22 @@ public class TranslatorUtils
    {
       if (translators != null && translators.isEmpty() == false)
       {
+         boolean trace = log.isTraceEnabled();
+
          // go in reverse order
          ListIterator<Translator> iter = translators.listIterator(translators.size() - 1);
          while(iter.hasPrevious())
          {
             Translator translator = iter.previous();
+            // sanity check
+            if (translator == null)
+            {
+               if (trace)
+                  log.trace("Null translator, classLoader: " + classLoader);
+
+               continue;
+            }
+
             try
             {
                translator.unregisterClassLoader(classLoader);
