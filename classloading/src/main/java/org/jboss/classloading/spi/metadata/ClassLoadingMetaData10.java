@@ -23,6 +23,7 @@ package org.jboss.classloading.spi.metadata;
 
 import javax.xml.bind.annotation.XmlNsForm;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.xb.annotations.JBossXmlSchema;
 
@@ -34,6 +35,7 @@ import org.jboss.xb.annotations.JBossXmlSchema;
  */
 @JBossXmlSchema(namespace="urn:jboss:classloading:1.0", elementFormDefault=XmlNsForm.QUALIFIED)
 @XmlRootElement(name="classloading")
+@XmlType(propOrder = {"requirements", "capabilities"})
 public class ClassLoadingMetaData10 extends ClassLoadingMetaData
 {
    /** The serialVersionUID */

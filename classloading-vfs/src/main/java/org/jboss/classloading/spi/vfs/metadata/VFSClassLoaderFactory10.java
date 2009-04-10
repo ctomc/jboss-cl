@@ -23,6 +23,7 @@ package org.jboss.classloading.spi.vfs.metadata;
 
 import javax.xml.bind.annotation.XmlNsForm;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.xb.annotations.JBossXmlSchema;
 
@@ -34,6 +35,7 @@ import org.jboss.xb.annotations.JBossXmlSchema;
  */
 @JBossXmlSchema(namespace="urn:jboss:classloader:1.0", elementFormDefault=XmlNsForm.QUALIFIED)
 @XmlRootElement(name="classloader")
+@XmlType(propOrder = {"requirements", "capabilities", "roots"})
 public class VFSClassLoaderFactory10 extends VFSClassLoaderFactory
 {
    /** The serialVersionUID */
