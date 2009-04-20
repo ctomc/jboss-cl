@@ -121,8 +121,8 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       assertManagedProperty(mo, "included", String.class, null);
       assertManagedProperty(mo, "excluded", String.class, null);
       assertManagedProperty(mo, "excludedExport", String.class, null);
-      assertManagedProperty(mo, "importAll", Boolean.class, false);
-      assertManagedProperty(mo, "parentFirst", Boolean.class, true);
+      assertManagedProperty(mo, "importAll", boolean.class, false);
+      assertManagedProperty(mo, "parentFirst", boolean.class, true);
       assertManagedProperty(mo, "capabilities", CapabilitiesMetaData.class, new CapabilitiesMetaData());
       assertManagedProperty(mo, "requirements", RequirementsMetaData.class, new RequirementsMetaData());
    }
@@ -204,7 +204,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
       test.setImportAll(true);
       ManagedObject mo = assertManagedObject(test);
-      assertManagedProperty(mo, "importAll", Boolean.class, true);
+      assertManagedProperty(mo, "importAll", boolean.class, true);
    }
    
    public void testJ2seClassLoadingComplaince() throws Exception
@@ -212,7 +212,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
       test.setJ2seClassLoadingCompliance(false);
       ManagedObject mo = assertManagedObject(test);
-      assertManagedProperty(mo, "parentFirst", Boolean.class, false);
+      assertManagedProperty(mo, "parentFirst", boolean.class, false);
    }
    
    public void testCacheable() throws Exception
@@ -220,7 +220,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
       test.setCacheable(false);
       ManagedObject mo = assertManagedObject(test);
-      assertManagedProperty(mo, "cache", Boolean.class, false);
+      assertManagedProperty(mo, "cache", boolean.class, false);
    }
    
    public void testBlackList() throws Exception
@@ -228,7 +228,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
       test.setBlackListable(false);
       ManagedObject mo = assertManagedObject(test);
-      assertManagedProperty(mo, "blackList", Boolean.class, false);
+      assertManagedProperty(mo, "blackList", boolean.class, false);
    }
    
    public void testSetSystem() throws Exception
