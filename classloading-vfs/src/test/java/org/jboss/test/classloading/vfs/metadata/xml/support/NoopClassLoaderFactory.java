@@ -26,6 +26,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlNsForm;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.beans.metadata.spi.BeanMetaData;
 import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory;
@@ -38,6 +39,7 @@ import org.jboss.xb.annotations.JBossXmlSchema;
  */
 @JBossXmlSchema(namespace="urn:jboss:classloader:1.0", elementFormDefault=XmlNsForm.QUALIFIED)
 @XmlRootElement(name="classloader")
+@XmlType(propOrder = {"requirements", "capabilities", "roots"})
 public class NoopClassLoaderFactory extends VFSClassLoaderFactory
 {
    private static final long serialVersionUID = 1l;
