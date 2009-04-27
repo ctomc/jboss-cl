@@ -7,8 +7,9 @@
   <classpathentry kind="var" path="M2_REPO/org/apache/ant/ant/1.7.0/ant-1.7.0.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/apache/ant/ant-junit/1.7.0/ant-junit-1.7.0.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/apache/ant/ant-launcher/1.7.0/ant-launcher-1.7.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/javassist/javassist/3.10.0.GA/javassist-3.10.0.GA.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/jboss/integration/jboss-classloading-spi/5.0.3.GA/jboss-classloading-spi-5.0.3.GA.jar" sourcepath="M2_REPO/org/jboss/integration/jboss-classloading-spi/5.0.3.GA/jboss-classloading-spi-5.0.3.GA-sources.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/jboss/jboss-common-core/2.2.10.GA/jboss-common-core-2.2.10.GA.jar" sourcepath="M2_REPO/org/jboss/jboss-common-core/2.2.10.GA/jboss-common-core-2.2.10.GA-sources.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/jboss/jboss-common-core/2.2.13.GA/jboss-common-core-2.2.13.GA.jar" sourcepath="M2_REPO/org/jboss/jboss-common-core/2.2.13.GA/jboss-common-core-2.2.13.GA-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/jboss/logging/jboss-logging-log4j/2.0.5.GA/jboss-logging-log4j-2.0.5.GA.jar" sourcepath="M2_REPO/org/jboss/logging/jboss-logging-log4j/2.0.5.GA/jboss-logging-log4j-2.0.5.GA-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/jboss/logging/jboss-logging-spi/2.0.5.GA/jboss-logging-spi-2.0.5.GA.jar" sourcepath="M2_REPO/org/jboss/logging/jboss-logging-spi/2.0.5.GA/jboss-logging-spi-2.0.5.GA-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/jboss/profiler/jvmti/jboss-profiler-jvmti/1.0.0.CR5/jboss-profiler-jvmti-1.0.0.CR5.jar"/>
