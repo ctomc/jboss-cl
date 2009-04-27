@@ -239,9 +239,8 @@ public abstract class BaseClassLoaderDomain implements Loader
       boolean trace = log.isTraceEnabled();
       
       String path = ClassLoaderUtils.classNameToPath(name);
-      
-      if (allExports)
-         checkClassBlackList(classLoader, name, path, allExports);
+
+      checkClassBlackList(classLoader, name, path, allExports);
       
       boolean findInParent = (isUseLoadClassForParent() == false);
       
