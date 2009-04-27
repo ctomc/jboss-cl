@@ -426,7 +426,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       if (result != null)
          return result;
       
-      result = checkCacheAndBlackList(name, true);
+      result = checkCacheAndBlackList(name, trace);
       if (result != null)
          return result;
       
