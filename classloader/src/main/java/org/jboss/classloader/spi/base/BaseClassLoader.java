@@ -346,6 +346,24 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          log.trace(this + " already loaded class " + ClassLoaderUtils.classToString(result));
       return result;
    }
+   
+   /**
+    * Check the cache and blacklist
+    * 
+    * @param name the name of the class
+    * @param trace whether trace is enabled
+    * @return the class is if it is already loaded, null otherwise
+    * @throws ClassNotFoundException when blacklisted
+    */
+   protected Class<?> checkCacheAndBlackList(String name, boolean trace) throws ClassNotFoundException
+   {
+      BaseClassLoaderPolicy basePolicy = policy;
+      BaseClassLoaderDomain domain = basePolicy.getClassLoaderDomain();
+      if (domain == null)
+         return null;
+
+      return domain.checkClassCacheAndBlackList(this, name, null, basePolicy.isImportAll());
+   }
 
    /**
     * Find the classloader for a class but don't load the class
@@ -405,6 +423,10 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          if (trace)
             log.trace(this + " resolved array "  + ClassLoaderUtils.classToString(result));
       }
+      if (result != null)
+         return result;
+      
+      result = checkCacheAndBlackList(name, true);
       if (result != null)
          return result;
       

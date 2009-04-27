@@ -68,7 +68,7 @@ public abstract class BaseClassLoaderDomain implements Loader
    private Map<String, List<ClassLoaderInformation>> classLoadersByPackageName = new ConcurrentHashMap<String, List<ClassLoaderInformation>>();
    
    /** The global class cache */
-   private Map<String, Loader> globalClassCache = new ConcurrentHashMap<String, Loader>();
+   private Map<String, ClassCacheItem> globalClassCache = new ConcurrentHashMap<String, ClassCacheItem>();
    
    /** The global class black list */
    private Map<String, String> globalClassBlackList = new ConcurrentHashMap<String, String>();
@@ -124,7 +124,7 @@ public abstract class BaseClassLoaderDomain implements Loader
    public Map<String, String> listClassCache()
    {
       Map<String, String> result = new HashMap<String, String>(globalClassCache.size());
-      for (Map.Entry<String, Loader> entry : globalClassCache.entrySet())
+      for (Map.Entry<String, ClassCacheItem> entry : globalClassCache.entrySet())
          result.put(entry.getKey(), entry.getValue().toString());
       return result;
    }
@@ -237,7 +237,12 @@ public abstract class BaseClassLoaderDomain implements Loader
    protected Class<?> loadClass(BaseClassLoader classLoader, String name, boolean allExports) throws ClassNotFoundException
    {
       boolean trace = log.isTraceEnabled();
-
+      
+      String path = ClassLoaderUtils.classNameToPath(name);
+      
+      if (allExports)
+         checkClassBlackList(classLoader, name, path, allExports);
+      
       boolean findInParent = (isUseLoadClassForParent() == false);
       
       // Should we directly load from the parent?
@@ -245,10 +250,11 @@ public abstract class BaseClassLoaderDomain implements Loader
       {
          Class<?> clazz = loadClassBefore(name);
          if (clazz != null)
+         {
+            globalClassCache.put(path, new ClassCacheItem(clazz));
             return clazz;
+         }
       }
-      
-      String path = ClassLoaderUtils.classNameToPath(name);
       
       Loader loader = findLoader(classLoader, path, allExports, findInParent);
       if (loader != null)
@@ -256,7 +262,11 @@ public abstract class BaseClassLoaderDomain implements Loader
          Thread thread = Thread.currentThread();
          ClassLoadingTask task = new ClassLoadingTask(name, classLoader, thread);
          ClassLoaderManager.scheduleTask(task, loader, false);
-         return ClassLoaderManager.process(thread, task);
+         Class<?> result = ClassLoaderManager.process(thread, task);
+         ClassCacheItem item = globalClassCache.get(path);
+         if (item != null)
+            item.clazz = result;
+         return result;
       }
       
       // Should we directly load from the parent?
@@ -264,7 +274,10 @@ public abstract class BaseClassLoaderDomain implements Loader
       {
          Class<?> clazz = loadClassAfter(name);
          if (clazz != null)
+         {
+            globalClassCache.put(path, new ClassCacheItem(clazz));
             return clazz;
+         }
       }
 
       // Finally see whether this is the JDK assuming it can load its classes from any classloader
@@ -281,6 +294,7 @@ public abstract class BaseClassLoaderDomain implements Loader
             {
                if (trace)
                   log.trace(this + " loaded from hack " + hack + " " + ClassLoaderUtils.classToString(result));
+               globalClassCache.put(path, new ClassCacheItem(result));
                return result;
             }
          }
@@ -627,13 +641,16 @@ public abstract class BaseClassLoaderDomain implements Loader
     */
    private Loader findLoaderInExports(BaseClassLoader classLoader, String name, boolean trace)
    {
-      Loader loader = globalClassCache.get(name);
-      if (loader != null)
+      ClassCacheItem item = globalClassCache.get(name);
+      if (item != null)
       {
-         if (trace)
-            log.trace(this + " found in global class cache " + name);
-
-         return loader;
+         Loader loader = item.loader;
+         if (loader != null)
+         {
+            if (trace)
+               log.trace(this + " found loader " + loader + " in global class cache " + name);
+            return loader;
+         }
       }
 
       if (globalClassBlackList.containsKey(name))
@@ -665,7 +682,7 @@ public abstract class BaseClassLoaderDomain implements Loader
             if (exported.getResource(name) != null)
             {
                if (canCache)
-                  globalClassCache.put(name, exported);
+                  globalClassCache.put(name, new ClassCacheItem(exported));
                return exported;
             }
          }
@@ -1419,6 +1436,75 @@ public abstract class BaseClassLoaderDomain implements Loader
    }
 
    /**
+    * Check the class cache
+    * 
+    * @param classLoader the reference classloader (possibly null)
+    * @param name the name of the class
+    * @param path the path of the class resource
+    * @param allExports whether to look at all exports
+    * @return the class if cached
+    */
+   Class<?> checkClassCache(BaseClassLoader classLoader, String name, String path, boolean allExports)
+   {
+      if (allExports)
+      {
+         ClassCacheItem item = globalClassCache.get(path);
+         if (item != null)
+         {
+            if (log.isTraceEnabled())
+               log.trace("Found " + name + " in global cache");
+            return item.clazz;
+         }
+      }
+      return null;
+   }
+
+   /**
+    * Check the class blacklist
+    * 
+    * @param classLoader the classloader (possibly null)
+    * @param name the name
+    * @param path the path of the class resource
+    * @param allExports whether to look at all exports
+    * @throws ClassNotFoundException when the class is blacklisted
+    */
+   void checkClassBlackList(BaseClassLoader classLoader, String name, String path, boolean allExports) throws ClassNotFoundException
+   {
+      if (allExports)
+      {
+         if (globalClassBlackList.containsKey(path))
+         {
+            if (log.isTraceEnabled())
+               log.trace("Found " + name + " in global blacklist");
+            throw new ClassNotFoundException(name + " not found - blacklisted");
+         }
+      }
+   }
+   
+   /**
+    * Check the cache and blacklist
+    * 
+    * @param classLoader the classloader (possibly null)
+    * @param name the name
+    * @param path the path of the class resource
+    * @param allExports whether to look at all exports
+    * @return the class when found in the cache
+    * @throws ClassNotFoundException when the class is blacklisted
+    */
+   protected Class<?> checkClassCacheAndBlackList(BaseClassLoader classLoader, String name, String path, boolean allExports) throws ClassNotFoundException
+   {
+      if (path == null)
+         path = ClassLoaderUtils.classNameToPath(name);
+      
+      Class<?> result = checkClassCache(classLoader, name, path, allExports);
+      if (result != null)
+         return result;
+      
+      checkClassBlackList(classLoader, name, path, allExports);
+      return null;
+   }
+
+   /**
     * Cleans the entry with the given name from the blackList
     *
     * @param name the name of the resource to clear from the blackList
@@ -1440,4 +1526,30 @@ public abstract class BaseClassLoaderDomain implements Loader
          info.clearBlackList(name);
    }
    
+   /**
+    * ClassCacheItem.
+    */
+   class ClassCacheItem
+   {
+      Loader loader;
+      Class<?> clazz;
+      
+      public ClassCacheItem(Loader loader)
+      {
+         this.loader = loader;
+      }
+      
+      public ClassCacheItem(Class<?> clazz)
+      {
+         this.clazz = clazz;
+      }
+
+      @Override
+      public String toString()
+      {
+         if (loader != null)
+            return loader.toString();
+         return null;
+      }
+   }
 }
