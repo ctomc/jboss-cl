@@ -1487,10 +1487,14 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param name the name
     * @param path the path of the class resource
     * @param allExports whether to look at all exports
+    * @param failIfBlackListed <code>true</code> if a blacklisted class should
+    *                          result in ClassNotFoundException; <code>false</code>
+    *                          if a <code>null</code> return value is acceptable
     * @return the class when found in the cache
-    * @throws ClassNotFoundException when the class is blacklisted
+    * @throws ClassNotFoundException when the class is blacklisted and 
+    *                               <code>failIfBlackListed</code> is <code>true</code>
     */
-   protected Class<?> checkClassCacheAndBlackList(BaseClassLoader classLoader, String name, String path, boolean allExports) throws ClassNotFoundException
+   protected Class<?> checkClassCacheAndBlackList(BaseClassLoader classLoader, String name, String path, boolean allExports, boolean failIfBlackListed) throws ClassNotFoundException
    {
       if (path == null)
          path = ClassLoaderUtils.classNameToPath(name);
@@ -1499,7 +1503,10 @@ public abstract class BaseClassLoaderDomain implements Loader
       if (result != null)
          return result;
       
-      checkClassBlackList(classLoader, name, path, allExports);
+      if (failIfBlackListed)
+      {
+         checkClassBlackList(classLoader, name, path, allExports);
+      }
       return null;
    }
 

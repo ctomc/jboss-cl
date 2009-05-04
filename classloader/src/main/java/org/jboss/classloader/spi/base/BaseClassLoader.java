@@ -351,18 +351,22 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
     * Check the cache and blacklist
     * 
     * @param name the name of the class
+    * @param failIfBlackListed <code>true</code> if a blacklisted class should
+    *                          result in ClassNotFoundException; <code>false</code>
+    *                          if a <code>null</code> return value is acceptable
     * @param trace whether trace is enabled
     * @return the class is if it is already loaded, null otherwise
-    * @throws ClassNotFoundException when blacklisted
+    * @throws ClassNotFoundException when the class is blacklisted and 
+    *                               <code>failIfBlackListed</code> is <code>true</code>
     */
-   protected Class<?> checkCacheAndBlackList(String name, boolean trace) throws ClassNotFoundException
+   protected Class<?> checkCacheAndBlackList(String name, boolean failIfBlackListed, boolean trace) throws ClassNotFoundException
    {
       BaseClassLoaderPolicy basePolicy = policy;
       BaseClassLoaderDomain domain = basePolicy.getClassLoaderDomain();
       if (domain == null)
          return null;
 
-      return domain.checkClassCacheAndBlackList(this, name, null, basePolicy.isImportAll());
+      return domain.checkClassCacheAndBlackList(this, name, null, basePolicy.isImportAll(), failIfBlackListed);
    }
 
    /**
@@ -426,17 +430,9 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       if (result != null)
          return result;
 
-      try
-      {
-         result = checkCacheAndBlackList(name, trace);
-         if (result != null)
-            return result;
-      }
-      catch (ClassNotFoundException blacklisted)
-      {
-         if (trace)
-            log.trace(name + " has been blacklisted; cannot load from domain cache");
-      }
+      result = checkCacheAndBlackList(name, false, trace);
+      if (result != null)
+         return result;
       
       synchronized (this)
       {
