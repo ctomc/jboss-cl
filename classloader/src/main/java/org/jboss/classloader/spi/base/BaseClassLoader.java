@@ -425,10 +425,18 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       }
       if (result != null)
          return result;
-      
-      result = checkCacheAndBlackList(name, trace);
-      if (result != null)
-         return result;
+
+      try
+      {
+         result = checkCacheAndBlackList(name, trace);
+         if (result != null)
+            return result;
+      }
+      catch (ClassNotFoundException blacklisted)
+      {
+         if (trace)
+            log.trace(name + " has been blacklisted; cannot load from domain cache");
+      }
       
       synchronized (this)
       {
