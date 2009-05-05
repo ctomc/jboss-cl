@@ -240,7 +240,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       
       String path = ClassLoaderUtils.classNameToPath(name);
 
-      checkClassBlackList(classLoader, name, path, allExports);
+      checkClassBlackList(classLoader, name, path, allExports, true);
       
       boolean findInParent = (isUseLoadClassForParent() == false);
       
@@ -1465,13 +1465,16 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param name the name
     * @param path the path of the class resource
     * @param allExports whether to look at all exports
+    * @param failIfBlackListed <code>true</code> if a blacklisted class should
+    *                          result in ClassNotFoundException; <code>false</code>
+    *                          if a <code>null</code> return value is acceptable
     * @throws ClassNotFoundException when the class is blacklisted
     */
-   void checkClassBlackList(BaseClassLoader classLoader, String name, String path, boolean allExports) throws ClassNotFoundException
+   void checkClassBlackList(BaseClassLoader classLoader, String name, String path, boolean allExports, boolean failIfBlackListed) throws ClassNotFoundException
    {
       if (allExports)
       {
-         if (globalClassBlackList.containsKey(path))
+         if (failIfBlackListed && globalClassBlackList.containsKey(path))
          {
             if (log.isTraceEnabled())
                log.trace("Found " + name + " in global blacklist");
@@ -1503,10 +1506,8 @@ public abstract class BaseClassLoaderDomain implements Loader
       if (result != null)
          return result;
       
-      if (failIfBlackListed)
-      {
-         checkClassBlackList(classLoader, name, path, allExports);
-      }
+      checkClassBlackList(classLoader, name, path, allExports, failIfBlackListed);
+      
       return null;
    }
 
