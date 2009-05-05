@@ -240,7 +240,8 @@ public abstract class BaseClassLoaderDomain implements Loader
       
       String path = ClassLoaderUtils.classNameToPath(name);
 
-      checkClassBlackList(classLoader, name, path, allExports, true);
+      // JBCL-101 TODO need to rework the blacklist
+      //checkClassBlackList(classLoader, name, path, allExports, true);
       
       boolean findInParent = (isUseLoadClassForParent() == false);
       
