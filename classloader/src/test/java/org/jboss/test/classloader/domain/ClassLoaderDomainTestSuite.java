@@ -22,6 +22,7 @@
 package org.jboss.test.classloader.domain;
 
 import org.jboss.test.classloader.domain.test.CustomParentLoaderUnitTestCase;
+import org.jboss.test.classloader.domain.test.HierarchicalParentClassLoaderUnitTestCase;
 import org.jboss.test.classloader.domain.test.HierarchicalParentLoaderUnitTestCase;
 import org.jboss.test.classloader.domain.test.ParentPolicyUnitTestCase;
 
@@ -59,6 +60,7 @@ public class ClassLoaderDomainTestSuite extends TestSuite
       suite.addTest(ParentPolicyUnitTestCase.suite());
       suite.addTest(CustomParentLoaderUnitTestCase.suite());
       suite.addTest(HierarchicalParentLoaderUnitTestCase.suite());
+      suite.addTest(HierarchicalParentClassLoaderUnitTestCase.suite());
       
       return suite;
    }

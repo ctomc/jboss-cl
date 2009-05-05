@@ -59,12 +59,15 @@ public class HierarchicalParentLoaderUnitTestCase extends AbstractClassLoaderTes
       
       MockClassLoaderPolicy parentPolicy = createMockClassLoaderPolicy();
       parentPolicy.setPathsAndPackageNames(MockLoader.class, Loader.class);
+      parentPolicy.setImportAll(true);
       ClassLoader parentClassLoader = system.registerClassLoaderPolicy(parent, parentPolicy);
       
       MockClassLoaderPolicy childPolicy = createMockClassLoaderPolicy();
       childPolicy.setPathsAndPackageNames(MockLoader.class, Loader.class);
+      childPolicy.setImportAll(true);
       ClassLoader classLoader = system.registerClassLoaderPolicy(child, childPolicy);
       
+      assertLoadClass(MockLoader.class, classLoader, parentClassLoader);
       assertLoadClass(MockLoader.class, classLoader, parentClassLoader);
    }
    
@@ -79,6 +82,7 @@ public class HierarchicalParentLoaderUnitTestCase extends AbstractClassLoaderTes
       ClassLoader classLoader = system.registerClassLoaderPolicy(child, childPolicy);
       
       assertLoadClass(MockLoader.class, classLoader);
+      assertLoadClass(MockLoader.class, classLoader);
    }
    
    public void testHierarchyAfterNotReached() throws Exception
@@ -89,12 +93,15 @@ public class HierarchicalParentLoaderUnitTestCase extends AbstractClassLoaderTes
       
       MockClassLoaderPolicy parentPolicy = createMockClassLoaderPolicy();
       parentPolicy.setPathsAndPackageNames(MockLoader.class, Loader.class);
+      parentPolicy.setImportAll(true);
       system.registerClassLoaderPolicy(parent, parentPolicy);
       
       MockClassLoaderPolicy childPolicy = createMockClassLoaderPolicy();
       childPolicy.setPathsAndPackageNames(MockLoader.class, Loader.class);
+      childPolicy.setImportAll(true);
       ClassLoader classLoader = system.registerClassLoaderPolicy(child, childPolicy);
       
+      assertLoadClass(MockLoader.class, classLoader);
       assertLoadClass(MockLoader.class, classLoader);
    }
    
@@ -106,11 +113,14 @@ public class HierarchicalParentLoaderUnitTestCase extends AbstractClassLoaderTes
       
       MockClassLoaderPolicy parentPolicy = createMockClassLoaderPolicy();
       parentPolicy.setPathsAndPackageNames(MockLoader.class, Loader.class);
+      parentPolicy.setImportAll(true);
       ClassLoader parentClassLoader = system.registerClassLoaderPolicy(parent, parentPolicy);
       
       MockClassLoaderPolicy childPolicy = createMockClassLoaderPolicy();
       ClassLoader classLoader = system.registerClassLoaderPolicy(child, childPolicy);
+      childPolicy.setImportAll(true);
       
+      assertLoadClass(MockLoader.class, classLoader, parentClassLoader);
       assertLoadClass(MockLoader.class, classLoader, parentClassLoader);
    }
    
@@ -124,13 +134,16 @@ public class HierarchicalParentLoaderUnitTestCase extends AbstractClassLoaderTes
       
       MockClassLoaderPolicy parentPolicy = createMockClassLoaderPolicy();
       parentPolicy.setPathsAndPackageNames(MockLoader.class, Loader.class);
+      parentPolicy.setImportAll(true);
       system.registerClassLoaderPolicy(parent, parentPolicy);
       
       MockClassLoaderPolicy childPolicy = createMockClassLoaderPolicy();
       childPolicy.setPathsAndPackageNames(MockLoader.class, Loader.class);
+      childPolicy.setImportAll(true);
       ClassLoader classLoader = system.registerClassLoaderPolicy(child, childPolicy);
       
       assertLoadClass(MockLoader.class, classLoader);
       assertTrue("Should have been filtered", filter.filtered);
+      assertLoadClass(MockLoader.class, classLoader);
    }
 }
