@@ -140,7 +140,7 @@ class ClassLoadingTask
     */
    synchronized int incrementNumCCE()
    {
-      return numCCE;
+      return ++numCCE;
    }
 
    /**

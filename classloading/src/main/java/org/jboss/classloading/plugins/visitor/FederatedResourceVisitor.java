@@ -84,7 +84,7 @@ public class FederatedResourceVisitor implements ResourceVisitor
                filters[i] = visitors[i].getFilter();
          }
 
-         filterFlags = new boolean[filters == null ? 0 : filters.length];
+         filterFlags = new boolean[filters.length];
          filter = new FederatedResourceFilter();
       }
       return filter;
