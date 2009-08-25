@@ -36,6 +36,8 @@ import org.jboss.test.classloading.dependency.test.ModuleDependencyUnitTestCase;
 import org.jboss.test.classloading.dependency.test.PackageDependencyUnitTestCase;
 import org.jboss.test.classloading.dependency.test.ReExportModuleUnitTestCase;
 import org.jboss.test.classloading.dependency.test.ReExportPackageUnitTestCase;
+import org.jboss.test.classloading.dependency.test.SelfImportPackageDependencyUnitTestCase;
+import org.jboss.test.classloading.dependency.test.SplitPackageDependencyUnitTestCase;
 import org.jboss.test.classloading.dependency.test.UsesPackageUnitTestCase;
 import org.jboss.test.classloading.dependency.test.MockResourceVisitorUnitTestCase;
 
@@ -79,6 +81,8 @@ public class DependencyTestSuite extends TestSuite
       suite.addTest(HierarchicalDomainUnitTestCase.suite());
       suite.addTest(ConflictingPackageUnitTestCase.suite());
       suite.addTest(ConflictingRequirementUnitTestCase.suite());
+      suite.addTest(SplitPackageDependencyUnitTestCase.suite());
+      suite.addTest(SelfImportPackageDependencyUnitTestCase.suite());
 
       return suite;
    }

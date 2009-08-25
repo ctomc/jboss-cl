@@ -91,19 +91,31 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       Module module = getModule().resolveModule(this, true);
       if (module != null)
       {
-         Object iDependOn = module.getContextName();
-         ControllerContext context = controller.getContext(iDependOn, getDependentState());
-         if (context != null)
+         // self dependency
+         if (module == this.module)
          {
+            Object iDependOn = module.getContextName();
+            ControllerContext context = controller.getContext(iDependOn, null);
             setIDependOn(context.getName());
             addDependsOnMe(controller, context);
             setResolved(true);
-            if (module.getClassLoadingSpace() == null)
-               log.warn(getModule() + " resolved " + getRequirement() + " to " + module + " which has import-all=true. Cannot check its consistency.");
          }
          else
          {
-            setResolved(false);
+            Object iDependOn = module.getContextName();
+            ControllerContext context = controller.getContext(iDependOn, getDependentState());
+            if (context != null)
+            {
+               setIDependOn(context.getName());
+               addDependsOnMe(controller, context);
+               setResolved(true);
+               if (module.getClassLoadingSpace() == null)
+                  log.warn(getModule() + " resolved " + getRequirement() + " to " + module + " which has import-all=true. Cannot check its consistency.");
+            }
+            else
+            {
+               setResolved(false);
+            }
          }
       }
       else

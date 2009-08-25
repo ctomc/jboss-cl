@@ -1,19 +1,21 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  
   <parent>
     <groupId>org.jboss</groupId>
     <artifactId>jboss-parent</artifactId>
     <version>4</version>
   </parent>
+  
   <groupId>org.jboss.cl</groupId>
   <artifactId>jboss-cl-parent</artifactId>
   <version>2.2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
+  
   <name>JBoss ClassLoader Parent POM</name>
+  <description>JBoss ClassLoader</description>
   <url>http://www.jboss.com/products/jbossmc</url>
-  <description>
-    JBoss ClassLoader
-  </description>
+  
   <scm>
     <connection>scm:svn:http://anonsvn.jboss.org/repos/jbossas/projects/jboss-cl/trunk/</connection>
     <developerConnection>scm:svn:https://svn.jboss.org/repos/jbossas/projects/jboss-cl/trunk/</developerConnection>
@@ -30,7 +32,7 @@
   <properties>
     <version.jboss.vfs>2.1.2.GA</version.jboss.vfs>
     <version.jboss.man>2.1.1.CR1</version.jboss.man>
-    <version.jboss.microcontainer>2.0.7.GA</version.jboss.microcontainer>
+    <version.jboss.microcontainer>2.0.9-SNAPSHOT</version.jboss.microcontainer>
     <version.jboss.common.core>2.2.14.GA</version.jboss.common.core>
     <version.jboss.logging.spi>2.0.5.GA</version.jboss.logging.spi>
     <version.jboss.classloading.spi>5.1.0.SP1</version.jboss.classloading.spi>

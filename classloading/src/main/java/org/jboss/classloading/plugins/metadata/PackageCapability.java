@@ -38,8 +38,22 @@ import org.jboss.classloading.spi.metadata.helpers.AbstractCapability;
 public class PackageCapability extends AbstractCapability implements ExportPackages
 {
    /** The serialVersionUID */
-   private static final long serialVersionUID = -1586959469453286396L;
+   private static final long serialVersionUID = 948069557003560933L;
 
+   /** The supported values for the split package poicy */
+   public enum SplitPackagePolicy 
+   {
+      /** The first module wins */
+      First, 
+      /** The last module wins */
+      Last, 
+      /** Split packages generate an error. This is the default. */
+      Error 
+   };
+   
+   /** The split package policy. Default is {@link SplitPackagePolicy#Error} */
+   private SplitPackagePolicy splitPolicy = SplitPackagePolicy.Error;
+   
    /**
     * Create a new PackageCapability.
     */
@@ -68,6 +82,36 @@ public class PackageCapability extends AbstractCapability implements ExportPacka
    public PackageCapability(String name, Object version)
    {
       super(name, version);
+   }
+
+   /**
+    * Create a new PackageCapability.
+    * 
+    * @param name the name
+    * @param version the version - pass null for default version
+    * @param splitPolicy the split package policy
+    * @throws IllegalArgumentException for a null name
+    */
+   public PackageCapability(String name, Object version, SplitPackagePolicy splitPolicy)
+   {
+      super(name, version);
+      this.splitPolicy = splitPolicy;
+   }
+
+   /** 
+    * Get the split package policy
+    */
+   public SplitPackagePolicy getSplitPackagePolicy()
+   {
+      return splitPolicy;
+   }
+
+   /** 
+    * Set the split package policy
+    */
+   public void setSplitPackagePolicy(SplitPackagePolicy policy)
+   {
+      this.splitPolicy = policy;
    }
 
    public boolean resolves(Module module, Requirement requirement)

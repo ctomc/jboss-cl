@@ -29,6 +29,8 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jboss.classloading.plugins.metadata.PackageCapability;
+import org.jboss.classloading.plugins.metadata.PackageCapability.SplitPackagePolicy;
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.logging.Logger;
 
@@ -211,16 +213,22 @@ public class ClassLoadingSpace
 
       // The packages exported by this module (excluding optional packages)
       List<String> exportedPackages = module.determinePackageNames(false);
-
+      
       // Check there are no conflicting packages
       if (exportedPackages != null && exportedPackages.isEmpty() == false)
       {
          for (String exportedPackage : exportedPackages)
          {
             Module otherModule = modulesByPackage.get(exportedPackage);
-            // TODO JBCL-22 ERRORS
             if (otherModule != null)
-               throw new IllegalStateException(module + " cannot be added because it is exports package " + exportedPackage + " which conflicts with " + otherModule);
+            {
+               PackageCapability exportCapability = module.getExportCapability(exportedPackage);
+               if (exportCapability.getSplitPackagePolicy() == SplitPackagePolicy.Error)
+               {
+                  // TODO JBCL-22 ERRORS
+                  throw new IllegalStateException(module + " cannot be added because it is exports package " + exportedPackage + " which conflicts with " + otherModule);
+               }
+            }
          }
       }
 
@@ -253,7 +261,12 @@ public class ClassLoadingSpace
       if (exportedPackages != null && exportedPackages.isEmpty() == false)
       {
          for (String exportedPackage : exportedPackages)
-            modulesByPackage.put(exportedPackage, module);
+         {
+            Module firstModule = modulesByPackage.get(exportedPackage);
+            PackageCapability exportCapability = module.getExportCapability(exportedPackage);
+            if (firstModule == null || exportCapability.getSplitPackagePolicy() == SplitPackagePolicy.Last)
+               modulesByPackage.put(exportedPackage, module);
+         }
       }
       
       // Remember the module requirements

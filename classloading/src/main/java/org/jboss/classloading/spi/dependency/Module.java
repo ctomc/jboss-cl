@@ -39,6 +39,7 @@ import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.ParentPolicy;
 import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloading.plugins.metadata.PackageCapability;
 import org.jboss.classloading.spi.helpers.NameAndVersionSupport;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
@@ -737,21 +738,7 @@ public abstract class Module extends NameAndVersionSupport
       {
          for (Requirement requirement : getRequirements())
          {
-            if (requirement instanceof ExportPackages)
-            {
-               ExportPackages exported = (ExportPackages) requirement;
-               Set<String> exportPackages = exported.getPackageNames(this);
-               if (optional || requirement.isOptional() == false)
-               {
-                  if (exportPackages != null && exportPackages.isEmpty() == false)
-                  {
-                     if (packageNames.isEmpty())
-                        packageNames = new ArrayList<String>();
-                     packageNames.addAll(exportPackages);
-                  }
-               }
-            }
-            else if (optional == false && requirement instanceof OptionalPackages)
+            if (optional == false && requirement instanceof OptionalPackages)
             {
                OptionalPackages exported = (OptionalPackages) requirement;
                Set<String> optionalPackages = exported.getOptionalPackageNames(this);
@@ -762,6 +749,32 @@ public abstract class Module extends NameAndVersionSupport
       }
 
       return packageNames;
+   }
+   
+   /**
+    * Return the export package capability for a given package name
+    * @param exportedPackage the name of the exported package
+    * @return null if the capability cannot be found
+    */
+   public PackageCapability getExportCapability(String exportedPackage)
+   {
+      List<Capability> capabilities = getCapabilities();
+      if (capabilities != null && capabilities.isEmpty() == false)
+      {
+         for (Capability capability : capabilities)
+         {
+            if (capability instanceof PackageCapability)
+            {
+               PackageCapability exported = (PackageCapability) capability;
+               for (String packageName : exported.getPackageNames(this))
+               {
+                  if (packageName.equals(exportedPackage))
+                     return exported;
+               }
+            }
+         }
+      }
+      return null;
    }
    
    /**

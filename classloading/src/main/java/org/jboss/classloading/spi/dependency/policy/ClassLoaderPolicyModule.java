@@ -27,6 +27,7 @@ import java.security.PrivilegedExceptionAction;
 
 import org.jboss.classloader.plugins.loader.ClassLoaderToLoaderAdapter;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
+import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.Loader;
@@ -235,7 +236,24 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    @Override
    public DelegateLoader getDelegateLoader(Module requiringModule, Requirement requirement)
    {
-      return getPolicy().getExported();
+      // self dependency
+      if (this == requiringModule)
+      {
+         ClassLoaderPolicyFactory clpf = new ClassLoaderPolicyFactory()
+         {
+            public ClassLoaderPolicy createClassLoaderPolicy()
+            {
+               if (policy == null)
+                  throw new IllegalStateException("ClassLoaderPolicy not available");
+               return policy;
+            }
+         };
+         return new DelegateLoader(clpf);
+      }
+      else
+      {
+         return getPolicy().getExported();
+      }
    }
 
    @Override
