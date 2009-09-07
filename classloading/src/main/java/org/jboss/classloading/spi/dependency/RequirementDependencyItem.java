@@ -39,10 +39,10 @@ public class RequirementDependencyItem extends AbstractDependencyItem
 {
    /** The log */
    private static final Logger log = Logger.getLogger(RequirementDependencyItem.class);
-   
+
    /** The module */
    private Module module;
-   
+
    /** The requirement */
    private Requirement requirement;
 
@@ -64,7 +64,7 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       this.module = module;
       this.requirement = requirement;
    }
-   
+
    /**
     * Get the module.
     * 
@@ -89,41 +89,39 @@ public class RequirementDependencyItem extends AbstractDependencyItem
    {
       Requirement requirement = getRequirement();
       Module module = getModule().resolveModule(this, true);
-      if (module != null)
+      
+      // No module present
+      if (module == null)
       {
-         // self dependency
-         if (module == this.module)
-         {
-            Object iDependOn = module.getContextName();
-            ControllerContext context = controller.getContext(iDependOn, null);
-            setIDependOn(context.getName());
-            addDependsOnMe(controller, context);
-            setResolved(true);
-         }
-         else
-         {
-            Object iDependOn = module.getContextName();
-            ControllerContext context = controller.getContext(iDependOn, getDependentState());
-            if (context != null)
-            {
-               setIDependOn(context.getName());
-               addDependsOnMe(controller, context);
-               setResolved(true);
-               if (module.getClassLoadingSpace() == null)
-                  log.warn(getModule() + " resolved " + getRequirement() + " to " + module + " which has import-all=true. Cannot check its consistency.");
-            }
-            else
-            {
-               setResolved(false);
-            }
-         }
+         setResolved(requirement.isOptional() || requirement.isDynamic());
+         return isResolved();
       }
-      else
+
+      // Self dependency
+      if (module == this.module)
       {
-         // Optional requirement
-         if (requirement.isOptional() || requirement.isDynamic())
-            setResolved(true);
+         Object iDependOn = module.getContextName();
+         ControllerContext context = controller.getContext(iDependOn, null);
+         setIDependOn(context.getName());
+         addDependsOnMe(controller, context);
+         setResolved(true);
+         return isResolved();
       }
+
+      // Resolved against a context in the dependent state  
+      Object iDependOn = module.getContextName();
+      ControllerContext context = controller.getContext(iDependOn, getDependentState());
+      if (context != null)
+      {
+         setIDependOn(context.getName());
+         addDependsOnMe(controller, context);
+         setResolved(true);
+         if (module.getClassLoadingSpace() == null)
+            log.warn(getModule() + " resolved " + getRequirement() + " to " + module + " which has import-all=true. Cannot check its consistency.");
+         return isResolved();
+      }
+
+      setResolved(false);
       return isResolved();
    }
 
@@ -134,13 +132,13 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       setResolved(false);
       return true;
    }
-   
+
    public void toString(JBossStringBuilder buffer)
    {
       super.toString(buffer);
       buffer.append(" requirement=").append(getRequirement());
    }
-   
+
    public void toShortString(JBossStringBuilder buffer)
    {
       buffer.append(getName()).append(" ").append(getRequirement());
