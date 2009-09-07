@@ -56,7 +56,21 @@ public class RequirementDependencyItem extends AbstractDependencyItem
     */
    public RequirementDependencyItem(Module module, Requirement requirement, ControllerState state)
    {
-      super(module != null ? module.getContextName() : null, null, state, ControllerState.INSTALLED);
+      this(module, requirement, state, ControllerState.INSTALLED);
+   }
+
+   /**
+    * Create a new RequirementDependencyItem.
+    *
+    * @param module the module
+    * @param requirement the requirement
+    * @param whenRequired when the dependency is required and the state of the required dependency
+    * @param dependentState the required state of the dependent
+    * @throws IllegalArgumentException for a null parameter
+    */
+   public RequirementDependencyItem(Module module, Requirement requirement, ControllerState whenRequired, ControllerState dependentState)
+   {
+      super(module != null ? module.getContextName() : null, null, whenRequired, dependentState);
       if (module == null)
          throw new IllegalArgumentException("Null module");
       if (requirement == null)
