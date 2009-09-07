@@ -844,7 +844,8 @@ public abstract class Module extends NameAndVersionSupport
          requirementDependencies = new ArrayList<RequirementDependencyItem>();
          for (Requirement requirement : requirements)
          {
-            RequirementDependencyItem item = new RequirementDependencyItem(this, requirement, classLoaderState);
+            // [JBCL-113] RequirementDependencyItems can only resolve againt INSTALLED contexts
+            RequirementDependencyItem item = new RequirementDependencyItem(this, requirement, classLoaderState, classLoaderState);
             addIDependOn(item);
             requirementDependencies.add(item);
          }
