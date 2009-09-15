@@ -653,7 +653,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          if (log.isTraceEnabled())
             log.trace("getProtectionDomain:className="+ className + " path="+ path + " codeSourceURL=" + codeSourceURL);
 
-         Certificate[] certs = null; // TODO JBCL-67 determine certificates
+         Certificate[] certs = clazz.getCertificates();
          CodeSource cs = new CodeSource(codeSourceURL, certs);
          PermissionCollection permissions = Policy.getPolicy().getPermissions(cs);
          return new ProtectionDomain(cs, permissions);
