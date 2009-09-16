@@ -103,7 +103,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    private boolean blackListable = true;
    
    /** Manifest cache */
-   private Map<URL, Manifest> manifestCache = new ConcurrentHashMap<URL, Manifest>();
+   private Map<String, Manifest> manifestCache = new ConcurrentHashMap<String, Manifest>();
    
    /** Cache of virtual file information by path */
    @SuppressWarnings("unchecked")
@@ -603,14 +603,14 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          try
          {
             rootURL = root.toURL();
-            manifest = manifestCache.get(rootURL);
+            manifest = manifestCache.get(rootURL.toString());
             if (manifest == null)
             {
                manifest = VFSUtils.getManifest(root);
                if (manifest == null)
-                  manifestCache.put(rootURL, NO_MANIFEST);
+                  manifestCache.put(rootURL.toString(), NO_MANIFEST);
                else
-                  manifestCache.put(rootURL, manifest);
+                  manifestCache.put(rootURL.toString(), manifest);
             }
             
             if (manifest == NO_MANIFEST)
