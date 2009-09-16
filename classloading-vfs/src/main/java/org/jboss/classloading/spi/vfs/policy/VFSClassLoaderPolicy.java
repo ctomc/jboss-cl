@@ -597,20 +597,21 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       String path = ClassLoaderUtils.classNameToPath(className);
       VirtualFile root = findRoot(path);
       Manifest manifest = null;
-      URL rootURL = null;
+      String rootURL = null;
+
       if (root != null)
       {
          try
          {
-            rootURL = root.toURL();
-            manifest = manifestCache.get(rootURL.toString());
+            rootURL = root.toURL().toString();
+            manifest = manifestCache.get(rootURL);
             if (manifest == null)
             {
                manifest = VFSUtils.getManifest(root);
                if (manifest == null)
-                  manifestCache.put(rootURL.toString(), NO_MANIFEST);
+                  manifestCache.put(rootURL, NO_MANIFEST);
                else
-                  manifestCache.put(rootURL.toString(), manifest);
+                  manifestCache.put(rootURL, manifest);
             }
             
             if (manifest == NO_MANIFEST)
