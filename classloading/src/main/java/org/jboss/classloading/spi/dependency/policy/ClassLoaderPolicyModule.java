@@ -49,7 +49,7 @@ import org.jboss.dependency.spi.ControllerContext;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
+public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule implements ClassLoaderPolicyFactory
 {
    /** The serialVersionUID */
    private static final long serialVersionUID = -3357427104777457717L;
@@ -62,6 +62,9 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    
    /** The classloader */
    private ClassLoader classLoader;
+   
+   /** An optional classloader policy factory */
+   private ClassLoaderPolicyFactory policyFactory;
 
    /**
     * Create a new ClassLoaderPolicyModule.
@@ -72,6 +75,15 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    public ClassLoaderPolicyModule(ClassLoadingMetaData classLoadingMetaData, String contextName)
    {
       super(classLoadingMetaData, contextName);
+   }
+
+   /**
+    * Set the classloader policy factory
+    * @param policyFactory the classloader policy factory
+    */
+   public void setPolicyFactory(ClassLoaderPolicyFactory policyFactory)
+   {
+      this.policyFactory = policyFactory;
    }
 
    @Override
@@ -193,7 +205,11 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    {
       if (policy != null)
          return policy;
-      policy = determinePolicy();
+      
+      if (policyFactory == null)
+         policyFactory = this;
+      
+      policy = policyFactory.createClassLoaderPolicy();
       return policy;
    }
 
@@ -208,6 +224,14 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       policy = null;
    }
    
+   /**
+    * Default implementation of class loader policy factory 
+    */
+   public ClassLoaderPolicy createClassLoaderPolicy()
+   {
+      return determinePolicy();
+   }
+
    /**
     * Determine the classloader policy
     * 

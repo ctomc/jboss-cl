@@ -52,4 +52,13 @@ public class DelegateLoader extends BaseDelegateLoader implements Loader
    {
       super(factory);
    }
+   
+   /**
+    * Get the ClassLoaderPolicy associated with this DelegateLoader
+    * @return the class loader policy
+    */
+   public ClassLoaderPolicy getPolicy()
+   {
+      return (ClassLoaderPolicy)super.getPolicy();
+   }
 }

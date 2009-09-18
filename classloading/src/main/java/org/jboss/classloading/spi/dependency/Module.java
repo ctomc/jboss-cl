@@ -29,17 +29,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.ParentPolicy;
 import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
+import org.jboss.classloader.spi.filter.PackageClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageCapability;
+import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.helpers.NameAndVersionSupport;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
@@ -364,7 +370,7 @@ public abstract class Module extends NameAndVersionSupport
     * @return the module or null if the classloader does not correspond to a registered module classloader
     * @throws SecurityException if the caller doesn't have <code>new RuntimePermision("getClassLoader")</code>
     */
-   static Module getModuleForClassLoader(ClassLoader cl)
+   public static Module getModuleForClassLoader(ClassLoader cl)
    {
       SecurityManager sm = System.getSecurityManager();
       if (sm != null)
@@ -569,11 +575,15 @@ public abstract class Module extends NameAndVersionSupport
       // Check whether we already did this module
       if (visited.contains(module))
          return;
+      
       visited.add(module);
       
       List<RequirementDependencyItem> dependencies = module.getRequirementDependencyItems();
       if (dependencies == null || dependencies.isEmpty())
          return;
+      
+      // Maps the ClassLoaderPolicy that we get from the iDependOnModule to the list of package names that we are importing
+      Map<ClassLoaderPolicy, List<String>> delegateToRequiredPackages = new LinkedHashMap<ClassLoaderPolicy, List<String>>();
       
       for (RequirementDependencyItem item : dependencies)
       {
@@ -603,22 +613,50 @@ public abstract class Module extends NameAndVersionSupport
                // Something has gone wrong
                throw new IllegalStateException("No iDependOn for item: " + item);
             }
+            
             Module iDependOnModule = checkDomain().getModule(name);
             if (iDependOnModule == null)
                throw new IllegalStateException("Module not found with name: " + name);
 
             // Determine the delegate loader for the module
-            Module other = item.getModule();
-            DelegateLoader delegate = iDependOnModule.getDelegateLoader(other, requirement);
+            DelegateLoader delegate = iDependOnModule.getDelegateLoader(module, requirement);
+            if (delegate == null)
+               throw new IllegalStateException("Cannot obtain delegate for: " + requirement); 
 
             // Check for re-export by the module
             if (requirement.wantReExports())
                addDelegates(iDependOnModule, delegates, dynamic, visited, true);
             
-            // We want a module's re-exports (i.e. part of its imports) before the module itself
-            if (delegate != null)
-               delegates.add(delegate);
+            // Only add a the delegate if this is not a self-dependency
+            if (iDependOnModule != module)
+            {
+               // If we are connecting to another module we collect the imported package names per delegate
+               if (requirement instanceof PackageRequirement)
+               {
+                  ClassLoaderPolicy policy = delegate.getPolicy();
+                  List<String> packageNames = delegateToRequiredPackages.get(policy);
+                  if (packageNames == null)
+                  {
+                     packageNames = new ArrayList<String>();
+                     delegateToRequiredPackages.put(policy, packageNames);
+                  }
+                  
+                  PackageRequirement packageRequirement = (PackageRequirement)requirement;
+                  packageNames.add(packageRequirement.getName());
+               }
+               else
+               {
+                  delegates.add(delegate);
+               }
+            }
          }
+      }
+      
+      // Add FilteredDelegateLoaders for all collected package requirements
+      for (Entry<ClassLoaderPolicy, List<String>> entry : delegateToRequiredPackages.entrySet())
+      {
+         PackageClassFilter filter = PackageClassFilter.createPackageClassFilter(entry.getValue());
+         delegates.add(new FilteredDelegateLoader(entry.getKey(), filter));
       }
    }
 

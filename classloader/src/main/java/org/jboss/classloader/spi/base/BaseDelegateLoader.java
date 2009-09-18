@@ -73,7 +73,7 @@ public class BaseDelegateLoader implements Loader
       this.factory = factory;
    }
    
-   BaseClassLoaderPolicy getPolicy()
+   protected BaseClassLoaderPolicy getPolicy()
    {
       BaseClassLoaderPolicy delegate = this.delegate;
       if (delegate == null)
