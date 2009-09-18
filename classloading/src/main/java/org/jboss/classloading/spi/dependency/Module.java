@@ -57,6 +57,7 @@ import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
 import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerState;
+import org.jboss.dependency.spi.DependencyInfo;
 
 /**
  * Module.
@@ -944,7 +945,28 @@ public abstract class Module extends NameAndVersionSupport
    {
       if (context == null)
          throw new IllegalStateException("No controller context");
-      context.getDependencyInfo().removeIDependOn(item);
+      
+      // Remove the DependsOnMe part of this item
+      Object iDependOn = item.getIDependOn();
+      if (iDependOn != null)
+      {
+         // TODO - we need a better way to cleanup
+         Module otherModule = domain.getModule(iDependOn.toString());
+         if (otherModule != null)
+         {
+            ControllerContext otherContext = otherModule.getControllerContext();
+            if (otherContext != null)
+            {
+               DependencyInfo otherDependencyInfo = otherContext.getDependencyInfo();
+               if (otherDependencyInfo != null)
+                  otherDependencyInfo.removeDependsOnMe(item);
+            }
+         }
+      }
+      
+      // Remove the IDependOn part of this item
+      DependencyInfo dependencyInfo = context.getDependencyInfo();
+      dependencyInfo.removeIDependOn(item);
    }
    
    /**

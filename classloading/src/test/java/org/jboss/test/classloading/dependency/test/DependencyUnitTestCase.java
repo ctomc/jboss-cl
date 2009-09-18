@@ -22,12 +22,14 @@
 package org.jboss.test.classloading.dependency.test;
 
 import java.util.Collections;
+import java.util.Set;
 
 import junit.framework.Test;
-
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.Requirement;
+import org.jboss.dependency.spi.DependencyInfo;
+import org.jboss.dependency.spi.DependencyItem;
 import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.test.classloading.dependency.support.a.A;
 import org.jboss.test.classloading.dependency.support.b.B;
@@ -36,6 +38,7 @@ import org.jboss.test.classloading.dependency.support.b.B;
  * DependencyUnitTestCase.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class DependencyUnitTestCase extends AbstractMockClassLoaderUnitTest
@@ -251,6 +254,47 @@ public class DependencyUnitTestCase extends AbstractMockClassLoaderUnitTest
          assertLoadClass(A.class, clA);
          assertLoadClassFail(B.class, clA);
          assertNoClassLoader(contextB);
+      }
+      finally
+      {
+         uninstall(contextA);
+      }
+      assertNoClassLoader(contextA);
+   }
+
+   /**
+    * This checks if Module::removeIDependOn cleans up properly.
+    * If/when the cleanup algorithm changes, this test could be changed as well.
+    *
+    * @throws Exception for any error
+    */
+   public void testDependencyRemoval() throws Exception
+   {
+      MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+      a.setPathsAndPackageNames(A.class);
+      KernelControllerContext contextA = install(a);
+      try
+      {
+         DependencyInfo infoA = contextA.getDependencyInfo();
+
+         MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+         b.setPathsAndPackageNames(B.class);
+         ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+         Requirement requirement = factory.createRequirePackage(A.class.getPackage().getName());
+         b.setRequirements(Collections.singletonList(requirement));
+
+         KernelControllerContext contextB = install(b);
+         try
+         {
+            Set<DependencyItem> items = infoA.getDependsOnMe(null);
+            assertEquals(1, items.size());
+         }
+         finally
+         {
+            uninstall(contextB);
+            Set<DependencyItem> items = infoA.getDependsOnMe(null);
+            assertEquals(0, items.size());
+         }
       }
       finally
       {
