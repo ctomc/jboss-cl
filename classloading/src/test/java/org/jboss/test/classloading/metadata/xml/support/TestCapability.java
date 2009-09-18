@@ -44,7 +44,7 @@ public class TestCapability extends AbstractCapability
       super(name, version);
    }
    
-   public boolean resolves(Module module, Requirement requirement)
+   public boolean resolves(Module reqModule, Requirement requirement)
    {
       return false;
    }

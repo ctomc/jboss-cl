@@ -33,6 +33,7 @@ import org.jboss.classloading.spi.metadata.helpers.AbstractCapability;
  * PackageCapability.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author Thomas.Diesler@jboss.com
  * @version $Revision: 1.1 $
  */
 public class PackageCapability extends AbstractCapability implements ExportPackages
@@ -114,7 +115,7 @@ public class PackageCapability extends AbstractCapability implements ExportPacka
       this.splitPolicy = policy;
    }
 
-   public boolean resolves(Module module, Requirement requirement)
+   public boolean resolves(Module reqModule, Requirement requirement)
    {
       if (requirement instanceof PackageRequirement == false)
          return false;

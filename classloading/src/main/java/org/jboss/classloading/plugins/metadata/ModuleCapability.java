@@ -29,6 +29,7 @@ import org.jboss.classloading.spi.metadata.helpers.AbstractCapability;
  * ModuleCapability.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author Thomas.Diesler@jboss.com
  * @version $Revision: 1.1 $
  */
 public class ModuleCapability extends AbstractCapability
@@ -66,7 +67,7 @@ public class ModuleCapability extends AbstractCapability
       super(name, version);
    }
 
-   public boolean resolves(Module module, Requirement requirement)
+   public boolean resolves(Module reqModule, Requirement requirement)
    {
       if (requirement instanceof ModuleRequirement == false)
          return false;

@@ -355,7 +355,6 @@ public class JMXUnitTestCase extends AbstractClassLoaderTest
       assertEquals(expectedURLs, urls);
    }
 
-   @SuppressWarnings("unchecked")
    public void testClassLoaderMBean() throws Exception
    {
       ClassLoaderSystem system = createClassLoaderSystemWithModifiedBootstrap();

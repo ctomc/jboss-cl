@@ -298,9 +298,9 @@ public class ClassLoadingSpace
       {
          for (String packageName : packageNames)
          {
-            Module removed = modulesByPackage.remove(packageName);
-            if (removed != module)
-               throw new IllegalStateException("BUG: Removed module " + removed + " for package " + packageName + " is not the expected module: " + module);
+            Module other = modulesByPackage.get(packageName);
+            if (other == module)
+               modulesByPackage.remove(packageName);
          }
       }
 

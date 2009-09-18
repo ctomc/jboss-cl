@@ -29,17 +29,18 @@ import org.jboss.classloading.spi.dependency.Module;
  * Capability.
  * 
  * @author <a href="adrian@jboss.org">Adrian Brock</a>
+ * @author Thomas.Diesler@jboss.com
  * @version $Revision: 1.1 $
  */
 public interface Capability extends Serializable
 {
    /**
     * Whether this capability resolves the requirement
-    * 
-    * @param module the module
+    * @param reqModule the requirement module
     * @param requirement the requirement
+    * 
     * @throws IllegalArgumentException for a null requirement
     * @return true when it is resolves the requirement
     */
-   boolean resolves(Module module, Requirement requirement);
+   boolean resolves(Module reqModule, Requirement requirement);
 }

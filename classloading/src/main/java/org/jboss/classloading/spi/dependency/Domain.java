@@ -35,6 +35,7 @@ import org.jboss.logging.Logger;
  * 
  * @author <a href="adrian@jboss.org">Adrian Brock</a>
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
+ * @author Thomas.Diesler@jboss.com
  * @version $Revision: 1.1 $
  */
 public class Domain
@@ -244,7 +245,7 @@ public class Domain
             return result;
       }
       
-      // TODO JBCL-24 check for self-dependency/circularity
+      Module firstMatch = null;
       for (Module other : modules)
       {
          List<Capability> capabilities = other.getCapabilities();
@@ -253,10 +254,22 @@ public class Domain
             for (Capability capability : capabilities)
             {
                if (capability.resolves(module, requirement))
-                  return other;
+               {
+                  if (firstMatch != null)
+                  {
+                     String otherName = other.getName() + ":" + other.getVersion(); 
+                     String firstName = firstMatch.getName() + ":" + firstMatch.getVersion(); 
+                     log.debug("Requirement " + requirement + " resolves agaist " + firstName + " and " + otherName + " - using first.");
+                  }
+                  if (firstMatch == null)
+                     firstMatch = other;
+               }
             }
          }
       }
+      
+      if (firstMatch != null)
+         return firstMatch;
 
       // Check the parent afterwards when required
       if (parentDomain != null && parentFirst == false)
