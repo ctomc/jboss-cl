@@ -371,7 +371,7 @@ public abstract class Module extends NameAndVersionSupport
     * @return the module or null if the classloader does not correspond to a registered module classloader
     * @throws SecurityException if the caller doesn't have <code>new RuntimePermision("getClassLoader")</code>
     */
-   public static Module getModuleForClassLoader(ClassLoader cl)
+   static Module getModuleForClassLoader(ClassLoader cl)
    {
       SecurityManager sm = System.getSecurityManager();
       if (sm != null)
@@ -953,22 +953,28 @@ public abstract class Module extends NameAndVersionSupport
          // TODO - we need a better way to cleanup
          Module otherModule = domain.getModule(iDependOn.toString());
          if (otherModule != null)
-         {
-            ControllerContext otherContext = otherModule.getControllerContext();
-            if (otherContext != null)
-            {
-               DependencyInfo otherDependencyInfo = otherContext.getDependencyInfo();
-               if (otherDependencyInfo != null)
-                  otherDependencyInfo.removeDependsOnMe(item);
-            }
-         }
+            otherModule.removeDependsOnMe(item);
       }
       
       // Remove the IDependOn part of this item
       DependencyInfo dependencyInfo = context.getDependencyInfo();
       dependencyInfo.removeIDependOn(item);
    }
-   
+
+   /**
+    * Remove a dependency.
+    *
+    * @param item the dependency item.
+    */
+   protected void removeDependsOnMe(RequirementDependencyItem item)
+   {
+      if (context == null)
+         return;
+
+      DependencyInfo dependencyInfo = context.getDependencyInfo();
+      dependencyInfo.removeDependsOnMe(item);
+   }
+
    /**
     * Resolve a requirement
     * 
