@@ -113,6 +113,7 @@ public class ClassLoaderManager
          {
             synchronized (taskList)
             {
+               List<ThreadTask> ourselves = null;
                while (taskList.isEmpty() == false)
                {
                   ThreadTask threadTask = taskList.remove(0);
@@ -123,12 +124,27 @@ public class ClassLoaderManager
                   threadTask.setThread(null);
                   // Insert the task into the front of requestingThread task list
                   List<ThreadTask> toTaskList = loadTasksByThread.get(requestingThread);
-                  synchronized (toTaskList)
+                  // Our we assigning to ourselves?
+                  if (toTaskList == taskList)
                   {
-                     toTaskList.add(0, threadTask);
-                     loadTask.nextEvent();
-                     toTaskList.notify();
+                     if (ourselves == null)
+                        ourselves = new LinkedList<ThreadTask>();
+                     ourselves.add(threadTask);
                   }
+                  else
+                  {
+                     synchronized (toTaskList)
+                     {
+                        toTaskList.add(0, threadTask);
+                        loadTask.nextEvent();
+                        toTaskList.notify();
+                     }
+                  }
+               }
+               // Any assigned back to ourselves?
+               if (ourselves != null)
+               {
+                  taskList.addAll(ourselves);
                }
             }
          }
