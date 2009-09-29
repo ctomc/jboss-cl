@@ -82,9 +82,6 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
    
    /** Our black list */
    private Map<String, String> blackList;
-
-   /** A cached version of toLongString() */
-   private String cachedToString;
    
    /**
     * Create a new ClassLoader with no parent.
@@ -884,17 +881,13 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
     */
    public String toLongString()
    {
-      if (cachedToString != null)
-         return cachedToString;
-      
       StringBuilder builder = new StringBuilder();
       builder.append(getClass().getSimpleName());
       builder.append('@').append(Integer.toHexString(System.identityHashCode(this)));
       builder.append('{').append(getPolicy().toLongString());
       toLongString(builder);
       builder.append('}');
-      cachedToString = builder.toString();
-      return cachedToString;
+      return builder.toString();
    }
    
    /**
@@ -907,7 +900,6 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          resourceCache.clear();
       if (blackList != null)
          blackList.clear();
-      cachedToString = null;
    }
    
    /**
