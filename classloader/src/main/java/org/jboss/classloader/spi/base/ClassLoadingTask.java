@@ -27,7 +27,6 @@ import java.security.AccessController;
 import java.security.CodeSource;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.Loader;
@@ -73,7 +72,7 @@ class ClassLoadingTask
    private ClassLoader classLoader;
    
    /** The loaded class */
-   private AtomicReference<Class<?>> loadedClass = new AtomicReference<Class<?>>();
+   private volatile Class<?> loadedClass;
    
    /** The error during the load */
    private Throwable loadException;
@@ -121,7 +120,7 @@ class ClassLoadingTask
     */
    Class<?> getLoadedClass()
    {
-      return loadedClass.get();
+      return loadedClass;
    }
 
    /**
@@ -171,7 +170,7 @@ class ClassLoadingTask
     */
    synchronized void finish(Class<?> loadedClass)
    {
-      this.loadedClass.set(loadedClass);
+      this.loadedClass = loadedClass;
       state = TaskState.FINISHED;
    }
 
@@ -312,7 +311,7 @@ class ClassLoadingTask
 
       // Accept the first class
       if (theClass != null && loadedClass == null)
-         this.loadedClass.set(theClass);
+         this.loadedClass = theClass;
    }
 
    /** 
@@ -360,7 +359,7 @@ class ClassLoadingTask
        */
       Class<?> getLoadedClass()
       {
-         return loadedClass.get();
+         return loadedClass;
       }
 
       @Override
