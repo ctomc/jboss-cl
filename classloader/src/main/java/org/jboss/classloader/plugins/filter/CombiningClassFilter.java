@@ -31,6 +31,9 @@ import org.jboss.classloader.spi.filter.ClassFilter;
  */
 public class CombiningClassFilter implements ClassFilter
 {
+   /** The serialVersionUID */
+   private static final long serialVersionUID = -2504634309000740765L;
+
    /** Whether it is an "and" filter */
    private boolean and = false;
    

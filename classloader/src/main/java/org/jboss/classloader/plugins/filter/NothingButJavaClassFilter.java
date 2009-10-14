@@ -29,6 +29,9 @@ package org.jboss.classloader.plugins.filter;
  */
 public class NothingButJavaClassFilter extends PatternClassFilter
 {
+   /** The serialVersionUID */
+   private static final long serialVersionUID = -7796711453545934666L;
+
    /** The singleton instance */ 
    public static final NothingButJavaClassFilter INSTANCE = new NothingButJavaClassFilter();
    

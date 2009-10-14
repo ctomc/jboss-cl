@@ -35,6 +35,9 @@ import org.jboss.classloader.spi.filter.ClassFilter;
  */
 public class PatternClassFilter implements ClassFilter
 {
+   /** The serialVersionUID */
+   private static final long serialVersionUID = -9128970113480901464L;
+
    /** The class patterns as regular expressions */
    private Pattern[] classPatterns;
 

@@ -21,6 +21,8 @@
  */
 package org.jboss.classloader.spi.filter;
 
+import java.io.Serializable;
+
 import org.jboss.classloader.plugins.filter.EverythingClassFilter;
 import org.jboss.classloader.plugins.filter.JavaOnlyClassFilter;
 import org.jboss.classloader.plugins.filter.NothingButJavaClassFilter;
@@ -32,7 +34,7 @@ import org.jboss.classloader.plugins.filter.NothingClassFilter;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public interface ClassFilter
+public interface ClassFilter extends Serializable
 {
    /** Match evertything */
    ClassFilter EVERYTHING = EverythingClassFilter.INSTANCE;

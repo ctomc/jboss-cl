@@ -36,6 +36,9 @@ import org.jboss.classloader.plugins.filter.PatternClassFilter;
  */
 public class RecursivePackageClassFilter extends PatternClassFilter
 {
+   /** The serialVersionUID */
+   private static final long serialVersionUID = -2757199997130618510L;
+
    private static final String[] EVERYTHING_PATTERN = { ".*" };
    
    /** The patterns as regular expressions */

@@ -31,6 +31,9 @@ import org.jboss.classloader.spi.filter.ClassFilter;
  */
 public class EverythingClassFilter implements ClassFilter
 {
+   /** The serialVersionUID */
+   private static final long serialVersionUID = 7781337360322042671L;
+
    /** The singleton instance */
    public static final EverythingClassFilter INSTANCE = new EverythingClassFilter();
    

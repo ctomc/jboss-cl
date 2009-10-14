@@ -36,6 +36,9 @@ import org.jboss.classloader.plugins.filter.PatternClassFilter;
  */
 public class PackageClassFilter extends PatternClassFilter
 {
+   /** The serialVersionUID */
+   private static final long serialVersionUID = 8922510385156624259L;
+
    /** The patterns as regular expressions */
    private String[] packageNames;
    

@@ -32,6 +32,9 @@ import org.jboss.classloader.spi.filter.ClassFilter;
  */
 public class NoMatchClassFilter implements ClassFilter
 {
+   /** The serialVersionUID */
+   private static final long serialVersionUID = 8061776668591552349L;
+
    String className;
    
    public boolean filtered = false;
