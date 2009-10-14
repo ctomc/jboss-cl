@@ -38,6 +38,7 @@ import org.jboss.util.JBossStringBuilder;
 public class RequirementDependencyItem extends AbstractDependencyItem
 {
    /** The log */
+   @SuppressWarnings("hiding")
    private static final Logger log = Logger.getLogger(RequirementDependencyItem.class);
 
    /** The module */

@@ -47,7 +47,6 @@ import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
  */
 public class SchemaPrinter
 {
-   @SuppressWarnings("unchecked")
    public static String printSchema(SchemaBinding schemaBinding)
    {
       String nsURI = schemaBinding.getNamespaces().iterator().next();
@@ -157,7 +156,6 @@ public class SchemaPrinter
       builder.append("</complexType>");
    }
 
-   @SuppressWarnings("unchecked")
    public static void printTypeInfo(StringBuilder builder, int pad, TypeBinding type)
    {
       ParticleBinding particle = type.getParticle();
@@ -191,7 +189,6 @@ public class SchemaPrinter
          printModel(builder, pad, particle, "choice");
    }
 
-   @SuppressWarnings("unchecked")
    public static void printModel(StringBuilder builder, int pad, ParticleBinding particle, String prefix)
    {
       pad(builder, pad);

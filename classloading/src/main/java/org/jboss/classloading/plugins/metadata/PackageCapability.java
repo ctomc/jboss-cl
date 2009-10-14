@@ -101,6 +101,8 @@ public class PackageCapability extends AbstractCapability implements ExportPacka
 
    /** 
     * Get the split package policy
+    * 
+    * @return the split package policy
     */
    public SplitPackagePolicy getSplitPackagePolicy()
    {
@@ -109,6 +111,8 @@ public class PackageCapability extends AbstractCapability implements ExportPacka
 
    /** 
     * Set the split package policy
+    * 
+    * @param policy the split package policy
     */
    public void setSplitPackagePolicy(SplitPackagePolicy policy)
    {

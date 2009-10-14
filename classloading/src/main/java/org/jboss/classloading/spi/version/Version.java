@@ -255,7 +255,6 @@ public class Version implements Serializable, Comparable<Version>
    }
 
    @Override
-   @SuppressWarnings("unchecked")
    public boolean equals(Object object)
    {
       if (object == this)

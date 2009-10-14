@@ -175,11 +175,6 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
       {
          return classname;
       }
-      
-      public String getPackageName()
-      {
-         return ClassLoaderUtils.getClassPackageName(classname);
-      }
 
       public String getResourceName()
       {

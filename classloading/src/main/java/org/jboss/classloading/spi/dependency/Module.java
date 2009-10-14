@@ -67,6 +67,9 @@ import org.jboss.dependency.spi.DependencyInfo;
  */
 public abstract class Module extends NameAndVersionSupport
 {
+   /** The serialVersionUID - not really serializable */
+   private static final long serialVersionUID = 1L;
+
    /** The modules by classloader */
    private static Map<ClassLoader, Module> modulesByClassLoader = new ConcurrentHashMap<ClassLoader, Module>();
    
