@@ -255,6 +255,7 @@ public class Version implements Serializable, Comparable<Version>
    }
 
    @Override
+   // FINDBUGS: Not suprising it doesn't understand this :-)
    public boolean equals(Object object)
    {
       if (object == this)

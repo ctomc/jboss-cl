@@ -143,4 +143,11 @@ public class PackageCapability extends AbstractCapability implements ExportPacka
          return false;
       return super.equals(obj);
    }
+   
+   // FINDBUGS: Just to keep it happy
+   @Override
+   public int hashCode()
+   {
+      return super.hashCode();
+   }
 }

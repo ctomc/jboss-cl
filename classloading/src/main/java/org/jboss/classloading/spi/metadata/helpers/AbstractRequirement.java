@@ -182,6 +182,13 @@ public class AbstractRequirement extends NameAndVersionRangeSupport implements R
          return false;
       return true;
    }
+   
+   // FINDBUGS: Just to keep it happy
+   @Override
+   public int hashCode()
+   {
+      return super.hashCode();
+   }
 
    @Override
    public String toString()

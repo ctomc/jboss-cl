@@ -162,7 +162,7 @@ public abstract class BaseClassLoaderPolicy
 
       ClassLoader classLoader = getClassLoaderUnchecked();
       if (classLoader != null)
-         result = TranslatorUtils.applyTranslatorsOnTransform(translators, classLoader, className, result, protectionDomain);
+         result = TranslatorUtils.applyTranslatorsOnTransform(getTranslators(), classLoader, className, result, protectionDomain);
 
       return result;
    }
@@ -336,7 +336,7 @@ public abstract class BaseClassLoaderPolicy
       log.debug(toString() + " shutdown!");
       BaseClassLoader classLoader = this.classLoader;
       this.classLoader = null;
-      TranslatorUtils.applyTranslatorsAtUnregister(translators, classLoader);
+      TranslatorUtils.applyTranslatorsAtUnregister(getTranslators(), classLoader);
       classLoader.shutdownClassLoader();
    }
    
@@ -358,7 +358,7 @@ public abstract class BaseClassLoaderPolicy
     *
     * @return the translators
     */
-   public List<Translator> getTranslators()
+   public synchronized List<Translator> getTranslators()
    {
       if (translators == null || translators.isEmpty())
          return Collections.emptyList();

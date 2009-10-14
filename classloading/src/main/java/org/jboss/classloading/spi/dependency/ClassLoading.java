@@ -164,6 +164,7 @@ public class ClassLoading
    protected Domain getDomain(String domainName, String parentDomainName, boolean parentFirst)
    {
       Domain domain;
+      // FINDBUGS: This synchronization is correct - more than addIfNotPresent behaviour
       synchronized (domains)
       {
          domain = getDomain(domainName);

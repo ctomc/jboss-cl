@@ -308,4 +308,18 @@ public class MockClassLoadingMetaData extends ClassLoadingMetaData
       
       setExportedPackages(packages);
    }
+   
+   // FINDBUGS: Just to keep it happy
+   @Override
+   public boolean equals(Object obj)
+   {
+      return super.equals(obj);
+   }
+   
+   // FINDBUGS: Just to keep it happy
+   @Override
+   public int hashCode()
+   {
+      return super.hashCode();
+   }
 }

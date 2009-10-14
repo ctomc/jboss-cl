@@ -209,4 +209,18 @@ public class VFSClassLoaderFactory extends ClassLoadingMetaData implements BeanM
       
       return Arrays.asList(classLoader, module);
    }
+   
+   // FINDBUGS: Just to keep it happy
+   @Override
+   public boolean equals(Object obj)
+   {
+      return super.equals(obj);
+   }
+   
+   // FINDBUGS: Just to keep it happy
+   @Override
+   public int hashCode()
+   {
+      return super.hashCode();
+   }
 }

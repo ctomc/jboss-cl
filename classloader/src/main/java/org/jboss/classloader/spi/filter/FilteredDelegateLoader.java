@@ -115,7 +115,7 @@ public class FilteredDelegateLoader extends DelegateLoader
    protected void setFilter(ClassFilter filter)
    {
       if (filter == null)
-         filter = ClassFilter.EVERYTHING;
+         this.filter = ClassFilter.EVERYTHING;
       else
          this.filter = filter;
    }

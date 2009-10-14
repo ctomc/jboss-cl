@@ -546,12 +546,17 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       return true;
    }
    
+   // FINDBUGS: Just to keep it happy
+   @Override
+   public int hashCode()
+   {
+      return super.hashCode();
+   }
+   
    private static boolean equals(Object one, Object two)
    {
-      if (one == null && two == null)
-         return true;
-      if (one == null && two != null)
-         return false;
+      if (one == null)
+         return two == null;
       return one.equals(two);
    }
 

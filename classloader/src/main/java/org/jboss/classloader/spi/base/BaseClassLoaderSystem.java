@@ -176,6 +176,7 @@ public abstract class BaseClassLoaderSystem
     */
    protected BaseClassLoader createClassLoader(ClassLoaderPolicy policy)
    {
+      // FINDBUGS: This is correct we want to use the caller's access control context
       return new BaseClassLoader(policy);
    }
    

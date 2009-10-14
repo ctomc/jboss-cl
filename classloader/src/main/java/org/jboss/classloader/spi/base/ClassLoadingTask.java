@@ -27,6 +27,7 @@ import java.security.AccessController;
 import java.security.CodeSource;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.Loader;
@@ -72,7 +73,7 @@ class ClassLoadingTask
    private ClassLoader classLoader;
    
    /** The loaded class */
-   private Class<?> loadedClass;
+   private AtomicReference<Class<?>> loadedClass = new AtomicReference<Class<?>>();
    
    /** The error during the load */
    private Throwable loadException;
@@ -118,9 +119,9 @@ class ClassLoadingTask
     * 
     * @return the loadedClass.
     */
-   synchronized Class<?> getLoadedClass()
+   Class<?> getLoadedClass()
    {
-      return loadedClass;
+      return loadedClass.get();
    }
 
    /**
@@ -170,7 +171,7 @@ class ClassLoadingTask
     */
    synchronized void finish(Class<?> loadedClass)
    {
-      this.loadedClass = loadedClass;
+      this.loadedClass.set(loadedClass);
       state = TaskState.FINISHED;
    }
 
@@ -226,6 +227,7 @@ class ClassLoadingTask
       builder.append("className=").append(className);
       builder.append(" requestingThread=").append(requestingThread);
       builder.append(" requestingClassLoader: ").append(classLoader);
+      Class<?> loadedClass = getLoadedClass();
       if (loadedClass != null)
       {
          builder.append(" loadedClass=");
@@ -294,7 +296,8 @@ class ClassLoadingTask
          log.trace("setLoadedClass, theClass=" + theClass);
 
       // Warn about duplicate classes
-      if (this.loadedClass != null && theClass != null)
+      Class<?> loadedClass = getLoadedClass();
+      if (loadedClass != null && theClass != null)
       {
          StringBuilder builder = new StringBuilder();
          builder.append("Duplicate class found: ").append(className).append('\n');
@@ -309,7 +312,7 @@ class ClassLoadingTask
 
       // Accept the first class
       if (theClass != null && loadedClass == null)
-         this.loadedClass = theClass;
+         this.loadedClass.set(theClass);
    }
 
    /** 
@@ -357,7 +360,7 @@ class ClassLoadingTask
        */
       Class<?> getLoadedClass()
       {
-         return loadedClass;
+         return loadedClass.get();
       }
 
       @Override
@@ -447,6 +450,7 @@ class ClassLoadingTask
        */
       void run() throws ClassNotFoundException
       {
+         Class<?> loadedClass = getLoadedClass();
          if (loadedClass == null)
          {
             Class<?> theClass = loader.loadClass(className);

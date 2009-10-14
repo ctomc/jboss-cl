@@ -266,7 +266,7 @@ public class VersionComparatorRegistry
     * @param <T> the first version type
     * @param <U> the second version type
     */
-   private class SwitchVersionComparator<T, U> implements VersionComparator<T, U>
+   private static class SwitchVersionComparator<T, U> implements VersionComparator<T, U>
    {
       /** The delegate */
       private VersionComparator<U, T> delegate;
@@ -292,7 +292,7 @@ public class VersionComparatorRegistry
    /**
     * VersionToVersionComparator.
     */
-   private class VersionToVersionComparator implements VersionComparator<Version, Version>
+   private static class VersionToVersionComparator implements VersionComparator<Version, Version>
    {
       public int compare(Version t, Version u)
       {
@@ -303,7 +303,7 @@ public class VersionComparatorRegistry
    /**
     * VersionToStringComparator.
     */
-   private class VersionToStringComparator implements VersionComparator<Version, String>
+   private static class VersionToStringComparator implements VersionComparator<Version, String>
    {
       public int compare(Version t, String u)
       {
@@ -314,7 +314,7 @@ public class VersionComparatorRegistry
    /**
     * StringToStringComparator.
     */
-   private class StringToStringComparator implements VersionComparator<String, String>
+   private static class StringToStringComparator implements VersionComparator<String, String>
    {
       public int compare(String t, String u)
       {

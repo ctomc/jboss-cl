@@ -1295,6 +1295,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       BaseClassLoaderPolicy basePolicy = classLoader.getPolicy();
       basePolicy.setClassLoaderDomain(this);
 
+      // FINDBUGS: This synchronization is correct - more than addIfNotPresent behaviour
       synchronized (classLoaders)
       {
          // Create the information
@@ -1353,6 +1354,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       BaseClassLoaderPolicy policy = classLoader.getPolicy();
       policy.unsetClassLoaderDomain(this);
 
+      // FINDBUGS: This synchronization is correct - more than addIfNotPresent behaviour
       synchronized (classLoaders)
       {
          // Remove the classloader
@@ -1537,7 +1539,7 @@ public abstract class BaseClassLoaderDomain implements Loader
    /**
     * ClassCacheItem.
     */
-   class ClassCacheItem
+   static class ClassCacheItem
    {
       Loader loader;
       Class<?> clazz;
@@ -1557,7 +1559,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       {
          if (loader != null)
             return loader.toString();
-         return null;
+         return "";
       }
    }
 }
