@@ -56,6 +56,7 @@ public interface Loader
     * @param urls the list of urls to add to
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    void getResources(String name, Set<URL> urls) throws IOException;
    
    /**

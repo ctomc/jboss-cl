@@ -466,6 +466,7 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param urls the urls to add to
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    void getResources(BaseClassLoader classLoader, String name, Set<URL> urls, boolean allExports) throws IOException
    {
       boolean trace = log.isTraceEnabled();
@@ -761,6 +762,7 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param trace whether trace is enabled
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    void getResourcesFromExports(BaseClassLoader classLoader, String name, Set<URL> urls, boolean trace) throws IOException
    {
       String packageName = ClassLoaderUtils.getResourcePackageName(name);
@@ -931,6 +933,7 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param trace whether trace is enabled
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    void getResourcesFromImports(ClassLoaderInformation info, String name, Set<URL> urls, boolean trace) throws IOException
    {
       List<? extends DelegateLoader> delegates = info.getDelegates();
@@ -1037,6 +1040,7 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param urls the urls to add to
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    protected abstract void beforeGetResources(String name,  Set<URL> urls) throws IOException;
    
    /**
@@ -1046,6 +1050,7 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param urls the urls to add to
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    protected abstract void afterGetResources(String name, Set<URL> urls) throws IOException;
    
    /**
@@ -1136,6 +1141,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       return getResource(classLoader, name, false);
    }
    
+   // FindBugs: The Set doesn't use equals/hashCode
    public void getResources(String name, Set<URL> urls) throws IOException
    {
       getResources(null, name, urls, true);
@@ -1149,6 +1155,7 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param urls the urls to add to
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    void getResources(BaseClassLoader classLoader, String name, Set<URL> urls) throws IOException
    {
       getResources(classLoader, name, urls, false);

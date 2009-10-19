@@ -119,6 +119,7 @@ public interface BaseClassLoaderMBean
     * 
     * @return the loaded resources
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    Set<URL> listLoadedResources();
    
    /**
@@ -137,6 +138,7 @@ public interface BaseClassLoaderMBean
     * @return the resource urls
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    Set<URL> loadResources(String name) throws IOException;
    
    /**

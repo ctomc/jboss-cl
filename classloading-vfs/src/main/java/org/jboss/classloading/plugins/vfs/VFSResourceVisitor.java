@@ -23,6 +23,7 @@ package org.jboss.classloading.plugins.vfs;
 
 import java.net.URL;
 
+import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
@@ -121,10 +122,8 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
       URL rootURL = root.toURL();
       for (URL url : urls)
       {
-         if (rootURL.equals(url))
-         {
+         if (ClassLoaderUtils.compareURL(rootURL, url) == 0)
             return true;
-         }
       }
       return false;
    }

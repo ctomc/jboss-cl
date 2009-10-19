@@ -143,6 +143,7 @@ public class BaseDelegateLoader implements Loader
       return null;
    }
 
+   // FindBugs: The Set doesn't use equals/hashCode
    public void getResources(String name, Set<URL> urls) throws IOException
    {
       BaseClassLoader classLoader = getBaseClassLoader("getting resources ", name);

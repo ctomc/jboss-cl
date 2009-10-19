@@ -176,6 +176,7 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy
     * @param urls the list of urls to add to
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    public abstract void getResources(String name, Set<URL> urls) throws IOException;
    
    /**

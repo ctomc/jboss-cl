@@ -149,6 +149,7 @@ public class FilteredDelegateLoader extends DelegateLoader
       return null;
    }
 
+   // FindBugs: The Set doesn't use equals/hashCode
    public void getResources(String name, Set<URL> urls) throws IOException
    {
       boolean trace = log.isTraceEnabled();

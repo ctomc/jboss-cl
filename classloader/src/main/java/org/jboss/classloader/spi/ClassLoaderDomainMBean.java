@@ -110,6 +110,7 @@ public interface ClassLoaderDomainMBean
     * @return the resource urls
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    Set<URL> loadResources(String name) throws IOException;
    
    /**

@@ -700,7 +700,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
     *
     * @return the translators
     */
-   public List<Translator> getTranslators()
+   public synchronized List<Translator> getTranslators()
    {
       if (translators == null || translators.isEmpty())
          return Collections.emptyList();

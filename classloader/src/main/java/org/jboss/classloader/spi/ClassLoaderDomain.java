@@ -31,12 +31,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.Map.Entry;
 
 import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.plugins.loader.ClassLoaderToLoaderAdapter;
 import org.jboss.classloader.spi.base.BaseClassLoaderDomain;
 import org.jboss.classloader.spi.filter.ClassFilter;
@@ -261,9 +263,10 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
       return null;
    }
 
+   // FindBugs: The Set doesn't use equals/hashCode
    public Set<URL> loadResources(String name) throws IOException
    {
-      HashSet<URL> result = new HashSet<URL>();
+      TreeSet<URL> result = new TreeSet<URL>(ClassLoaderUtils.URLComparator.INSTANCE);
       getResources(name, result);
       return result;
    }
@@ -486,6 +489,7 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
    }
    
    @Override
+   // FindBugs: The Set doesn't use equals/hashCode
    protected void beforeGetResources(String name, Set<URL> urls) throws IOException
    {
       boolean trace = log.isTraceEnabled();
@@ -501,6 +505,7 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
    }
 
    @Override
+   // FindBugs: The Set doesn't use equals/hashCode
    protected void afterGetResources(String name, Set<URL> urls) throws IOException
    {
       boolean trace = log.isTraceEnabled();
@@ -522,6 +527,7 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
     * @param urls the urls to add to
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    protected void getResourcesFromParent(String name, Set<URL> urls) throws IOException
    {
       Loader parentLoader = getParent();

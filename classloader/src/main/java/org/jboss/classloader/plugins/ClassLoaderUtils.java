@@ -24,10 +24,13 @@ package org.jboss.classloader.plugins;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
+import java.net.URL;
 import java.security.AccessController;
 import java.security.CodeSource;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
+import java.util.Comparator;
 
 /**
  * ClassLoaderUtils.
@@ -307,5 +310,75 @@ public class ClassLoaderUtils
       if (protectionDomain == null)
          return null;
       return protectionDomain.getCodeSource();
+   }
+   
+   /**
+    * Compare two urls
+    * 
+    * @param one the first url
+    * @param two the second url
+    * @return whether one is less than two
+    */
+   public static int compareURL(URL one, URL two)
+   {
+      if (one == null)
+         throw new IllegalArgumentException("Null one");
+      if (two == null)
+         throw new IllegalArgumentException("Null one");
+
+      String a = one.getProtocol();
+      String b = two.getProtocol();
+      int result = compare(a, b);
+      if (result != 0)
+         return result;
+
+      a = one.getHost();
+      b = two.getHost();
+      result = compare(a, b);
+      if (result != 0)
+         return result;
+
+      a = one.getFile();
+      b = two.getFile();
+      result = compare(a, b);
+      if (result != 0)
+         return result;
+
+      int c = one.getPort();
+      int d = two.getPort();
+      result = c - d;
+      if (result != 0)
+         return result;
+      
+      String ref1 = one.getRef();
+      String ref2 = two.getRef();
+      return compare(ref1, ref2);
+   }
+   
+   private static int compare(String one, String two)
+   {
+      if (one == null &&  two == null)
+         return 0;
+      if (one == null)
+         return -1;
+      if (two == null)
+         return +1;
+      return one.compareTo(two);
+   }
+   
+   /**
+    * URLComparator.
+    */
+   public static class URLComparator implements Comparator<URL>, Serializable
+   {
+      /** The serialVersionUID */
+      private static final long serialVersionUID = 169805004616968144L;
+
+      public static final URLComparator INSTANCE = new URLComparator();
+      
+      public int compare(URL o1, URL o2)
+      {
+         return compareURL(o1, o2);
+      }
    }
 }

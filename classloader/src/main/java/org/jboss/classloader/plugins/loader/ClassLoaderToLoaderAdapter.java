@@ -127,6 +127,7 @@ public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements
       return url;
    }
 
+   // FindBugs: The Set doesn't use equals/hashCode
    public void getResources(final String name, Set<URL> urls) throws IOException
    {
       final ClassLoader classLoader = getClassLoader();

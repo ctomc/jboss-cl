@@ -512,6 +512,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    }
 
    @Override
+   // FindBugs: The Set doesn't use equals/hashCode
    public void getResources(String name, Set<URL> urls) throws IOException
    {
       if (checkFilters(name, "getResources"))

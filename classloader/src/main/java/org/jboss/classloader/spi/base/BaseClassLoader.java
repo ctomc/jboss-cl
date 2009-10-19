@@ -38,6 +38,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -210,11 +211,14 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       return new HashSet<String>(resourceCache.keySet());
    }
 
+   // FindBugs: The Set doesn't use equals/hashCode
    public Set<URL> listLoadedResources()
    {
       if (resourceCache == null)
          return Collections.emptySet();
-      return new HashSet<URL>(resourceCache.values());
+      Set<URL> result = new TreeSet<URL>(ClassLoaderUtils.URLComparator.INSTANCE);
+      result.addAll(resourceCache.values());
+      return result;
    }
 
    /**
@@ -479,6 +483,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       return Iterators.toEnumeration(resourceURLs.iterator());
    }
 
+   // FindBugs: The Set doesn't use equals/hashCode
    public Set<URL> loadResources(String name) throws IOException
    {
       BaseClassLoaderPolicy basePolicy = policy;
@@ -487,7 +492,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       if (trace)
          log.trace(this + " findResources " + name + " domain=" + domain);
 
-      Set<URL> resourceURLs = new HashSet<URL>();
+      Set<URL> resourceURLs = new TreeSet<URL>(ClassLoaderUtils.URLComparator.INSTANCE);
       if (domain != null)
          domain.getResources(this, name, resourceURLs);
       return resourceURLs;
@@ -660,6 +665,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
     * @param urls the urls to add to
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    void getResourcesLocally(String name, Set<URL> urls) throws IOException
    {
       getResourcesLocally(name, urls, log.isTraceEnabled());
@@ -673,6 +679,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
     * @param trace whether trace is enabled
     * @throws IOException for any error
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    void getResourcesLocally(final String name, final Set<URL> urls, boolean trace) throws IOException
    {
       if (trace)

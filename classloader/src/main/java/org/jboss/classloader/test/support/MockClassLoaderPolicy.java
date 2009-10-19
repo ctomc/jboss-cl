@@ -389,6 +389,7 @@ public class MockClassLoaderPolicy extends ClassLoaderPolicy
    }
 
    @Override
+   // FindBugs: The Set doesn't use equals/hashCode
    public void getResources(String path, Set<URL> urls) throws IOException
    {
       if (paths == null)
