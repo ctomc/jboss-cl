@@ -42,6 +42,7 @@ import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.PackageInformation;
 import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloading.plugins.vfs.PackageVisitor;
 import org.jboss.classloading.spi.metadata.ExportAll;
@@ -443,7 +444,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    public DelegateLoader getExported()
    {
       if (getExportAll() != null)
-         return new FilteredDelegateLoader(this, ClassFilter.EVERYTHING);
+         return new FilteredDelegateLoader(this, ClassFilterUtils.EVERYTHING);
       return super.getExported();
    }
 

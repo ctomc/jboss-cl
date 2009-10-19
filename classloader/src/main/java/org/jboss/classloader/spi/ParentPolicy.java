@@ -22,6 +22,7 @@
 package org.jboss.classloader.spi;
 
 import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 
 /**
  * ParentPolicy
@@ -32,19 +33,19 @@ import org.jboss.classloader.spi.filter.ClassFilter;
 public class ParentPolicy
 {
    /** Standard Java Delegation */
-   public static final ParentPolicy BEFORE = new ParentPolicy(ClassFilter.EVERYTHING, ClassFilter.NOTHING, "BEFORE");
+   public static final ParentPolicy BEFORE = new ParentPolicy(ClassFilterUtils.EVERYTHING, ClassFilterUtils.NOTHING, "BEFORE");
 
    /** Servlet style */
-   public static final ParentPolicy AFTER = new ParentPolicy(ClassFilter.NOTHING_BUT_JAVA, ClassFilter.EVERYTHING, "AFTER");
+   public static final ParentPolicy AFTER = new ParentPolicy(ClassFilterUtils.NOTHING_BUT_JAVA, ClassFilterUtils.EVERYTHING, "AFTER");
 
    /** Standard Java Delegation for java classes */
-   public static final ParentPolicy BEFORE_BUT_JAVA_ONLY = new ParentPolicy(ClassFilter.JAVA_ONLY, ClassFilter.NOTHING, "BEFORE_BUT_JAVA_ONLY");
+   public static final ParentPolicy BEFORE_BUT_JAVA_ONLY = new ParentPolicy(ClassFilterUtils.JAVA_ONLY, ClassFilterUtils.NOTHING, "BEFORE_BUT_JAVA_ONLY");
 
    /** Java and Javax classes before, everything else after */
-   public static final ParentPolicy AFTER_BUT_JAVA_BEFORE = new ParentPolicy(ClassFilter.JAVA_ONLY, ClassFilter.EVERYTHING, "AFTER_BUT_JAVA_BEFORE");
+   public static final ParentPolicy AFTER_BUT_JAVA_BEFORE = new ParentPolicy(ClassFilterUtils.JAVA_ONLY, ClassFilterUtils.EVERYTHING, "AFTER_BUT_JAVA_BEFORE");
 
    /** Java classes before, everything else after */
-   public static final ParentPolicy AFTER_BUT_ONLY_JAVA_BEFORE = new ParentPolicy(ClassFilter.NOTHING_BUT_JAVA, ClassFilter.EVERYTHING, "AFTER_BUT_JAVA_BEFORE");
+   public static final ParentPolicy AFTER_BUT_ONLY_JAVA_BEFORE = new ParentPolicy(ClassFilterUtils.NOTHING_BUT_JAVA, ClassFilterUtils.EVERYTHING, "AFTER_BUT_JAVA_BEFORE");
    
    /** The before filter */
    private ClassFilter beforeFilter;

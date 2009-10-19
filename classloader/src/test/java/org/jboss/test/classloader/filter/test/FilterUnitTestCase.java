@@ -24,6 +24,7 @@ package org.jboss.test.classloader.filter.test;
 import junit.framework.Test;
 
 import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.test.classloader.AbstractClassLoaderTestWithSecurity;
 
 /**
@@ -46,7 +47,7 @@ public class FilterUnitTestCase extends AbstractClassLoaderTestWithSecurity
    
    public void testEverything() throws Exception
    {
-      ClassFilter filter = ClassFilter.EVERYTHING;
+      ClassFilter filter = ClassFilterUtils.EVERYTHING;
       assertFilterMatchesClassName("gibberish", filter);
       assertFilterMatchesClassName("", filter);
       assertFilterMatchesClassName(null, filter);
@@ -60,7 +61,7 @@ public class FilterUnitTestCase extends AbstractClassLoaderTestWithSecurity
    
    public void testNothing() throws Exception
    {
-      ClassFilter filter = ClassFilter.NOTHING;
+      ClassFilter filter = ClassFilterUtils.NOTHING;
       assertFilterNoMatchClassName("gibberish", filter);
       assertFilterNoMatchClassName("", filter);
       assertFilterNoMatchClassName(null, filter);
@@ -74,7 +75,7 @@ public class FilterUnitTestCase extends AbstractClassLoaderTestWithSecurity
    
    public void testJavaOnly() throws Exception
    {
-      ClassFilter filter = ClassFilter.JAVA_ONLY;
+      ClassFilter filter = ClassFilterUtils.JAVA_ONLY;
       assertFilterMatchesClassName("java.x", filter);
       assertFilterMatchesClassName("java.lang.Object", filter);
       assertFilterMatchesClassName("java.lang.ref.Method", filter);

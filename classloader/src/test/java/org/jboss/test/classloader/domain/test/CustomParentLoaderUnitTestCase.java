@@ -23,6 +23,7 @@ package org.jboss.test.classloader.domain.test;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.management.MBeanRegistration;
 
 import junit.framework.Test;
@@ -34,7 +35,7 @@ import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.Loader;
 import org.jboss.classloader.spi.ParentPolicy;
 import org.jboss.classloader.spi.base.BaseClassLoaderDomain;
-import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.test.classloader.AbstractClassLoaderTestWithSecurity;
 import org.jboss.test.classloader.domain.support.MockLoader;
@@ -118,7 +119,7 @@ public class CustomParentLoaderUnitTestCase extends AbstractClassLoaderTestWithS
       ClassLoaderSystem system = createClassLoaderSystem();
       MockLoader loader = new MockLoader();
       NoMatchClassFilter filter = new NoMatchClassFilter(MockLoader.class);
-      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilter.NOTHING);
+      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilterUtils.NOTHING);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, loader);
       
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
@@ -198,7 +199,7 @@ public class CustomParentLoaderUnitTestCase extends AbstractClassLoaderTestWithS
       ClassLoaderSystem system = createClassLoaderSystem();
       MockLoader loader = new MockLoader();
       NoMatchClassFilter filter = new NoMatchClassFilter(MockLoader.class);
-      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilter.NOTHING);
+      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilterUtils.NOTHING);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, loader);
       domain.setUseLoadClassForParent(false);
       

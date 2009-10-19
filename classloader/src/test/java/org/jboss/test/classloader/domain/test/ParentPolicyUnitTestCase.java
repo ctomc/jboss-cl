@@ -28,7 +28,7 @@ import junit.framework.Test;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.ParentPolicy;
-import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloader.spi.filter.PackageClassFilter;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.test.classloader.AbstractClassLoaderTestWithSecurity;
@@ -198,7 +198,7 @@ public class ParentPolicyUnitTestCase extends AbstractClassLoaderTestWithSecurit
    {
       ClassLoaderSystem system = createClassLoaderSystem();
       NoMatchClassFilter filter = new NoMatchClassFilter(ClassLoaderDomain.class);
-      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilter.NOTHING);
+      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilterUtils.NOTHING);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, null);
       
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
@@ -215,7 +215,7 @@ public class ParentPolicyUnitTestCase extends AbstractClassLoaderTestWithSecurit
    {
       ClassLoaderSystem system = createClassLoaderSystem();
       MatchClassFilter filter = new MatchClassFilter(ClassLoaderDomain.class);
-      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilter.NOTHING);
+      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilterUtils.NOTHING);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, null);
       
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
@@ -232,7 +232,7 @@ public class ParentPolicyUnitTestCase extends AbstractClassLoaderTestWithSecurit
    {
       ClassLoaderSystem system = createClassLoaderSystem();
       NoMatchClassFilter filter = new NoMatchClassFilter(ClassLoaderDomain.class);
-      ParentPolicy parentPolicy = new ParentPolicy(ClassFilter.JAVA_ONLY, filter);
+      ParentPolicy parentPolicy = new ParentPolicy(ClassFilterUtils.JAVA_ONLY, filter);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, null);
       
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
@@ -249,7 +249,7 @@ public class ParentPolicyUnitTestCase extends AbstractClassLoaderTestWithSecurit
    {
       ClassLoaderSystem system = createClassLoaderSystem();
       NoMatchClassFilter filter = new NoMatchClassFilter(ClassLoaderDomain.class);
-      ParentPolicy parentPolicy = new ParentPolicy(ClassFilter.JAVA_ONLY, filter);
+      ParentPolicy parentPolicy = new ParentPolicy(ClassFilterUtils.JAVA_ONLY, filter);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, null);
       
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
@@ -264,7 +264,7 @@ public class ParentPolicyUnitTestCase extends AbstractClassLoaderTestWithSecurit
    {
       ClassLoaderSystem system = createClassLoaderSystem();
       MatchClassFilter filter = new MatchClassFilter(ClassLoaderDomain.class);
-      ParentPolicy parentPolicy = new ParentPolicy(ClassFilter.JAVA_ONLY, filter);
+      ParentPolicy parentPolicy = new ParentPolicy(ClassFilterUtils.JAVA_ONLY, filter);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, null);
       
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
@@ -279,7 +279,7 @@ public class ParentPolicyUnitTestCase extends AbstractClassLoaderTestWithSecurit
    public void testNoMatchBeforeAndAfter() throws Exception
    {
       ClassLoaderSystem system = createClassLoaderSystem();
-      ParentPolicy parentPolicy = new ParentPolicy(ClassFilter.NOTHING, ClassFilter.NOTHING);
+      ParentPolicy parentPolicy = new ParentPolicy(ClassFilterUtils.NOTHING, ClassFilterUtils.NOTHING);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, null);
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
@@ -290,7 +290,7 @@ public class ParentPolicyUnitTestCase extends AbstractClassLoaderTestWithSecurit
    {
       ClassLoaderSystem system = createClassLoaderSystem();
       PackageClassFilter filter = PackageClassFilter.createPackageClassFilter("dummy");
-      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilter.NOTHING);
+      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilterUtils.NOTHING);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, null);
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
@@ -302,7 +302,7 @@ public class ParentPolicyUnitTestCase extends AbstractClassLoaderTestWithSecurit
       ClassLoaderSystem system = createClassLoaderSystem();
       PackageClassFilter filter = PackageClassFilter.createPackageClassFilter("dummy");
       filter.setIncludeJava(true);
-      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilter.NOTHING);
+      ParentPolicy parentPolicy = new ParentPolicy(filter, ClassFilterUtils.NOTHING);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy, null);
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);

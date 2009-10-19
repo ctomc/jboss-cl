@@ -41,6 +41,7 @@ import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.Loader;
 import org.jboss.classloader.spi.ParentPolicy;
 import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.spi.filter.PackageClassFilter;
 import org.jboss.logging.Logger;
@@ -227,7 +228,7 @@ public class IsolatedClassLoaderTestHelper
       // The parent filter
       PackageClassFilter filter = new PackageClassFilter(parentPackages);
       filter.setIncludeJava(true);
-      return initializeClassLoader(clazz, system, filter, ClassFilter.NOTHING, policy);
+      return initializeClassLoader(clazz, system, filter, ClassFilterUtils.NOTHING, policy);
    }
 
    /**
@@ -281,7 +282,7 @@ public class IsolatedClassLoaderTestHelper
       PackageClassFilter filter = new PackageClassFilter(parentPkgs);
       filter.setIncludeJava(true);
       CombiningClassFilter beforeFilter = CombiningClassFilter.create(filter, parentFilter);
-      ParentPolicy parentPolicy = new ParentPolicy(beforeFilter, ClassFilter.NOTHING);
+      ParentPolicy parentPolicy = new ParentPolicy(beforeFilter, ClassFilterUtils.NOTHING);
       return initializeClassLoader(clazz, system, parentPolicy, policy);
    }
 

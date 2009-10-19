@@ -28,7 +28,7 @@ import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.Loader;
 import org.jboss.classloader.spi.ParentPolicy;
-import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.test.classloader.AbstractClassLoaderTestWithSecurity;
 import org.jboss.test.classloader.domain.support.MockLoader;
@@ -142,7 +142,7 @@ public class HierarchicalParentClassLoaderUnitTestCase extends AbstractClassLoad
    {
       ClassLoaderSystem system = createClassLoaderSystem();
       NoMatchClassFilter filter = new NoMatchClassFilter(MockLoader.class);
-      ParentPolicy pp = new ParentPolicy(filter, ClassFilter.NOTHING);
+      ParentPolicy pp = new ParentPolicy(filter, ClassFilterUtils.NOTHING);
       ClassLoaderDomain parent = system.createAndRegisterDomain("parent", ParentPolicy.BEFORE_BUT_JAVA_ONLY);
       
       MockClassLoaderPolicy parentPolicy = createMockClassLoaderPolicy();
@@ -257,7 +257,7 @@ public class HierarchicalParentClassLoaderUnitTestCase extends AbstractClassLoad
    {
       ClassLoaderSystem system = createClassLoaderSystem();
       NoMatchClassFilter filter = new NoMatchClassFilter(MockLoader.class);
-      ParentPolicy pp = new ParentPolicy(filter, ClassFilter.NOTHING);
+      ParentPolicy pp = new ParentPolicy(filter, ClassFilterUtils.NOTHING);
       ClassLoaderDomain parent = system.createAndRegisterDomain("parent", ParentPolicy.BEFORE_BUT_JAVA_ONLY);
       
       MockClassLoaderPolicy parentPolicy = createMockClassLoaderPolicy();

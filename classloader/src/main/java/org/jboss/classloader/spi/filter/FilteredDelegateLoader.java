@@ -53,7 +53,7 @@ public class FilteredDelegateLoader extends DelegateLoader
     */
    public FilteredDelegateLoader(ClassLoaderPolicy delegate)
    {
-      this(delegate, ClassFilter.EVERYTHING);
+      this(delegate, ClassFilterUtils.EVERYTHING);
    }
 
    /**
@@ -79,7 +79,7 @@ public class FilteredDelegateLoader extends DelegateLoader
     */
    public FilteredDelegateLoader(ClassLoaderPolicyFactory factory)
    {
-      this(factory, ClassFilter.EVERYTHING);
+      this(factory, ClassFilterUtils.EVERYTHING);
    }
 
    /**
@@ -115,7 +115,7 @@ public class FilteredDelegateLoader extends DelegateLoader
    protected void setFilter(ClassFilter filter)
    {
       if (filter == null)
-         this.filter = ClassFilter.EVERYTHING;
+         this.filter = ClassFilterUtils.EVERYTHING;
       else
          this.filter = filter;
    }

@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2007, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2009, Red Hat Middleware LLC, and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -23,11 +23,6 @@ package org.jboss.classloader.spi.filter;
 
 import java.io.Serializable;
 
-import org.jboss.classloader.plugins.filter.EverythingClassFilter;
-import org.jboss.classloader.plugins.filter.JavaOnlyClassFilter;
-import org.jboss.classloader.plugins.filter.NothingButJavaClassFilter;
-import org.jboss.classloader.plugins.filter.NothingClassFilter;
-
 /**
  * ClassFilter.
  * 
@@ -36,18 +31,6 @@ import org.jboss.classloader.plugins.filter.NothingClassFilter;
  */
 public interface ClassFilter extends Serializable
 {
-   /** Match evertything */
-   ClassFilter EVERYTHING = EverythingClassFilter.INSTANCE;
-
-   /** Match nothing */
-   ClassFilter NOTHING = NothingClassFilter.INSTANCE;
-
-   /** Match nothing */
-   ClassFilter NOTHING_BUT_JAVA = NothingButJavaClassFilter.INSTANCE;
-
-   /** Java Only */
-   ClassFilter JAVA_ONLY = JavaOnlyClassFilter.INSTANCE;
-   
    /** 
     * Whether the class name matches the filter
     * 

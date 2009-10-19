@@ -27,6 +27,7 @@ import java.util.Collections;
 import junit.framework.Test;
 
 import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloading.spi.metadata.CapabilitiesMetaData;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaData;
@@ -181,24 +182,24 @@ public class ClassLoadingMetaDataUnitTestCase extends AbstractClassLoadingTestWi
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
       assertNull(test.getIncluded());
-      test.setIncluded(ClassFilter.EVERYTHING);
-      assertEquals(ClassFilter.EVERYTHING, test.getIncluded());
+      test.setIncluded(ClassFilterUtils.EVERYTHING);
+      assertEquals(ClassFilterUtils.EVERYTHING, test.getIncluded());
    }
    
    public void testSetExcluded() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
       assertNull(test.getExcluded());
-      test.setExcluded(ClassFilter.EVERYTHING);
-      assertEquals(ClassFilter.EVERYTHING, test.getExcluded());
+      test.setExcluded(ClassFilterUtils.EVERYTHING);
+      assertEquals(ClassFilterUtils.EVERYTHING, test.getExcluded());
    }
    
    public void testSetExcludedExport() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
       assertNull(test.getExcludedExport());
-      test.setExcludedExport(ClassFilter.EVERYTHING);
-      assertEquals(ClassFilter.EVERYTHING, test.getExcludedExport());
+      test.setExcludedExport(ClassFilterUtils.EVERYTHING);
+      assertEquals(ClassFilterUtils.EVERYTHING, test.getExcludedExport());
    }
    
    public void testGetIncluded() throws Exception
@@ -211,14 +212,14 @@ public class ClassLoadingMetaDataUnitTestCase extends AbstractClassLoadingTestWi
       assertTrue(filter.matchesClassName(Object.class.getName()));
       assertFalse(filter.matchesClassName(Collection.class.getName()));
       
-      test.setIncluded(ClassFilter.JAVA_ONLY);
+      test.setIncluded(ClassFilterUtils.JAVA_ONLY);
       filter = test.getIncluded();
       assertTrue(filter.matchesClassName(Object.class.getName()));
       assertFalse(filter.matchesClassName(Collection.class.getName()));
       
       test.setIncludedPackages(null);
       filter = test.getIncluded();
-      assertEquals(ClassFilter.JAVA_ONLY, filter);
+      assertEquals(ClassFilterUtils.JAVA_ONLY, filter);
       assertTrue(filter.matchesClassName(Object.class.getName()));
       assertTrue(filter.matchesClassName(Collection.class.getName()));
    }
@@ -233,14 +234,14 @@ public class ClassLoadingMetaDataUnitTestCase extends AbstractClassLoadingTestWi
       assertTrue(filter.matchesClassName(Object.class.getName()));
       assertFalse(filter.matchesClassName(Collection.class.getName()));
       
-      test.setExcluded(ClassFilter.JAVA_ONLY);
+      test.setExcluded(ClassFilterUtils.JAVA_ONLY);
       filter = test.getExcluded();
       assertTrue(filter.matchesClassName(Object.class.getName()));
       assertFalse(filter.matchesClassName(Collection.class.getName()));
       
       test.setExcludedPackages(null);
       filter = test.getExcluded();
-      assertEquals(ClassFilter.JAVA_ONLY, filter);
+      assertEquals(ClassFilterUtils.JAVA_ONLY, filter);
       assertTrue(filter.matchesClassName(Object.class.getName()));
       assertTrue(filter.matchesClassName(Collection.class.getName()));
    }
@@ -255,14 +256,14 @@ public class ClassLoadingMetaDataUnitTestCase extends AbstractClassLoadingTestWi
       assertTrue(filter.matchesClassName(Object.class.getName()));
       assertFalse(filter.matchesClassName(Collection.class.getName()));
       
-      test.setExcludedExport(ClassFilter.JAVA_ONLY);
+      test.setExcludedExport(ClassFilterUtils.JAVA_ONLY);
       filter = test.getExcludedExport();
       assertTrue(filter.matchesClassName(Object.class.getName()));
       assertFalse(filter.matchesClassName(Collection.class.getName()));
       
       test.setExcludedExportPackages(null);
       filter = test.getExcludedExport();
-      assertEquals(ClassFilter.JAVA_ONLY, filter);
+      assertEquals(ClassFilterUtils.JAVA_ONLY, filter);
       assertTrue(filter.matchesClassName(Object.class.getName()));
       assertTrue(filter.matchesClassName(Collection.class.getName()));
    }

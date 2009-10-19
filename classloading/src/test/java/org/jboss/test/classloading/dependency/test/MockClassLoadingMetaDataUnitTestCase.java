@@ -28,7 +28,7 @@ import java.util.List;
 import junit.framework.Test;
 
 import org.jboss.classloader.spi.ClassLoaderSystem;
-import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoaderPolicyModule;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.Capability;
@@ -159,12 +159,12 @@ public class MockClassLoadingMetaDataUnitTestCase extends AbstractMockClassLoade
    public void testIncluded() throws Exception
    {
       MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
-      a.setIncluded(ClassFilter.JAVA_ONLY);
+      a.setIncluded(ClassFilterUtils.JAVA_ONLY);
       KernelControllerContext contextA = install(a);
       try
       {
          MockClassLoaderPolicyModule module = assertModule(contextA);
-         assertEquals(ClassFilter.JAVA_ONLY, module.getIncluded());
+         assertEquals(ClassFilterUtils.JAVA_ONLY, module.getIncluded());
       }
       finally
       {
@@ -176,12 +176,12 @@ public class MockClassLoadingMetaDataUnitTestCase extends AbstractMockClassLoade
    public void testExcluded() throws Exception
    {
       MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
-      a.setExcluded(ClassFilter.JAVA_ONLY);
+      a.setExcluded(ClassFilterUtils.JAVA_ONLY);
       KernelControllerContext contextA = install(a);
       try
       {
          MockClassLoaderPolicyModule module = assertModule(contextA);
-         assertEquals(ClassFilter.JAVA_ONLY, module.getExcluded());
+         assertEquals(ClassFilterUtils.JAVA_ONLY, module.getExcluded());
       }
       finally
       {
@@ -193,12 +193,12 @@ public class MockClassLoadingMetaDataUnitTestCase extends AbstractMockClassLoade
    public void testExcludedExport() throws Exception
    {
       MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
-      a.setExcludedExport(ClassFilter.JAVA_ONLY);
+      a.setExcludedExport(ClassFilterUtils.JAVA_ONLY);
       KernelControllerContext contextA = install(a);
       try
       {
          MockClassLoaderPolicyModule module = assertModule(contextA);
-         assertEquals(ClassFilter.JAVA_ONLY, module.getExcludedExport());
+         assertEquals(ClassFilterUtils.JAVA_ONLY, module.getExcludedExport());
       }
       finally
       {

@@ -36,7 +36,7 @@ import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.ParentPolicy;
-import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.test.classloader.AbstractClassLoaderTest;
@@ -122,7 +122,7 @@ public class ClassLoaderPolicyUnitTestCase extends AbstractClassLoaderTest
    {
       ClassLoaderSystem system = createClassLoaderSystem();
       // Hide java
-      ParentPolicy parentPolicy = new ParentPolicy(ClassFilter.NOTHING, ClassFilter.NOTHING);
+      ParentPolicy parentPolicy = new ParentPolicy(ClassFilterUtils.NOTHING, ClassFilterUtils.NOTHING);
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", parentPolicy);
       TestClassLoaderPolicy policy = new TestClassLoaderPolicy();
       ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);

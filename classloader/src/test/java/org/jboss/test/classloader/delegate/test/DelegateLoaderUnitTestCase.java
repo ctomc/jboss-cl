@@ -26,7 +26,7 @@ import junit.framework.Test;
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.DelegateLoader;
-import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.spi.filter.LazyFilteredDelegateLoader;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
@@ -73,7 +73,7 @@ public class DelegateLoaderUnitTestCase extends AbstractClassLoaderTestWithSecur
       policy.setPathsAndPackageNames(TestA1.class);
       system.registerClassLoaderPolicy(policy);
       
-      FilteredDelegateLoader delegate = new FilteredDelegateLoader(policy, ClassFilter.NOTHING);
+      FilteredDelegateLoader delegate = new FilteredDelegateLoader(policy, ClassFilterUtils.NOTHING);
       assertLoadClassFail(TestA1.class, delegate);
    }
    

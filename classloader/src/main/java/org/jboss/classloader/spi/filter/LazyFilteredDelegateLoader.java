@@ -40,7 +40,7 @@ public class LazyFilteredDelegateLoader extends FilteredDelegateLoader
     */
    public LazyFilteredDelegateLoader(ClassLoaderPolicyFactory factory)
    {
-      super(factory, ClassFilter.EVERYTHING);
+      super(factory, ClassFilterUtils.EVERYTHING);
    }
 
    @Override
