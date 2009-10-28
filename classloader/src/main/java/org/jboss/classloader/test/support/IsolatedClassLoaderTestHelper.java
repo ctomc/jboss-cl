@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.Arrays;
 
 import junit.extensions.TestSetup;
 import junit.framework.Test;
@@ -165,8 +166,7 @@ public class IsolatedClassLoaderTestHelper
       MockClassLoaderPolicy policy = new MockClassLoaderPolicy();
       Set<Class<?>> classes = new HashSet<Class<?>>();
       classes.add(clazz);
-      for (Class<?> c : packages)
-         classes.add(c);
+      classes.addAll(Arrays.asList(packages));
       policy.setImportAll(importAll);
       policy.setPathsAndPackageNames(classes.toArray(new Class[classes.size()]));
 
@@ -245,8 +245,7 @@ public class IsolatedClassLoaderTestHelper
       MockClassLoaderPolicy policy = new MockClassLoaderPolicy();
       Set<Class<?>> classes = new HashSet<Class<?>>();
       classes.add(clazz);
-      for (Class<?> c : packages)
-         classes.add(c);
+      classes.addAll(Arrays.asList(packages));
       policy.setImportAll(importAll);
       policy.setPathsAndPackageNames(classes.toArray(new Class[classes.size()]));
       return initializeClassLoader(clazz, parentFilter, policy);
