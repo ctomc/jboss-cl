@@ -213,6 +213,12 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       return policy;
    }
 
+   /**
+    * Remove classloader.
+    *
+    * Unregister policy from the system
+    * and remove tha actual classloader from module.
+    */
    public void removeClassLoader()
    {
       if (system != null && policy != null)
