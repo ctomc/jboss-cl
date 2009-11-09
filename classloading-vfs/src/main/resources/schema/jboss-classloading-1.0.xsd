@@ -91,6 +91,17 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
+      <xsd:attribute name="top-level-classloader" type="xsd:boolean" use="optional">
+         <xsd:annotation>
+            <xsd:documentation>
+               <![CDATA[
+               Whether a subdeployment classloader should be a top level classloader,
+               the default is false. This value is ignored when not specified against
+               a subdeployment.
+               ]]>
+            </xsd:documentation>
+         </xsd:annotation>
+      </xsd:attribute>
       <xsd:attribute name="parent-first" type="xsd:boolean" use="optional">
          <xsd:annotation>
             <xsd:documentation>

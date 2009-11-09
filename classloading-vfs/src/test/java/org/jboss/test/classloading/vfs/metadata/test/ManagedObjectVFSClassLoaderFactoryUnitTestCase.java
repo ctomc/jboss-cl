@@ -46,7 +46,7 @@ import org.jboss.test.BaseTestCase;
 
 /**
  * ManagedObjectVFSClassLoaderFactoryUnitTestCase.
- * 
+ *
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
@@ -55,7 +55,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
    private ManagedObjectFactory moFactory = ManagedObjectFactory.getInstance();
    private MetaTypeFactory mtFactory = MetaTypeFactory.getInstance();
    private MetaValueFactory mvFactory = MetaValueFactory.getInstance();
-   
+
    public static Test suite()
    {
       return suite(ManagedObjectVFSClassLoaderFactoryUnitTestCase.class);
@@ -65,12 +65,12 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
    {
       super(name);
    }
-   
+
    protected ManagedObject assertManagedObject(VFSClassLoaderFactory test)
    {
       ManagedObject result = moFactory.initManagedObject(test, null, null);
       assertNotNull(result);
-      List<String> expectedProperties = Arrays.asList("name", "version", "context", "domain", "parentDomain", "exportAll", "included", "excluded", "excludedExport", "importAll", "parentFirst", "cache", "blackList", "system", "roots", "capabilities", "requirements");
+      List<String> expectedProperties = Arrays.asList("name", "version", "context", "domain", "parentDomain", "topLevelClassLoader", "exportAll", "included", "excluded", "excludedExport", "importAll", "parentFirst", "cache", "blackList", "system", "roots", "capabilities", "requirements");
       Set<String> actualProperties = result.getPropertyNames();
       for (String expected : expectedProperties)
       {
@@ -84,7 +84,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       }
       return result;
    }
-   
+
    protected ManagedProperty assertManagedProperty(ManagedObject mo, String name, MetaType metaType, MetaValue metaValue)
    {
       ManagedProperty property = mo.getProperty(name);
@@ -93,7 +93,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       assertEquals(metaValue, property.getValue());
       return property;
    }
-   
+
    protected ManagedProperty assertManagedProperty(ManagedObject mo, String name, Type type, Object value)
    {
       MetaType metaType = mtFactory.resolve(type);
@@ -103,12 +103,12 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
          metaValue = mvFactory.create(value, type);
       return assertManagedProperty(mo, name, metaType, metaValue);
    }
-   
+
    protected <T> ManagedProperty assertManagedProperty(ManagedObject mo, String name, Class<T> type, T value)
    {
       return assertManagedProperty(mo, name, (Type) type, value);
    }
-   
+
    public void testConstructor() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -117,6 +117,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       assertManagedProperty(mo, "version", Version.class, Version.DEFAULT_VERSION);
       assertManagedProperty(mo, "domain", String.class, null);
       assertManagedProperty(mo, "parentDomain", String.class, null);
+      assertManagedProperty(mo, "topLevelClassLoader", boolean.class, false);
       assertManagedProperty(mo, "exportAll", ExportAll.class, null);
       assertManagedProperty(mo, "included", String.class, null);
       assertManagedProperty(mo, "excluded", String.class, null);
@@ -126,7 +127,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       assertManagedProperty(mo, "capabilities", CapabilitiesMetaData.class, new CapabilitiesMetaData());
       assertManagedProperty(mo, "requirements", RequirementsMetaData.class, new RequirementsMetaData());
    }
-   
+
    public void testSetName() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -134,7 +135,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "name", String.class, "test");
    }
-   
+
    public void testSetVersion() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -142,7 +143,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "version", Version.class, Version.parseVersion("1.0.0"));
    }
-   
+
    public void testContext() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -158,7 +159,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "domain", String.class, "domain");
    }
-   
+
    public void testSetParentDomain() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -166,7 +167,15 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "parentDomain", String.class, "parentDomain");
    }
-   
+
+   public void testSetTopLevelClassLoader() throws Exception
+   {
+      VFSClassLoaderFactory test = new VFSClassLoaderFactory();
+      test.setTopLevelClassLoader(true);
+      ManagedObject mo = assertManagedObject(test);
+      assertManagedProperty(mo, "topLevelClassLoader", boolean.class, true);
+   }
+
    public void testSetExportAll() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -174,7 +183,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "exportAll", ExportAll.class, ExportAll.ALL);
    }
-   
+
    public void testSetIncludedPackages() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -182,7 +191,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "included", String.class, "Included");
    }
-   
+
    public void testSetExcludedPackages() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -190,7 +199,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "excluded", String.class, "Excluded");
    }
-   
+
    public void testSetExcludedExportPackages() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -198,7 +207,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "excludedExport", String.class, "ExcludedExport");
    }
-   
+
    public void testSetImportAll() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -206,7 +215,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "importAll", boolean.class, true);
    }
-   
+
    public void testJ2seClassLoadingComplaince() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -214,7 +223,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "parentFirst", boolean.class, false);
    }
-   
+
    public void testCacheable() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -222,7 +231,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "cache", boolean.class, false);
    }
-   
+
    public void testBlackList() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -230,7 +239,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "blackList", boolean.class, false);
    }
-   
+
    public void testSetSystem() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -238,7 +247,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "system", String.class, "test");
    }
-   
+
    public void testSetRoots() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -248,9 +257,9 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       Field field = getClass().getField("rootsSignature");
       assertManagedProperty(mo, "roots", field.getGenericType(), roots);
    }
-   
+
    public static List<String> rootsSignature;
-   
+
    public void testCapabilities() throws Exception
    {
       ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
@@ -260,7 +269,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "requirements", RequirementsMetaData.class, test.getRequirements());
    }
-   
+
    public void testRequirements() throws Exception
    {
       ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();

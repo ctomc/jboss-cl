@@ -44,7 +44,7 @@ import org.jboss.test.BaseTestCase;
 
 /**
  * ManagedObjectClassLoadingMetaDataUnitTestCase.
- * 
+ *
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
@@ -53,7 +53,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
    private ManagedObjectFactory moFactory = ManagedObjectFactory.getInstance();
    private MetaTypeFactory mtFactory = MetaTypeFactory.getInstance();
    private MetaValueFactory mvFactory = MetaValueFactory.getInstance();
-   
+
    public static Test suite()
    {
       return suite(ManagedObjectClassLoadingMetaDataUnitTestCase.class);
@@ -63,12 +63,12 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
    {
       super(name);
    }
-   
+
    protected ManagedObject assertManagedObject(ClassLoadingMetaData test)
    {
       ManagedObject result = moFactory.initManagedObject(test, null, null);
       assertNotNull(result);
-      List<String> expectedProperties = Arrays.asList("name", "version", "domain", "parentDomain", "exportAll", "included", "excluded", "excludedExport", "importAll", "parentFirst", "cache", "blackList", "capabilities", "requirements");
+      List<String> expectedProperties = Arrays.asList("name", "version", "domain", "parentDomain", "topLevelClassLoader", "exportAll", "included", "excluded", "excludedExport", "importAll", "parentFirst", "cache", "blackList", "capabilities", "requirements");
       Set<String> actualProperties = result.getPropertyNames();
       for (String expected : expectedProperties)
       {
@@ -82,7 +82,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       }
       return result;
    }
-   
+
    protected ManagedProperty assertManagedProperty(ManagedObject mo, String name, MetaType metaType, MetaValue metaValue)
    {
       ManagedProperty property = mo.getProperty(name);
@@ -91,7 +91,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       assertEquals(metaValue, property.getValue());
       return property;
    }
-   
+
    protected <T> ManagedProperty assertManagedProperty(ManagedObject mo, String name, Class<T> type, T value)
    {
       MetaType metaType = mtFactory.resolve(type);
@@ -101,7 +101,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
          metaValue = mvFactory.create(value);
       return assertManagedProperty(mo, name, metaType, metaValue);
    }
-   
+
    public void testConstructor() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -110,6 +110,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       assertManagedProperty(mo, "version", Version.class, Version.DEFAULT_VERSION);
       assertManagedProperty(mo, "domain", String.class, null);
       assertManagedProperty(mo, "parentDomain", String.class, null);
+      assertManagedProperty(mo, "topLevelClassLoader", boolean.class, false);
       assertManagedProperty(mo, "exportAll", ExportAll.class, null);
       assertManagedProperty(mo, "included", String.class, null);
       assertManagedProperty(mo, "excluded", String.class, null);
@@ -119,7 +120,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       assertManagedProperty(mo, "capabilities", CapabilitiesMetaData.class, new CapabilitiesMetaData());
       assertManagedProperty(mo, "requirements", RequirementsMetaData.class, new RequirementsMetaData());
    }
-   
+
    public void testSetName() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -127,7 +128,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "name", String.class, "test");
    }
-   
+
    public void testSetVersion() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -143,7 +144,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "domain", String.class, "domain");
    }
-   
+
    public void testSetParentDomain() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -151,7 +152,15 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "parentDomain", String.class, "parentDomain");
    }
-   
+
+   public void testSetTopLevelClassLoader() throws Exception
+   {
+      ClassLoadingMetaData test = new ClassLoadingMetaData();
+      test.setTopLevelClassLoader(true);
+      ManagedObject mo = assertManagedObject(test);
+      assertManagedProperty(mo, "topLevelClassLoader", boolean.class, true);
+   }
+
    public void testSetExportAll() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -159,7 +168,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "exportAll", ExportAll.class, ExportAll.ALL);
    }
-   
+
    public void testSetIncludedPackages() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -167,7 +176,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "included", String.class, "Included");
    }
-   
+
    public void testSetExcludedPackages() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -175,7 +184,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "excluded", String.class, "Excluded");
    }
-   
+
    public void testSetExcludedExportPackages() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -183,7 +192,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "excludedExport", String.class, "ExcludedExport");
    }
-   
+
    public void testSetImportAll() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -191,7 +200,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "importAll", boolean.class, true);
    }
-   
+
    public void testJ2seClassLoadingComplaince() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -199,7 +208,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "parentFirst", boolean.class, false);
    }
-   
+
    public void testCacheable() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -207,7 +216,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "cache", boolean.class, false);
    }
-   
+
    public void testBlackList() throws Exception
    {
       ClassLoadingMetaData test = new ClassLoadingMetaData();
@@ -215,7 +224,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "blackList", boolean.class, false);
    }
-   
+
    public void testCapabilities() throws Exception
    {
       ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
@@ -225,7 +234,7 @@ public class ManagedObjectClassLoadingMetaDataUnitTestCase extends BaseTestCase
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "requirements", RequirementsMetaData.class, test.getRequirements());
    }
-   
+
    public void testRequirements() throws Exception
    {
       ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();

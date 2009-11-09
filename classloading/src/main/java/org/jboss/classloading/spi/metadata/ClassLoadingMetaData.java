@@ -51,6 +51,9 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
    /** The parent domain */
    private String parentDomain;
    
+   /** Whether to make a subdeployment classloader a top-level classloader */
+   private boolean topLevelClassLoader = false;
+   
    /** Whether to enforce j2se classloading compliance */
    private boolean j2seClassLoadingCompliance = true;
    
@@ -132,6 +135,28 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
    public void setParentDomain(String parentDomain)
    {
       this.parentDomain = parentDomain;
+   }
+
+   /**
+    * Get the topLevelClassLoader.
+    * 
+    * @return the topLevelClassLoader.
+    */
+   public boolean isTopLevelClassLoader()
+   {
+      return topLevelClassLoader;
+   }
+
+   /**
+    * Set the topLevelClassLoader.
+    * 
+    * @param topLevelClassLoader the topLevelClassLoader.
+    */
+   @ManagementProperty
+   @XmlAttribute(name="top-level-classloader")
+   public void setTopLevelClassLoader(boolean topLevelClassLoader)
+   {
+      this.topLevelClassLoader = topLevelClassLoader;
    }
 
    /**

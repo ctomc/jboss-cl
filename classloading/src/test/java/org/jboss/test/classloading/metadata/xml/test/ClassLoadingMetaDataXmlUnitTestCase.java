@@ -63,6 +63,7 @@ public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
       assertEquals(Version.DEFAULT_VERSION, result.getVersion());
       assertNull(result.getDomain());
       assertNull(result.getParentDomain());
+      assertFalse(result.isTopLevelClassLoader());
       assertNull(result.getExportAll());
       assertNull(result.getIncludedPackages());
       assertNull(result.getExcludedPackages());
@@ -91,6 +92,12 @@ public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
    {
       ClassLoadingMetaData result = unmarshal();
       assertEquals("testParentDomain", result.getParentDomain());
+   }
+
+   public void testModuleTopLevelClassLoader() throws Exception
+   {
+      ClassLoadingMetaData result = unmarshal();
+      assertTrue(result.isTopLevelClassLoader());
    }
 
    public void testModuleExportAll() throws Exception
