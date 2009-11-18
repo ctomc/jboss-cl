@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloading.spi.metadata.Capability;
@@ -39,7 +40,7 @@ import org.jboss.util.collection.ConcurrentSet;
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public class ClassLoading
+public class ClassLoading implements Resolver
 {
    /** The log */
    private static final Logger log = Logger.getLogger(ClassLoading.class);
@@ -55,6 +56,9 @@ public class ClassLoading
 
    /** The module registries */
    private final Set<ModuleRegistry> moduleRegistries = new ConcurrentSet<ModuleRegistry>();
+
+   /** The resolvers */
+   private List<Resolver> resolvers = null;
 
    /**
     * Add a module
@@ -150,6 +154,58 @@ public class ClassLoading
          throw new IllegalArgumentException("Null global capabilities provider");
       
       globalCapabilitiesProviders.remove(provider);
+   }
+
+   /**
+    * Add a resolver
+    * 
+    * @param resolver the resolver
+    */
+   public void addResolver(Resolver resolver)
+   {
+      if (resolver == null)
+         throw new IllegalArgumentException("Null resolver");
+      
+      if (resolvers == null)
+         resolvers = new CopyOnWriteArrayList<Resolver>();
+      
+      resolvers.add(resolver);
+   }
+
+   /**
+    * Remove a resolver
+    * 
+    * @param resolver the resolver
+    */
+   public void removeResolver(Resolver resolver)
+   {
+      if (resolver == null)
+         throw new IllegalArgumentException("Null resolver");
+      
+      if (resolvers == null)
+         return;
+      
+      resolvers.remove(resolver);
+   }
+   
+   public boolean resolve(ResolutionContext context)
+   {
+      if (resolvers != null && resolvers.isEmpty() == false)
+      {
+         for (Resolver resolver : resolvers)
+         {
+            try
+            {
+               if (resolver.resolve(context))
+                  return true;
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error in resolver: " + resolver + " context=" + context, t);
+            }
+         }
+      }
+      return false;
    }
    
    /**

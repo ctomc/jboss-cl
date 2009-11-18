@@ -31,6 +31,7 @@ import org.jboss.classloader.spi.ParentPolicy;
 import org.jboss.classloading.spi.dependency.ClassLoading;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoaderPolicyModule;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
+import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerState;
 import org.jboss.dependency.spi.ControllerStateModel;
 import org.jboss.kernel.Kernel;
@@ -60,6 +61,13 @@ public abstract class AbstractMockClassLoaderUnitTest extends AbstractClassLoadi
    public AbstractMockClassLoaderUnitTest(String name)
    {
       super(name);
+   }
+
+   protected <T> T getBean(Object name, Class<T> expected)
+   {
+      ControllerContext context = controller.getInstalledContext(name);
+      assertNotNull("Context should be found: " + name, context);
+      return assertInstanceOf(context.getTarget(), expected);
    }
    
    protected ClassLoader assertClassLoader(KernelControllerContext context) throws Exception

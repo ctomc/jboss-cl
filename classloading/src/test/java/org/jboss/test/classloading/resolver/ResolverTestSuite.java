@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2008, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2009, Red Hat Middleware LLC, and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -19,25 +19,21 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.test.classloading;
+package org.jboss.test.classloading.resolver;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
-import org.jboss.test.classloading.dependency.DependencyTestSuite;
-import org.jboss.test.classloading.lifecycle.LifeCycleTestSuite;
-import org.jboss.test.classloading.metadata.MetaDataTestSuite;
-import org.jboss.test.classloading.resolver.ResolverTestSuite;
-import org.jboss.test.classloading.version.VersionTestSuite;
+import org.jboss.test.classloading.lifecycle.test.LifeCycleUnitTestCase;
 
 /**
- * ClassLoading All Test Suite.
+ * LifeCycle Test Suite.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 37459 $
  */
-public class ClassLoadingAllTestSuite extends TestSuite
+public class ResolverTestSuite extends TestSuite
 {
    /**
     * For running the testsuite from the command line
@@ -56,14 +52,10 @@ public class ClassLoadingAllTestSuite extends TestSuite
     */
    public static Test suite()
    {
-      TestSuite suite = new TestSuite("ClassLoading All Tests");
+      TestSuite suite = new TestSuite("LifeCycle Tests");
 
-      suite.addTest(VersionTestSuite.suite());
-      suite.addTest(MetaDataTestSuite.suite());
-      suite.addTest(DependencyTestSuite.suite());
-      suite.addTest(LifeCycleTestSuite.suite());
-      suite.addTest(ResolverTestSuite.suite());
-      
+      suite.addTest(LifeCycleUnitTestCase.suite());
+
       return suite;
    }
 }

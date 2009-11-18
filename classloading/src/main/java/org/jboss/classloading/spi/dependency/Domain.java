@@ -60,7 +60,7 @@ public class Domain
    
    /** The registered modules by name */
    private Map<String, Module> modulesByName = new ConcurrentHashMap<String, Module>();
-
+   
    /**
     * Create a new Domain.
     * 
@@ -218,7 +218,7 @@ public class Domain
    {
       return classLoading.mergeGlobalCapabilities(capabilities);
    }
-   
+
    /**
     * Resolve a requirement to a module
     * 
@@ -227,6 +227,35 @@ public class Domain
     * @return the resolved name or null if not resolved
     */
    protected Module resolveModule(Module module, Requirement requirement)
+   {
+      // Try to resolve the module
+      Module result = doResolveModule(module, requirement);
+      if (result == null)
+      {
+         // If we have resolvers, try again if they find it
+         if (classLoading.resolve(new ResolutionContext(this, module, requirement)))
+            result = doResolveModule(module, requirement);
+      }
+      
+      // If there is a result, check to see whether we need to resolve it
+      if (result != null)
+      {
+         LifeCycle lifeCycle = result.getLifeCycle();
+         if (lifeCycle != null && lifeCycle.isLazyResolve() && lifeCycle.isResolved() == false)
+            lifeCycle.doResolve();
+      }
+      
+      return result;
+   }   
+   
+   /**
+    * Resolve a requirement to a module
+    * 
+    * @param module the module
+    * @param requirement the requirement
+    * @return the resolved name or null if not resolved
+    */
+   protected Module doResolveModule(Module module, Requirement requirement)
    {
       // First check the parent domain has been setup
       Domain parentDomain = null;

@@ -67,7 +67,7 @@ import org.jboss.dependency.spi.DependencyInfo;
  */
 public abstract class Module extends NameAndVersionSupport
 {
-   /** The serialVersionUID - not really serializable */
+   /** The serialVersionUID */
    private static final long serialVersionUID = 1L;
 
    /** The modules by classloader */
@@ -93,6 +93,9 @@ public abstract class Module extends NameAndVersionSupport
    
    /** The requirements */
    private List<RequirementDependencyItem> requirementDependencies;
+
+   /** Any lifecycle associated with the classloader */
+   private LifeCycle lifeCycle;
    
    /**
     * Register a classloader for a module
@@ -109,6 +112,10 @@ public abstract class Module extends NameAndVersionSupport
          throw new IllegalArgumentException("Null classloader");
 
       modulesByClassLoader.put(classLoader, module);
+
+      LifeCycle lifeCycle = module.getLifeCycle();
+      if (lifeCycle != null)
+         lifeCycle.fireResolved();
    }
 
    /**
@@ -126,6 +133,10 @@ public abstract class Module extends NameAndVersionSupport
          throw new IllegalArgumentException("Null classloader");
 
       modulesByClassLoader.remove(classLoader);
+
+      LifeCycle lifeCycle = module.getLifeCycle();
+      if (lifeCycle != null)
+         lifeCycle.fireUnresolved();
    }
    
    /**
@@ -367,6 +378,28 @@ public abstract class Module extends NameAndVersionSupport
       return true;
    }
    
+   /**
+    * Get the lifecycle.
+    * 
+    * @return the lifecycle.
+    */
+   public LifeCycle getLifeCycle()
+   {
+      return lifeCycle;
+   }
+
+   /**
+    * Set the lifeCycle.
+    * 
+    * @param lifeCycle the lifeCycle.
+    */
+   public void setLifeCycle(LifeCycle lifeCycle)
+   {
+      if (lifeCycle != null && lifeCycle.getModule() != this)
+         throw new IllegalArgumentException("Cannot setLifeCycle on module " + this + " it is associated with a different module: " + lifeCycle.getModule());
+      this.lifeCycle = lifeCycle;
+   }
+
    /**
     * Find the module for a classloader
     * 
