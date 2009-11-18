@@ -46,8 +46,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.management.ObjectName;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
+import org.jboss.classloader.spi.ClassFoundEvent;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
+import org.jboss.classloader.spi.ClassNotFoundEvent;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.Loader;
 import org.jboss.classloader.spi.PackageInformation;
@@ -57,39 +59,39 @@ import org.jboss.util.collection.Iterators;
 
 /**
  * BaseClassLoader.
- * 
+ *
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public class BaseClassLoader extends SecureClassLoader implements BaseClassLoaderMBean, RealClassLoader 
+public class BaseClassLoader extends SecureClassLoader implements BaseClassLoaderMBean, RealClassLoader
 {
    /** The log */
    private static final Logger log = Logger.getLogger(BaseClassLoader.class);
 
    /** The lock object */
    private ReentrantLock lock = new ReentrantLock(true);
-   
+
    /** The policy for this classloader */
    private ClassLoaderPolicy policy;
-   
+
    /** Our Loader front end */
    private DelegateLoader loader;
-   
+
    /** The loaded classes */
    private Map<String, String> loadedClasses = new ConcurrentHashMap<String, String>();
-   
+
    /** Our resource cache */
    private Map<String, URL> resourceCache;
-   
+
    /** Our black list */
    private Map<String, String> blackList;
-   
+
    /**
     * Create a new ClassLoader with no parent.
-    * 
+    *
     * @param policy the policy
-    * @throws IllegalArgumentException for a null policy 
-    * @throws IllegalStateException if the policy is already associated with a classloader 
+    * @throws IllegalArgumentException for a null policy
+    * @throws IllegalStateException if the policy is already associated with a classloader
     */
    public BaseClassLoader(ClassLoaderPolicy policy)
    {
@@ -108,7 +110,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
       if (basePolicy.isBlackListable())
          blackList = new ConcurrentHashMap<String, String>();
-      
+
       log.debug("Created " + this + " with policy " + policy.toLongString());
    }
 
@@ -116,7 +118,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
    {
       return policy.getObjectName();
    }
-   
+
    public ObjectName getClassLoaderDomain()
    {
       BaseClassLoaderPolicy basePolicy = policy;
@@ -128,7 +130,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
    {
       return policy.getName();
    }
-   
+
    public boolean isBlackListable()
    {
       BaseClassLoaderPolicy basePolicy = policy;
@@ -173,7 +175,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       }
       return result;
    }
-   
+
    public String listPolicyDetails()
    {
       return policy.toLongString();
@@ -184,18 +186,18 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       final Class<?> clazz = loadClass(name);
       if (clazz == null)
          return null;
-      
+
       ClassLoader cl = AccessController.doPrivileged(new PrivilegedAction<ClassLoader>()
       {
          public ClassLoader run()
          {
-            return clazz.getClassLoader(); 
+            return clazz.getClassLoader();
          }
       });
-      
+
       if (cl != null && cl instanceof RealClassLoader)
          return ((RealClassLoader) cl).getObjectName();
-      
+
       return null;
    }
 
@@ -223,7 +225,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Get the policy.
-    * 
+    *
     * @return the policy.
     */
    ClassLoaderPolicy getPolicy()
@@ -233,7 +235,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Get the loader.
-    * 
+    *
     * @return the loader.
     */
    DelegateLoader getLoader()
@@ -250,12 +252,12 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
       if (name == null)
          return null;
-      
+
       // Did we already load this package?
       Package result = super.getPackage(name);
       if (result != null && trace)
          log.trace(this + " already loaded package " + name + " " + result.getName());
-      
+
       // Not already loaded use the domain
       if (result == null)
       {
@@ -267,14 +269,14 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
             log.trace(this + " getPackage " + name + " domain=" + domain);
          result = domain.getPackage(this, name);
       }
-      
+
       // Still not found
       if (result == null)
       {
          if (trace)
             log.trace(this + " package not found " + name);
       }
-      
+
       return result;
    }
 
@@ -296,7 +298,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Get a package locally
-    * 
+    *
     * @param name the package name
     * @return the package
     */
@@ -307,7 +309,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Get the packages locally
-    * 
+    *
     * @param packages the packages
     */
    void getPackagesLocally(Set<Package> packages)
@@ -316,10 +318,10 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       for (Package pkg : pkgs)
          packages.add(pkg);
    }
-   
+
    /**
     * Check to see if the class is already loaded
-    * 
+    *
     * @param name the name of the class
     * @param trace whether trace is enabled
     * @return the class is if it is already loaded, null otherwise
@@ -347,10 +349,10 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          log.trace(this + " already loaded class " + ClassLoaderUtils.classToString(result));
       return result;
    }
-   
+
    /**
     * Check the cache and blacklist
-    * 
+    *
     * @param name the name of the class
     * @param failIfBlackListed <code>true</code> if a blacklisted class should
     *                          result in ClassNotFoundException; <code>false</code>
@@ -367,12 +369,12 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       if (domain == null)
          return null;
 
-      return domain.checkClassCacheAndBlackList(this, name, null, basePolicy.isImportAll(), failIfBlackListed);
+      return domain.checkClassCacheAndBlackList(this, name, null, basePolicy.isImportAll(), false);
    }
 
    /**
     * Find the classloader for a class but don't load the class
-    * 
+    *
     * @param className the class name
     * @return the classloader
     * @throws ClassNotFoundException if the class is not found
@@ -392,11 +394,11 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
       ClassLoaderUtils.checkClassName(className);
       String path = ClassLoaderUtils.classNameToPath(className);
-      
+
       Loader loader = domain.findLoader(this, path, basePolicy.isImportAll(), true);
       if (loader == null)
          throw new ClassNotFoundException("Class " + className + " not found from " + this);
-      
+
       // This is a bit ugly but we can't abstract this behind an interface because
       // that would make the methods public
       if (loader instanceof BaseClassLoaderSource)
@@ -412,10 +414,10 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       boolean trace = log.isTraceEnabled();
       if (trace)
          log.trace(this + " loadClass " + name + " resolve=" + resolve);
-      
+
       // Validate the class name makes sense
       ClassLoaderUtils.checkClassName(name);
-      
+
       // Did we already load this class?
       Class<?> result = isLoadedClass(name, trace);
 
@@ -434,21 +436,72 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       result = checkCacheAndBlackList(name, false, trace);
       if (result != null)
          return result;
+
+      // Try to load the class
+      ClassNotFoundException exception = null;
+      try
+      {
+         result = doLoadClass(name, resolve, trace);
+      }
+      catch (ClassNotFoundException e)
+      {
+         exception = e;
+      }
+      
+      // If we failed, try any class not found handlers and retry if one says it is resolved
+      if (result == null)
+      {
+         ClassLoaderPolicy policy = getPolicy();
+         if (policy != null && policy.classNotFound(new ClassNotFoundEvent(this, name)))
+         {
+            try
+            {
+               result = doLoadClass(name, resolve, trace);
+            }
+            catch (ClassNotFoundException e)
+            {
+               exception = e;
+            }
+         }
+      }
+      
+      if (result == null)
+      {
+         if (trace)
+            log.trace(this + " class not found " + name);
+         if (exception != null)
+            throw exception;
+         throw new ClassNotFoundException(name + " from " + toString());
+      }
+      return result;
+   }
+
+   /**
+    * Do the load class
+    * 
+    * @param name the name
+    * @param resolve whether to resolve
+    * @param trace whether trace is enabled
+    * @return the class or null if not found
+    * @throws ClassNotFoundException if a problem is raised
+    */
+   protected Class<?> doLoadClass(String name, boolean resolve, boolean trace) throws ClassNotFoundException
+   {
+      Class<?> result = null;
       
       synchronized (this)
       {
+         // JBCL-114: did we lose the race to the synchronized?
+         result = isLoadedClass(name, trace);
+         
          // Not already loaded use the domain
          if (result == null)
             result = loadClassFromDomain(name, trace);
-         
+
          // Still not found
          if (result == null)
-         {
-            if (trace)
-               log.trace(this + " class not found " + name);
-            throw new ClassNotFoundException(name + " from " + toLongString());
-         }
-         
+            return null;
+
          // Link the class if requested
          if (resolve)
          {
@@ -456,7 +509,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
                log.trace(this + " resolveClass " + ClassLoaderUtils.classToString(result));
             resolveClass(result);
          }
-         
+
          return result;
       }
    }
@@ -497,10 +550,10 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          domain.getResources(this, name, resourceURLs);
       return resourceURLs;
    }
-   
+
    /**
     * Try to load the class locally
-    * 
+    *
     * @param name the class name
     * @return the class
     */
@@ -511,7 +564,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Try to load the class locally
-    * 
+    *
     * @param name the class name
     * @param trace whether trace is enabled
     * @return the class if found
@@ -528,7 +581,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
       // Look for the resource
       final String resourcePath = ClassLoaderUtils.classNameToPath(name);
-      
+
       result = AccessController.doPrivileged(new PrivilegedAction<Class<?>>()
       {
          public Class<?> run()
@@ -543,7 +596,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
             // Load the bytecode
             byte[] byteCode = ClassLoaderUtils.loadByteCode(name, is);
-            
+
             // Let the policy do things before we define the class
             BaseClassLoaderPolicy basePolicy = policy;
             ProtectionDomain protectionDomain = basePolicy.getProtectionDomain(name, resourcePath);
@@ -557,7 +610,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
             {
                throw new RuntimeException("Unexpected error transforming class " + name, t);
             }
-            
+
             // Create the package if necessary
             URL codeSourceURL = null;
             if (protectionDomain != null)
@@ -567,7 +620,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
                   codeSourceURL = codeSource.getLocation();
             }
             definePackage(name, codeSourceURL);
-            
+
             // Finally we can define the class
             Class<?> result;
             if (protectionDomain != null)
@@ -579,15 +632,16 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
             return result;
          }
       }, policy.getAccessControlContext());
-      
+
       loadedClasses.put(name, name);
-      
+      policy.classFound(new ClassFoundEvent(this, result));
+
       return result;
    }
 
    /**
     * Try to find the resource locally
-    * 
+    *
     * @param name the resource name
     * @return the url if found
     */
@@ -598,7 +652,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Try to find the resource locally
-    * 
+    *
     * @param name the resource name
     * @param trace whether trace is enabled
     * @return the URL if found
@@ -619,7 +673,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
             return url;
          }
       }
-      
+
       // Is this resource blacklisted?
       if (blackList != null && blackList.containsKey(name))
       {
@@ -627,7 +681,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
             log.trace(this + " resource is blacklisted " + name);
          return null;
       }
-      
+
       // Ask the policy for the resource
       URL result = AccessController.doPrivileged(new PrivilegedAction<URL>()
       {
@@ -650,17 +704,17 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       // Cache what we found
       if (resourceCache != null && result != null)
          resourceCache.put(name, result);
-      
+
       // Blacklist when not found
       if (blackList != null && result == null)
          blackList.put(name, name);
-      
+
       return result;
    }
 
    /**
     * Try to find the resource locally
-    * 
+    *
     * @param name the resource name
     * @param urls the urls to add to
     * @throws IOException for any error
@@ -673,7 +727,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Try to find the resources locally
-    * 
+    *
     * @param name the resource name
     * @param urls the urls to add to
     * @param trace whether trace is enabled
@@ -709,7 +763,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          throw e2;
       }
    }
-   
+
    /**
     * Define the package for the class if not already done
     *
@@ -721,10 +775,10 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       String packageName = ClassLoaderUtils.getClassPackageName(className);
       if (packageName.length() == 0)
          return;
-      
+
       // Ask the policy for the information
       PackageInformation pi = policy.getClassPackageInformation(className, packageName);
-      
+
       // Already defined?
       Package pkge = getPackage(packageName);
       if (pkge != null)
@@ -761,7 +815,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Try to load the class from the domain
-    * 
+    *
     * @param name the class name
     * @param trace whether trace is enabled
     * @return the class if found in the parent
@@ -771,17 +825,17 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
    {
       // Because of the broken classloading in the Sun JDK we need to
       // serialize access to the classloader.
-      
+
       // Additionally, acquiring the lock on the policy for this classloader
       // ensures that we don't race with somebody undeploying the classloader
       // which could cause leaks
       acquireLockFairly(trace);
       try
       {
-         // Here we have synchronized with the policy 
+         // Here we have synchronized with the policy
          BaseClassLoaderPolicy basePolicy = policy;
          BaseClassLoaderDomain domain = basePolicy.getClassLoaderDomain();
-         
+
          if (trace)
             log.trace(this + " load from domain " + name + " domain=" + domain);
 
@@ -791,7 +845,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          if (domain == null)
          {
             Class<?> result = loadClassLocally(name, trace);
-            
+
             // So this is almost certainly a classloader leak
             if (result == null)
                throw new IllegalStateException(this + " classLoader is not connected to a domain (probably undeployed?) for class " + name);
@@ -815,7 +869,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       BaseClassLoaderPolicy basePolicy = policy;
       return basePolicy.getClassLoaderUnchecked() != null;
    }
-   
+
    public Class<?> getCachedClass(String name)
    {
       // TODO look in global and/or local cache
@@ -880,10 +934,10 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          policy.clearBlackList(name);
       }
    }
-   
+
    /**
     * A long version of the classloader
-    * 
+    *
     * @return the long string
     */
    public String toLongString()
@@ -896,28 +950,29 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       builder.append('}');
       return builder.toString();
    }
-   
+
    /**
     * Shutdown the classloader
     */
    protected void shutdownClassLoader()
    {
       log.debug(toString() + " shutdown!");
+      loadedClasses.clear();
       if (resourceCache != null)
          resourceCache.clear();
       if (blackList != null)
          blackList.clear();
    }
-   
+
    /**
     * For subclasses to add things to the long string
-    * 
+    *
     * @param builder the builder
     */
    protected void toLongString(StringBuilder builder)
    {
    }
-   
+
    @Override
    public String toString()
    {
@@ -930,7 +985,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Attempt to lock, but don't wait
-    * 
+    *
     * @return true when the lock was obtained
     */
    boolean attemptLock()
@@ -940,7 +995,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Lock
-    * 
+    *
     * This method must be invoked with the monitor held
     */
    void lock()
@@ -950,7 +1005,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Unlock
-    * 
+    *
     * @param rescheduleTasks whether to reschedule tasks
     */
    void unlock(boolean rescheduleTasks)
@@ -960,7 +1015,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    /**
     * Attempt to get the lock but don't wait
-    * 
+    *
     * @param trace whether trace is enabled
     * @return true when obtained the lock
     */
@@ -1000,12 +1055,12 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
       return result;
    }
-   
+
    /**
     * Acquire the lock on the classloader fairly<p>
     *
     * This must be invoked with the monitor held
-    * 
+    *
     * @param trace whether trace is enabled
     */
    private void acquireLockFairly(boolean trace)
@@ -1017,7 +1072,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       boolean interrupted = Thread.interrupted();
 
       int waits = 0;
-      
+
       try
       {
          while (true)
@@ -1052,14 +1107,14 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          if (interrupted)
             thread.interrupt();
       }
-      
+
       if (lock.getHoldCount() == 1)
          ClassLoaderManager.registerLoaderThread(this, thread);
    }
 
    /**
     * Unlock
-    * 
+    *
     * @param trace whether trace is enabled
     * @param rescheduleTasks whether to reschedule tasks
     */
@@ -1071,8 +1126,8 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
       synchronized (this)
       {
-         lock.unlock();      
-      
+         lock.unlock();
+
          if (lock.getHoldCount() == 0)
          {
             ClassLoaderManager.unregisterLoaderThread(this, thread, rescheduleTasks);
@@ -1083,7 +1138,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
    
    /**
     * Get the classloader for a class
-    * 
+    *
     * @param clazz the class
     * @return the classloader or null if it doesn't have one
     */
@@ -1092,7 +1147,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       SecurityManager sm = System.getSecurityManager();
       if (sm == null)
          return clazz.getClassLoader();
-      
+
       return AccessController.doPrivileged(new PrivilegedAction<ClassLoader>()
       {
          public ClassLoader run()

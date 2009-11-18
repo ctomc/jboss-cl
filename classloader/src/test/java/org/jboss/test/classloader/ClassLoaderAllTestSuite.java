@@ -30,6 +30,7 @@ import org.jboss.test.classloader.domain.ClassLoaderDomainTestSuite;
 import org.jboss.test.classloader.filter.FilterTestSuite;
 import org.jboss.test.classloader.jmx.JMXTestSuite;
 import org.jboss.test.classloader.junit.JUnitTestSuite;
+import org.jboss.test.classloader.notifications.ClassLoaderNotificationsTestSuite;
 import org.jboss.test.classloader.old.OldTestSuite;
 import org.jboss.test.classloader.policy.test.ClassLoaderPolicyUnitTestCase;
 import org.jboss.test.classloader.resources.ResourceTestSuite;
@@ -75,6 +76,7 @@ public class ClassLoaderAllTestSuite extends TestSuite
       suite.addTest(JMXTestSuite.suite());
       suite.addTest(JUnitTestSuite.suite());
       suite.addTest(TransformTestSuite.suite());
+      suite.addTest(ClassLoaderNotificationsTestSuite.suite());
 
       return suite;
    }

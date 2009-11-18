@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -48,11 +49,17 @@ import org.jboss.logging.Logger;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy
+public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements ClassNotFoundHandler, ClassFoundHandler
 {
    /** The log */
    private static final Logger log = Logger.getLogger(ClassLoaderPolicy.class);
 
+   /** The class not found handlers */
+   private List<ClassNotFoundHandler> classNotFoundHandlers;
+
+   /** The class found handlers */
+   private List<ClassFoundHandler> classFoundHandlers;
+   
    /**
     * Get the delegate loader for exported stuff<p>
     *
@@ -142,6 +149,7 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy
     * @param path the path
     * @return the url or null if not found
     */
+   // FindBugs: The Set doesn't use equals/hashCode
    public abstract URL getResource(String path);
 
    /**
@@ -176,7 +184,6 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy
     * @param urls the list of urls to add to
     * @throws IOException for any error
     */
-   // FindBugs: The Set doesn't use equals/hashCode
    public abstract void getResources(String name, Set<URL> urls) throws IOException;
    
    /**
@@ -236,6 +243,115 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy
       if (checker.isJDKRequest(name))
          return getSystemClassLoader();
       return null;
+   }
+   
+   /**
+    * Add a ClassNotFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void addClassNotFoundHandler(ClassNotFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classNotFoundHandlers == null)
+         classNotFoundHandlers = new CopyOnWriteArrayList<ClassNotFoundHandler>();
+      
+      classNotFoundHandlers.add(handler);
+   }
+   
+   /**
+    * Remove a ClassNotFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void removeClassNotFoundHandler(ClassNotFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classNotFoundHandlers == null)
+         return;
+      classNotFoundHandlers.remove(handler);
+   }
+
+   public boolean classNotFound(ClassNotFoundEvent event)
+   {
+      if (classNotFoundHandlers != null && classNotFoundHandlers.isEmpty() == false)
+      {
+         for (ClassNotFoundHandler handler : classNotFoundHandlers)
+         {
+            try
+            {
+               if (handler.classNotFound(event))
+                  return true;
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error invoking classNotFoundHandler: " + handler, t);
+            }
+         }
+      }
+      
+      ClassLoaderDomain domain = getDomain();
+      if (domain == null)
+         return false;
+      return domain.classNotFound(event);
+   }
+   
+   /**
+    * Add a ClassFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void addClassFoundHandler(ClassFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classFoundHandlers == null)
+         classFoundHandlers = new CopyOnWriteArrayList<ClassFoundHandler>();
+      
+      classFoundHandlers.add(handler);
+   }
+   
+   /**
+    * Remove a ClassFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void removeClassFoundHandler(ClassFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classFoundHandlers == null)
+         return;
+      classFoundHandlers.remove(handler);
+   }
+
+   public void classFound(ClassFoundEvent event)
+   {
+      if (classFoundHandlers != null && classFoundHandlers.isEmpty() == false)
+      {
+         for (ClassFoundHandler handler : classFoundHandlers)
+         {
+            try
+            {
+               handler.classFound(event);
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error invoking classFoundHandler: " + handler, t);
+            }
+         }
+      }
+      
+      ClassLoaderDomain domain = getDomain();
+      if (domain == null)
+         return;
+      domain.classFound(event);
    }
 
    @Override

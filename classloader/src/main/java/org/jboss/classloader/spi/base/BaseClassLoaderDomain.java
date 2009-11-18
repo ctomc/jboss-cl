@@ -1195,6 +1195,23 @@ public abstract class BaseClassLoaderDomain implements Loader
    }
 
    /**
+    * Get the classloader policy associated with an object
+    * 
+    * @param object the  object
+    * @return the classloader policy or null if one is not associated
+    */
+   protected ClassLoaderPolicy getClassLoaderPolicy(Object object)
+   {
+      if (object instanceof BaseClassLoader)
+         return ((BaseClassLoader) object).getPolicy();
+      
+      if (object instanceof BaseClassLoaderSource)
+         return getClassLoaderPolicy(((BaseClassLoaderSource) object).getClassLoader());
+      
+      return null;
+   }
+   
+   /**
     * A long version of toString()
     * 
     * @return the long string

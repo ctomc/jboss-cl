@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Map.Entry;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
@@ -41,6 +42,7 @@ import javax.management.ObjectName;
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.plugins.loader.ClassLoaderToLoaderAdapter;
 import org.jboss.classloader.spi.base.BaseClassLoaderDomain;
+import org.jboss.classloader.spi.base.BaseClassLoaderSource;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.spi.RealClassLoader;
 import org.jboss.logging.Logger;
@@ -51,7 +53,7 @@ import org.jboss.logging.Logger;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, ClassLoaderDomainMBean, MBeanRegistration
+public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, ClassLoaderDomainMBean, MBeanRegistration, ClassNotFoundHandler, ClassFoundHandler
 {
    /** The log */
    private static final Logger log = Logger.getLogger(ClassLoaderDomain.class);
@@ -73,6 +75,15 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
    
    /** Whether to use load class for the parent */
    private boolean useLoadClassForParent = false;
+
+   /** The class not found handlers */
+   private List<ClassNotFoundHandler> classNotFoundHandlers;
+
+   /** The class found handlers */
+   private List<ClassFoundHandler> classFoundHandlers;
+
+   /** The class loader event handlers */
+   private List<ClassLoaderEventHandler> classLoaderEventHandlers;
    
    /**
     * Create a new ClassLoaderDomain with the {@link ParentPolicy#BEFORE} loading rules.
@@ -286,6 +297,227 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
          builder.append(parent);
       else
          builder.append(getParentClassLoader());
+   }
+   
+   /**
+    * Add a ClassNotFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void addClassNotFoundHandler(ClassNotFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classNotFoundHandlers == null)
+         classNotFoundHandlers = new CopyOnWriteArrayList<ClassNotFoundHandler>();
+      
+      classNotFoundHandlers.add(handler);
+   }
+   
+   /**
+    * Remove a ClassNotFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void removeClassNotFoundHandler(ClassNotFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classNotFoundHandlers == null)
+         return;
+      classNotFoundHandlers.remove(handler);
+   }
+
+   public boolean classNotFound(ClassNotFoundEvent event)
+   {
+      String className = event.getClassName();
+
+      ClassNotFoundHandler parent = null;
+      Loader parentLoader = getParent();
+      if (parentLoader instanceof ClassNotFoundHandler)
+         parent = (ClassNotFoundHandler) parentLoader;
+
+      ClassLoaderPolicy parentPolicy = getClassLoaderPolicy(parentLoader);
+      if (parentPolicy != null)
+         parent = parentPolicy;
+      
+      boolean parentResult = false;
+      if (parent != null)
+         parentResult = parent.classNotFound(event);
+
+      // Try the parent before
+      if (parentResult && getParentPolicy().getBeforeFilter().matchesClassName(className))
+         return true;
+      
+      if (classNotFoundHandlers != null && classNotFoundHandlers.isEmpty() == false)
+      {
+         for (ClassNotFoundHandler handler : classNotFoundHandlers)
+         {
+            try
+            {
+               if (handler.classNotFound(event))
+                  return true;
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error invoking classNotFoundHandler: " + handler, t);
+            }
+         }
+      }
+
+      // Try the parent after
+      if (parentResult && getParentPolicy().getAfterFilter().matchesClassName(className))
+         return true;
+      
+      ClassLoaderSystem system = (ClassLoaderSystem) getClassLoaderSystem();
+      if (system == null)
+         return false;
+      return system.classNotFound(event);
+   }
+   
+   /**
+    * Add a ClassFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void addClassFoundHandler(ClassFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classFoundHandlers == null)
+         classFoundHandlers = new CopyOnWriteArrayList<ClassFoundHandler>();
+      
+      classFoundHandlers.add(handler);
+   }
+   
+   /**
+    * Remove a ClassFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void removeClassFoundHandler(ClassFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classFoundHandlers == null)
+         return;
+      classFoundHandlers.remove(handler);
+   }
+
+   public void classFound(ClassFoundEvent event)
+   {
+      ClassFoundHandler parent = null;
+      Loader parentLoader = getParent();
+      if (parentLoader instanceof ClassFoundHandler)
+         parent = (ClassFoundHandler) parentLoader;
+
+      ClassLoaderPolicy parentPolicy = getClassLoaderPolicy(parentLoader);
+      if (parentPolicy != null)
+         parent = parentPolicy;
+      
+      if (parent != null)
+         parent.classFound(event);
+      
+      if (classFoundHandlers != null && classFoundHandlers.isEmpty() == false)
+      {
+         for (ClassFoundHandler handler : classFoundHandlers)
+         {
+            try
+            {
+               handler.classFound(event);
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error invoking classFoundHandler: " + handler, t);
+            }
+         }
+      }
+      
+      ClassLoaderSystem system = (ClassLoaderSystem) getClassLoaderSystem();
+      if (system == null)
+         return;
+      system.classFound(event);
+   }
+   
+   /**
+    * Add a ClassLoaderEventHandler
+    * 
+    * @param handler the handler
+    */
+   public void addClassLoaderEventHandler(ClassLoaderEventHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classLoaderEventHandlers == null)
+         classLoaderEventHandlers = new CopyOnWriteArrayList<ClassLoaderEventHandler>();
+      
+      classLoaderEventHandlers.add(handler);
+   }
+   
+   /**
+    * Remove a ClassLoaderEventHandler
+    * 
+    * @param handler the handler
+    */
+   public void removeClassLoaderEventHandler(ClassLoaderEventHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classLoaderEventHandlers == null)
+         return;
+      classLoaderEventHandlers.remove(handler);
+   }
+
+   private void fireRegisterClassLoader(ClassLoaderEvent event)
+   {
+      if (classLoaderEventHandlers != null && classLoaderEventHandlers.isEmpty() == false)
+      {
+         for (ClassLoaderEventHandler handler : classLoaderEventHandlers)
+         {
+            try
+            {
+               handler.fireRegisterClassLoader(event);
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error invoking classLoaderEventHandler: " + handler, t);
+            }
+         }
+      }
+      
+      ClassLoaderSystem system = (ClassLoaderSystem) getClassLoaderSystem();
+      if (system == null)
+         return;
+      system.fireRegisterClassLoader(event);
+   }
+
+   private void fireUnregisterClassLoader(ClassLoaderEvent event)
+   {
+      if (classLoaderEventHandlers != null && classLoaderEventHandlers.isEmpty() == false)
+      {
+         for (ClassLoaderEventHandler handler : classLoaderEventHandlers)
+         {
+            try
+            {
+               handler.fireUnregisterClassLoader(event);
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error invoking classLoaderEventHandler: " + handler, t);
+            }
+         }
+      }
+      
+      ClassLoaderSystem system = (ClassLoaderSystem) getClassLoaderSystem();
+      if (system == null)
+         return;
+      system.fireUnregisterClassLoader(event);
    }
 
    @Override
@@ -686,7 +918,8 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
       }
       finally
       {
-         setUseLoadClassForParent(parent instanceof ClassLoaderDomain == false);
+         if ((parent instanceof ClassLoaderDomain == false) && (parent instanceof BaseClassLoaderSource == false))
+            setUseLoadClassForParent(true);
       }
    }
 
@@ -728,11 +961,13 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
    protected void afterRegisterClassLoader(ClassLoader classLoader, ClassLoaderPolicy policy)
    {
       registerClassLoaderMBean(classLoader);
+      fireRegisterClassLoader(new ClassLoaderEvent(this, classLoader));
    }
 
    @Override
    protected void beforeUnregisterClassLoader(ClassLoader classLoader, ClassLoaderPolicy policy)
    {
+      fireUnregisterClassLoader(new ClassLoaderEvent(this, classLoader));
       unregisterClassLoaderMBean(classLoader);
    }
 

@@ -256,6 +256,16 @@ public abstract class BaseClassLoaderPolicy
     * 
     * @return the domain
     */
+   protected ClassLoaderDomain getDomain()
+   {
+      return (ClassLoaderDomain) getClassLoaderDomain();
+   }
+   
+   /**
+    * Get the classloader domain
+    * 
+    * @return the domain
+    */
    BaseClassLoaderDomain getClassLoaderDomain()
    {
       return domain;
@@ -336,7 +346,7 @@ public abstract class BaseClassLoaderPolicy
       log.debug(toString() + " shutdown!");
       BaseClassLoader classLoader = this.classLoader;
       this.classLoader = null;
-      TranslatorUtils.applyTranslatorsAtUnregister(getTranslators(), classLoader);
+      TranslatorUtils.applyTranslatorsAtUnregister(translators, classLoader);
       classLoader.shutdownClassLoader();
    }
    

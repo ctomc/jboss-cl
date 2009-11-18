@@ -23,6 +23,7 @@ package org.jboss.classloader.spi;
 
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -30,7 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Collections;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
@@ -50,7 +51,7 @@ import org.jboss.util.loading.Translator;
  * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements ClassLoaderSystemMBean, MBeanRegistration
+public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements ClassLoaderSystemMBean, MBeanRegistration, ClassNotFoundHandler, ClassFoundHandler, ClassLoaderEventHandler
 {
    /** The log */
    private static final Logger log = Logger.getLogger(ClassLoaderSystem.class);
@@ -78,6 +79,15 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
    
    /** The object name */
    private ObjectName objectName;
+
+   /** The class not found handlers */
+   private List<ClassNotFoundHandler> classNotFoundHandlers;
+
+   /** The class found handlers */
+   private List<ClassFoundHandler> classFoundHandlers;
+
+   /** The class loader event handlers */
+   private List<ClassLoaderEventHandler> classLoaderEventHandlers;
    
    /**
     * Get the classloading system instance
@@ -182,6 +192,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
    public ClassLoaderDomain createAndRegisterDomain(String name, ParentPolicy parentPolicy, Loader parent)
    {
       ClassLoaderDomain result = createDomain(name);
+      assert result != null : "createDomain(" + name + ") returned null";
       result.setParentPolicy(parentPolicy);
       result.setParent(parent);
       registerDomain(result);
@@ -520,7 +531,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
     * @deprecated use translator list
     */
    @Deprecated
-   public Translator getTranslator()
+   public synchronized Translator getTranslator()
    {
       if (translators == null || translators.isEmpty())
          return null;
@@ -535,7 +546,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
     * @deprecated use translator list
     */
    @Deprecated
-   public void setTranslator(Translator translator)
+   public synchronized void setTranslator(Translator translator)
    {
       log.debug(this + " set translator to " + translator);
 
@@ -548,7 +559,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
    @Override
    protected byte[] transform(ClassLoader classLoader, String className, byte[] byteCode, ProtectionDomain protectionDomain) throws Exception
    {
-      byte[] result = TranslatorUtils.applyTranslatorsOnTransform(translators, classLoader, className, byteCode, protectionDomain);
+      byte[] result = TranslatorUtils.applyTranslatorsOnTransform(getTranslators(), classLoader, className, byteCode, protectionDomain);
       return super.transform(classLoader, className, result, protectionDomain);
    }
 
@@ -557,7 +568,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
    {
       try
       {
-         TranslatorUtils.applyTranslatorsAtUnregister(translators, classLoader);
+         TranslatorUtils.applyTranslatorsAtUnregister(getTranslators(), classLoader);
       }
       catch (Throwable t)
       {
@@ -683,6 +694,173 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
       catch (Exception e)
       {
          log.warn("Error unregistering domain: " + domain, e);
+      }
+   }
+   
+   /**
+    * Add a ClassNotFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void addClassNotFoundHandler(ClassNotFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classNotFoundHandlers == null)
+         classNotFoundHandlers = new CopyOnWriteArrayList<ClassNotFoundHandler>();
+      
+      classNotFoundHandlers.add(handler);
+   }
+   
+   /**
+    * Remove a ClassNotFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void removeClassNotFoundHandler(ClassNotFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classNotFoundHandlers == null)
+         return;
+      classNotFoundHandlers.remove(handler);
+   }
+
+   public boolean classNotFound(ClassNotFoundEvent event)
+   {
+      if (classNotFoundHandlers != null && classNotFoundHandlers.isEmpty() == false)
+      {
+         for (ClassNotFoundHandler handler : classNotFoundHandlers)
+         {
+            try
+            {
+               if (handler.classNotFound(event))
+                  return true;
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error invoking classNotFoundHandler: " + handler, t);
+            }
+         }
+      }
+      return false;
+   }
+   
+   /**
+    * Add a ClassFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void addClassFoundHandler(ClassFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classFoundHandlers == null)
+         classFoundHandlers = new CopyOnWriteArrayList<ClassFoundHandler>();
+      
+      classFoundHandlers.add(handler);
+   }
+   
+   /**
+    * Remove a ClassFoundHandler
+    * 
+    * @param handler the handler
+    */
+   public void removeClassFoundHandler(ClassFoundHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classFoundHandlers == null)
+         return;
+      classFoundHandlers.remove(handler);
+   }
+
+   public void classFound(ClassFoundEvent event)
+   {
+      if (classFoundHandlers != null && classFoundHandlers.isEmpty() == false)
+      {
+         for (ClassFoundHandler handler : classFoundHandlers)
+         {
+            try
+            {
+               handler.classFound(event);
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error invoking classFoundHandler: " + handler, t);
+            }
+         }
+      }
+   }
+   
+   /**
+    * Add a ClassLoaderEventHandler
+    * 
+    * @param handler the handler
+    */
+   public void addClassLoaderEventHandler(ClassLoaderEventHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classLoaderEventHandlers == null)
+         classLoaderEventHandlers = new CopyOnWriteArrayList<ClassLoaderEventHandler>();
+      
+      classLoaderEventHandlers.add(handler);
+   }
+   
+   /**
+    * Remove a ClassLoaderEventHandler
+    * 
+    * @param handler the handler
+    */
+   public void removeClassLoaderEventHandler(ClassLoaderEventHandler handler)
+   {
+      if (handler == null)
+         throw new IllegalArgumentException("Null handler");
+      
+      if (classLoaderEventHandlers == null)
+         return;
+      classLoaderEventHandlers.remove(handler);
+   }
+
+   public void fireRegisterClassLoader(ClassLoaderEvent event)
+   {
+      if (classLoaderEventHandlers != null && classLoaderEventHandlers.isEmpty() == false)
+      {
+         for (ClassLoaderEventHandler handler : classLoaderEventHandlers)
+         {
+            try
+            {
+               handler.fireRegisterClassLoader(event);
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error invoking classLoaderEventHandler: " + handler, t);
+            }
+         }
+      }
+   }
+
+   public void fireUnregisterClassLoader(ClassLoaderEvent event)
+   {
+      if (classLoaderEventHandlers != null && classLoaderEventHandlers.isEmpty() == false)
+      {
+         for (ClassLoaderEventHandler handler : classLoaderEventHandlers)
+         {
+            try
+            {
+               handler.fireUnregisterClassLoader(event);
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error invoking classLoaderEventHandler: " + handler, t);
+            }
+         }
       }
    }
 
