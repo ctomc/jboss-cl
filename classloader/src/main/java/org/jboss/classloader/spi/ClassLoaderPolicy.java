@@ -232,7 +232,7 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
    /**
     * Check whether this a request from the jdk if it is return the relevant classloader<p>
     * 
-    * By default this uses the {@Link JDKCheckerFactory} and returns the system classloader if true.
+    * By default this uses the {@link JDKCheckerFactory} and returns the system classloader if true.
     * 
     * @param name the class name
     * @return the classloader
@@ -295,9 +295,7 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
       }
       
       ClassLoaderDomain domain = getDomain();
-      if (domain == null)
-         return false;
-      return domain.classNotFound(event);
+      return domain != null && domain.classNotFound(event);
    }
    
    /**
@@ -349,9 +347,8 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
       }
       
       ClassLoaderDomain domain = getDomain();
-      if (domain == null)
-         return;
-      domain.classFound(event);
+      if (domain != null)
+         domain.classFound(event);
    }
 
    @Override
