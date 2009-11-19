@@ -25,8 +25,10 @@ import org.jboss.classloader.spi.ClassFoundEvent;
 import org.jboss.classloader.spi.ClassFoundHandler;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloading.spi.dependency.policy.ClassLoaderPolicyModule;
+import org.jboss.dependency.spi.Controller;
 import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerState;
+import org.jboss.dependency.spi.ControllerStateModel;
 import org.jboss.logging.Logger;
 
 /**
@@ -154,7 +156,10 @@ public class LifeCycle
       ControllerContext context = module.getControllerContext();
       if (context == null)
          return false;
-      return ControllerState.INSTALLED.equals(context.getState());
+
+      Controller controller = context.getController();
+      ControllerStateModel model = controller.getStates();
+      return model.isBeforeState(context.getState(), ControllerState.INSTALLED) == false;
    }
    
    /**
