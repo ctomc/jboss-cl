@@ -338,10 +338,12 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
       Loader parentLoader = getParent();
       if (parentLoader instanceof ClassNotFoundHandler)
          parent = (ClassNotFoundHandler) parentLoader;
-
-      ClassLoaderPolicy parentPolicy = getClassLoaderPolicy(parentLoader);
-      if (parentPolicy != null)
-         parent = parentPolicy;
+      else
+      {
+         ClassLoaderPolicy parentPolicy = getClassLoaderPolicy(parentLoader);
+         if (parentPolicy != null)
+            parent = parentPolicy;
+      }
       
       boolean parentResult = false;
       if (parent != null)
@@ -412,10 +414,12 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
       Loader parentLoader = getParent();
       if (parentLoader instanceof ClassFoundHandler)
          parent = (ClassFoundHandler) parentLoader;
-
-      ClassLoaderPolicy parentPolicy = getClassLoaderPolicy(parentLoader);
-      if (parentPolicy != null)
-         parent = parentPolicy;
+      else
+      {
+         ClassLoaderPolicy parentPolicy = getClassLoaderPolicy(parentLoader);
+         if (parentPolicy != null)
+            parent = parentPolicy;
+      }
       
       if (parent != null)
          parent.classFound(event);
