@@ -372,9 +372,7 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
          return true;
       
       ClassLoaderSystem system = (ClassLoaderSystem) getClassLoaderSystem();
-      if (system == null)
-         return false;
-      return system.classNotFound(event);
+      return system != null && system.classNotFound(event);
    }
    
    /**
@@ -438,9 +436,8 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
       }
       
       ClassLoaderSystem system = (ClassLoaderSystem) getClassLoaderSystem();
-      if (system == null)
-         return;
-      system.classFound(event);
+      if (system != null)
+         system.classFound(event);
    }
    
    /**
