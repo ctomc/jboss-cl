@@ -487,7 +487,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
     */
    protected Class<?> doLoadClass(String name, boolean resolve, boolean trace) throws ClassNotFoundException
    {
-      Class<?> result = null;
+      Class<?> result;
       
       synchronized (this)
       {
