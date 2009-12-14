@@ -193,7 +193,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
    {
       ClassLoaderDomain result = createDomain(name);
       if (result == null)
-         throw new IllegalArgumentException("Created null domin: " + name);
+         throw new IllegalArgumentException("Created null domain: " + name);
 
       result.setParentPolicy(parentPolicy);
       result.setParent(parent);
