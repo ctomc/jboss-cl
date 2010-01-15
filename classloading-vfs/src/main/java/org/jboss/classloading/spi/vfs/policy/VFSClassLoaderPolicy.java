@@ -642,6 +642,27 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          {
          }
       }
+      
+      if (fragments != null)
+      {
+         for (VirtualFile root : fragments)
+         {
+            try
+            {
+               VirtualFile file = root.getChild(path);
+               if (file != null)
+               {
+                  result = new VirtualFileInfo(file, root);
+                  vfsCache.put(path, result);
+                  return result;
+               }
+            }
+            catch (Exception ignored)
+            {
+            }
+         }
+      }
+      
       return null;
    }
    
