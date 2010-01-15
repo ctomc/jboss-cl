@@ -36,6 +36,8 @@ import org.jboss.managed.api.annotation.ManagementProperty;
 /**
  * ClassLoadingMetaData.
  * 
+ * [TODO] Add meaningful javadoc
+ * 
  * @author <a href="adrian@jboss.org">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */

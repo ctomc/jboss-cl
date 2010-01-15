@@ -59,6 +59,8 @@ import org.jboss.util.collection.Iterators;
 
 /**
  * BaseClassLoader.
+ * 
+ * [TODO] Add meaningful javadoc
  *
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $

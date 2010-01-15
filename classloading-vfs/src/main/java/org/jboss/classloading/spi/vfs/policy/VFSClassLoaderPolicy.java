@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.Manifest;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
@@ -54,9 +55,12 @@ import org.jboss.virtual.VirtualFile;
 /**
  * VFSClassLoaderPolicy.
  * 
+ * [TODO] add meaningful javadoc
+ * 
  * @author <a href="adrian@jboss.org">Adrian Brock</a> 
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @author <a href="anil.saldhana@jboss.org">Anil Saldhana</a>
+ * @author Thomas.Diesler@jboss.com
  * @version $Revision: 1.1 $
  */
 public class VFSClassLoaderPolicy extends ClassLoaderPolicy
@@ -75,6 +79,9 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    
    /** The roots */
    private VirtualFile[] roots;
+   
+   /** The fragment roots */
+   private List<VirtualFile> fragments;
    
    /** The excluded roots */
    private VirtualFile[] excludedRoots;
@@ -260,6 +267,51 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    public String getName()
    {
       return name;
+   }
+
+   /**
+    * Attach a new fragment root to the policy.
+    * @param fragRoot The fragment root file
+    */
+   public void attachFragment(VirtualFile fragRoot)
+   {
+      if (fragRoot == null)
+         throw new IllegalArgumentException("Null fragment file");
+      
+      if (fragments == null)
+         fragments = new CopyOnWriteArrayList<VirtualFile>();
+      
+      fragments.add(fragRoot);
+   }
+   
+   /**
+    * Detach a fragment root from the policy.
+    * @param fragRoot The fragment root file
+    * @return true if the fragment could be detached
+    */
+   public boolean detachFragment(VirtualFile fragRoot)
+   {
+      if (fragRoot == null)
+         throw new IllegalArgumentException("Null fragment file");
+      
+      if (fragments == null)
+         return false;
+      
+      return fragments.remove(fragRoot);
+   }
+   
+   /**
+    * Get the array of attached fragment root files.
+    * @return The array of attached fragment root files or null.
+    */
+   public VirtualFile[] getFragmentRoots()
+   {
+      if (fragments == null)
+         return null;
+      
+      VirtualFile[] retarr = new VirtualFile[fragments.size()];
+      fragments.toArray(retarr);
+      return retarr;
    }
 
    @Override
