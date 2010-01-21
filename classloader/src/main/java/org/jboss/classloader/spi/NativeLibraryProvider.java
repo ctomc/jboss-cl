@@ -25,7 +25,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * NativeLibraryProvider.
+ * Provides the local file location for a native library.
  * 
  * @author thomas.diesler@jboss.com
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
@@ -34,16 +34,29 @@ import java.io.IOException;
 public interface NativeLibraryProvider
 {
    /**
-    * Get the library path
+    * Get the library name.
+    * 
+    * As it is used in the call to {@link System#loadLibrary(String)} 
+    * 
+    * @return the library path
+    */
+   String getLibraryName();
+   
+   /**
+    * Get the library path.
+    * 
+    * Relative to the deployment root.
     * 
     * @return the library path
     */
    String getLibraryPath();
    
    /**
-    * Get the local library file location. This may be proved lazily.
+    * Get the local library file location. 
     * 
-    * @return the file
+    * This may be proved lazily.
+    * 
+    * @return The native library file
     * @throws IOException for any error
     */
    File getLibraryLocation() throws IOException;

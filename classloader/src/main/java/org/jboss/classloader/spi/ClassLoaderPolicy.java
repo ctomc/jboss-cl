@@ -50,6 +50,7 @@ import org.jboss.logging.Logger;
  * ClassLoader policy.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author thomas.diesler@jboss.com
  * @version $Revision: 1.1 $
  */
 public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements ClassNotFoundHandler, ClassFoundHandler
@@ -70,55 +71,16 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
    private volatile Map<String, NativeLibraryProvider> libraryMap;
    
    /**
-    * Get the set of registered native library names.
-    * 
-    * @return Null if there are no native libraries registered.
-    */
-   public Set<String> getNativeLibraryNames()
-   {
-      Map<String, NativeLibraryProvider> map = libraryMap;
-
-      if (map == null)
-         return Collections.emptySet();
-      
-      return Collections.unmodifiableSet(libraryMap.keySet()); 
-   }
-   
-   /**
-    * Get the native library provider for the given name.
-    * 
-    * @param libname The library name 
-    * @return Null if there is no library with that name.
-    */
-   public NativeLibraryProvider getNativeLibrary(String libname)
-   {
-      Map<String, NativeLibraryProvider> map = libraryMap;
-      
-      return (map != null ? map.get(libname) : null);
-   }
-   
-   /**
     * Add a native library provider.
     * @param libname The library name 
     * @param provider The library file provider
     */
-   public void addNativeLibrary(String libname, NativeLibraryProvider provider)
+   public void addNativeLibrary(NativeLibraryProvider provider)
    {
       if (libraryMap == null)
          libraryMap = new ConcurrentHashMap<String, NativeLibraryProvider>();
       
-      libraryMap.put(libname, provider);
-   }
-   
-   /**
-    * Remove the native library provider for the given name.
-    * 
-    * @param libname The library name 
-    * @return Null if there is no library with that name.
-    */
-   public NativeLibraryProvider removeNativeLibrary(String libname)
-   {
-      return (libraryMap != null ? libraryMap.remove(libname) : null);
+      libraryMap.put(provider.getLibraryName(), provider);
    }
    
    /**
@@ -134,11 +96,6 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
          return null;
       
       NativeLibraryProvider libProvider = map.get(libname);
-      
-      // [TODO] why does the TCK use 'Native' to mean 'libNative' ? 
-      if (libProvider == null)
-         libProvider = map.get("lib" + libname);
-         
       if (libProvider == null)
          return null;
       
@@ -495,6 +452,44 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
          builder.append(" <IMPORT-ALL>");
    }
 
+   /**
+    * Get the set of registered native library names.
+    * 
+    * @return Null if there are no native libraries registered.
+    */
+   Set<String> getNativeLibraryNames()
+   {
+      Map<String, NativeLibraryProvider> map = libraryMap;
+      if (map == null)
+         return Collections.emptySet();
+      
+      return Collections.unmodifiableSet(map.keySet()); 
+   }
+   
+   /**
+    * Get the native library provider for the given name.
+    * 
+    * @param libname The library name 
+    * @return Null if there is no library with that name.
+    */
+   NativeLibraryProvider getNativeLibrary(String libname)
+   {
+      Map<String, NativeLibraryProvider> map = libraryMap;
+      return (map != null ? map.get(libname) : null);
+   }
+   
+   /**
+    * Remove the native library provider for the given name.
+    * 
+    * @param libname The library name 
+    * @return Null if there is no library with that name.
+    */
+   NativeLibraryProvider removeNativeLibrary(String libname)
+   {
+      Map<String, NativeLibraryProvider> map = libraryMap;
+      return (map != null ? map.remove(libname) : null);
+   }
+   
    /**
     * Get the system classloader
     * 
