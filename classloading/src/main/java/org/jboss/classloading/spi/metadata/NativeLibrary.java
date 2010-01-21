@@ -58,7 +58,7 @@ public class NativeLibrary implements Serializable
     * Create a NativeCode instance with mandatory properties.
     * @param osNames The set of OS names 
     * @param libraryPath The library path
-    * @param fileProvider An interface from which to retrieve the actual library location
+    * @param librarySource An interface from which to retrieve the actual library location
     */
    public NativeLibrary(List<String> osNames, String libraryPath, String librarySource)
    {

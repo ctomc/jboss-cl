@@ -67,19 +67,7 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
    private List<ClassFoundHandler> classFoundHandlers;
 
    /** Maps native library to its provider */
-   private Map<String, NativeLibraryProvider> libraryMap;
-   
-   /**
-    * Provides the actual local file location for a native library
-    */
-   public interface NativeLibraryProvider
-   {
-      /** Get the library path */
-      String getLibraryPath();
-      
-      /** Get the local library file location. This may be proved lazily. */
-      File getLibraryLocation() throws IOException;
-   }
+   private volatile Map<String, NativeLibraryProvider> libraryMap;
    
    /**
     * Get the set of registered native library names.
@@ -88,10 +76,12 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
     */
    public Set<String> getNativeLibraryNames()
    {
-      if (libraryMap == null)
+      Map<String, NativeLibraryProvider> map = libraryMap;
+
+      if (map == null)
          return Collections.emptySet();
       
-      return libraryMap.keySet(); 
+      return Collections.unmodifiableSet(libraryMap.keySet()); 
    }
    
    /**
@@ -102,7 +92,9 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
     */
    public NativeLibraryProvider getNativeLibrary(String libname)
    {
-      return (libraryMap != null ? libraryMap.get(libname) : null);
+      Map<String, NativeLibraryProvider> map = libraryMap;
+      
+      return (map != null ? map.get(libname) : null);
    }
    
    /**
@@ -132,20 +124,20 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
    /**
     * Returns the absolute path name of a native library.
     * 
-    * @see ClassLoader.findLibrary(String libname)
     * @param libname The library name 
     * @return The absolute path of the native library, or null
     */
    public String findLibrary(String libname)
    {
-      if (libraryMap == null)
+      Map<String, NativeLibraryProvider> map = libraryMap;
+      if (map == null)
          return null;
       
-      NativeLibraryProvider libProvider = libraryMap.get(libname);
+      NativeLibraryProvider libProvider = map.get(libname);
       
       // [TODO] why does the TCK use 'Native' to mean 'libNative' ? 
       if (libProvider == null)
-         libProvider = libraryMap.get("lib" + libname);
+         libProvider = map.get("lib" + libname);
          
       if (libProvider == null)
          return null;

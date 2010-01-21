@@ -527,7 +527,7 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
    /**
     * Set the native libraries.
     * 
-    * @param native libraries the native libraries.
+    * @param nativeLibraries libraries the native libraries.
     * @throws IllegalArgumentException for null native libraries
     */
    public void setNativeLibraries(NativeLibraryMetaData nativeLibraries)
