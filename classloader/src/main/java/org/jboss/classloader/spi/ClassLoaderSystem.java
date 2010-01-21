@@ -71,6 +71,9 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
    /** Any translators */
    private List<Translator> translators;
    
+   /** The shutdown policy */
+   private ShutdownPolicy shutdownPolicy;
+   
    /** Whether the system is shutdown */
    private boolean shutdown = false;
    
@@ -101,6 +104,26 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
       if (sm != null)
          sm.checkCreateClassLoader();
       return builder.get();
+   }
+
+   /**
+    * Get the shutdownPolicy.
+    * 
+    * @return the shutdownPolicy.
+    */
+   public ShutdownPolicy getShutdownPolicy()
+   {
+      return shutdownPolicy;
+   }
+
+   /**
+    * Set the shutdownPolicy.
+    * 
+    * @param shutdownPolicy the shutdownPolicy.
+    */
+   public void setShutdownPolicy(ShutdownPolicy shutdownPolicy)
+   {
+      this.shutdownPolicy = shutdownPolicy;
    }
 
    /**

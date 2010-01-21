@@ -23,6 +23,7 @@ package org.jboss.classloading.spi.dependency.helpers;
 
 import java.util.List;
 
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.metadata.Capability;
@@ -109,6 +110,21 @@ public abstract class ClassLoadingMetaDataModule extends Module
    public ExportAll getExportAll()
    {
       return classLoadingMetaData.getExportAll();
+   }
+
+   @Override
+   public ShutdownPolicy getShutdownPolicy()
+   {
+      return classLoadingMetaData.getShutdownPolicy();
+   }
+
+   @Override
+   public boolean isCascadeShutdown()
+   {
+      if (super.isCascadeShutdown() == false)
+         return false;
+      ShutdownPolicy shutdownPolicy = getShutdownPolicy();
+      return ShutdownPolicy.GARBAGE_COLLECTION != shutdownPolicy;
    }
 
    @Override

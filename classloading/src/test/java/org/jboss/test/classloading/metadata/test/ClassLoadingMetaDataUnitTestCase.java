@@ -26,6 +26,7 @@ import java.util.Collections;
 
 import junit.framework.Test;
 
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloading.spi.metadata.CapabilitiesMetaData;
@@ -65,6 +66,7 @@ public class ClassLoadingMetaDataUnitTestCase extends AbstractClassLoadingTestWi
       assertNull(test.getDomain());
       assertNull(test.getParentDomain());
       assertNull(test.getExportAll());
+      assertNull(test.getShutdownPolicy());
       assertNull(test.getIncluded());
       assertNull(test.getExcluded());
       assertNull(test.getExcludedExport());
@@ -151,6 +153,19 @@ public class ClassLoadingMetaDataUnitTestCase extends AbstractClassLoadingTestWi
       ClassLoadingMetaData test2 = new ClassLoadingMetaData();
       testEquals(test, test2, false);
       test2.setExportAll(ExportAll.ALL);
+      testEquals(test, test2, true);
+   }
+   
+   public void testSetShutdownPolicy() throws Exception
+   {
+      ClassLoadingMetaData test = new ClassLoadingMetaData();
+      assertNull(test.getShutdownPolicy());
+      test.setShutdownPolicy(ShutdownPolicy.GARBAGE_COLLECTION);
+      assertEquals(ShutdownPolicy.GARBAGE_COLLECTION, test.getShutdownPolicy());
+
+      ClassLoadingMetaData test2 = new ClassLoadingMetaData();
+      testEquals(test, test2, false);
+      test2.setShutdownPolicy(ShutdownPolicy.GARBAGE_COLLECTION);
       testEquals(test, test2, true);
    }
    
@@ -365,6 +380,7 @@ public class ClassLoadingMetaDataUnitTestCase extends AbstractClassLoadingTestWi
       test.setParentDomain("parent-domain");
       test.setExportAll(ExportAll.ALL);
       test.setImportAll(true);
+      test.setShutdownPolicy(ShutdownPolicy.GARBAGE_COLLECTION);
       test.setJ2seClassLoadingCompliance(false);
       test.getCapabilities().addCapability(factory.createModule("module", "1.0.0"));
       test.getCapabilities().addCapability(factory.createPackage("package", "1.0.0"));

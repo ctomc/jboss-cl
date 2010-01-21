@@ -29,6 +29,7 @@ import java.util.Set;
 
 import junit.framework.Test;
 
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloading.spi.metadata.CapabilitiesMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.ExportAll;
@@ -70,7 +71,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
    {
       ManagedObject result = moFactory.initManagedObject(test, null, null);
       assertNotNull(result);
-      List<String> expectedProperties = Arrays.asList("name", "version", "context", "domain", "parentDomain", "topLevelClassLoader", "exportAll", "included", "excluded", "excludedExport", "importAll", "parentFirst", "cache", "blackList", "system", "roots", "capabilities", "requirements");
+      List<String> expectedProperties = Arrays.asList("name", "version", "context", "domain", "parentDomain", "topLevelClassLoader", "exportAll", "shutdown", "included", "excluded", "excludedExport", "importAll", "parentFirst", "cache", "blackList", "system", "roots", "capabilities", "requirements");
       Set<String> actualProperties = result.getPropertyNames();
       for (String expected : expectedProperties)
       {
@@ -119,6 +120,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       assertManagedProperty(mo, "parentDomain", String.class, null);
       assertManagedProperty(mo, "topLevelClassLoader", boolean.class, false);
       assertManagedProperty(mo, "exportAll", ExportAll.class, null);
+      assertManagedProperty(mo, "shutdown", ShutdownPolicy.class, null);
       assertManagedProperty(mo, "included", String.class, null);
       assertManagedProperty(mo, "excluded", String.class, null);
       assertManagedProperty(mo, "excludedExport", String.class, null);
@@ -182,6 +184,14 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       test.setExportAll(ExportAll.ALL);
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "exportAll", ExportAll.class, ExportAll.ALL);
+   }
+
+   public void testSetShutdownPolicy() throws Exception
+   {
+      VFSClassLoaderFactory test = new VFSClassLoaderFactory();
+      test.setShutdownPolicy(ShutdownPolicy.GARBAGE_COLLECTION);
+      ManagedObject mo = assertManagedObject(test);
+      assertManagedProperty(mo, "shutdown", ShutdownPolicy.class, ShutdownPolicy.GARBAGE_COLLECTION);
    }
 
    public void testSetIncludedPackages() throws Exception

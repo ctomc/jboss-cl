@@ -26,6 +26,7 @@ import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 
 import org.jboss.classloader.spi.ClassLoaderPolicy;
+import org.jboss.classloader.spi.ShutdownPolicy;
 
 /**
  * Base ClassLoaderSystem.
@@ -35,6 +36,13 @@ import org.jboss.classloader.spi.ClassLoaderPolicy;
  */
 public abstract class BaseClassLoaderSystem
 {
+   /**
+    * Get the shutdownPolicy.
+    * 
+    * @return the shutdownPolicy.
+    */
+   protected abstract ShutdownPolicy getShutdownPolicy();
+
    /**
     * A long version of toString()
     * 

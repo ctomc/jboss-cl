@@ -27,6 +27,7 @@ import java.util.List;
 
 import junit.framework.Test;
 
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.ExportAll;
@@ -66,6 +67,7 @@ public class VFSClassLoaderFactoryXMLUnitTestCase extends AbstractJBossXBTest
       assertNull(result.getDomain());
       assertNull(result.getParentDomain());
       assertNull(result.getExportAll());
+      assertNull(result.getShutdownPolicy());
       assertNull(result.getIncludedPackages());
       assertNull(result.getExcludedPackages());
       assertNull(result.getExcludedExportPackages());
@@ -107,6 +109,12 @@ public class VFSClassLoaderFactoryXMLUnitTestCase extends AbstractJBossXBTest
    {
       VFSClassLoaderFactory result = unmarshal();
       assertEquals(ExportAll.ALL, result.getExportAll());
+   }
+
+   public void testModuleShutdown() throws Exception
+   {
+      VFSClassLoaderFactory result = unmarshal();
+      assertEquals(ShutdownPolicy.GARBAGE_COLLECTION, result.getShutdownPolicy());
    }
 
    public void testModuleIncluded() throws Exception

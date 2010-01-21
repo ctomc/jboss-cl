@@ -39,6 +39,7 @@ import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.Loader;
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.logging.Logger;
 
 /**
@@ -60,9 +61,6 @@ public abstract class BaseClassLoaderDomain implements Loader
    
    /** The classloaders  in the order they were registered */
    private List<ClassLoaderInformation> classLoaders = new CopyOnWriteArrayList<ClassLoaderInformation>();
-
-   /** The classloader information by classloader */
-   private Map<ClassLoader, ClassLoaderInformation> infos = new ConcurrentHashMap<ClassLoader, ClassLoaderInformation>();
    
    /** The classloaders by package name */
    private Map<String, List<ClassLoaderInformation>> classLoadersByPackageName = new ConcurrentHashMap<String, List<ClassLoaderInformation>>();
@@ -204,7 +202,14 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @return true to load class on the parent loader
     */
    public abstract boolean isUseLoadClassForParent();
-   
+
+   /**
+    * Get the shutdownPolicy.
+    * 
+    * @return the shutdownPolicy.
+    */
+   protected abstract ShutdownPolicy getShutdownPolicy();
+
    /**
     * Transform the byte code<p>
     * 
@@ -345,8 +350,8 @@ public abstract class BaseClassLoaderDomain implements Loader
       BaseClassLoaderPolicy policy;
       if (classLoader != null)
       {
-         info = infos.get(classLoader);
          policy = classLoader.getPolicy();
+         info = policy.getInformation();
          if (policy.isImportAll())
             allExports = true;
       }
@@ -425,7 +430,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       if (classLoader != null)
       {
          policy = classLoader.getPolicy();
-         info = infos.get(classLoader);
+         info = policy.getInformation();
          if (policy.isImportAll())
             allExports = true;
       }
@@ -483,7 +488,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       if (classLoader != null)
       {
          policy = classLoader.getPolicy();
-         info = infos.get(classLoader);
+         info = policy.getInformation();
          if (policy.isImportAll())
             allExports = true;
       }
@@ -536,7 +541,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       if (classLoader != null)
       {
          policy = classLoader.getPolicy();
-         info = infos.get(classLoader);
+         info = policy.getInformation();
          if (policy.isImportAll())
             allExports = true;
       }
@@ -605,7 +610,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       if (classLoader != null)
       {
          policy = classLoader.getPolicy();
-         info = infos.get(classLoader);
+         info = policy.getInformation();
          if (policy.isImportAll())
             allExports = true;
       }
@@ -1325,7 +1330,7 @@ public abstract class BaseClassLoaderDomain implements Loader
          // Create the information
          ClassLoaderInformation info = new ClassLoaderInformation(classLoader, policy, order++);
          classLoaders.add(info);
-         infos.put(classLoader, info);
+         basePolicy.setInformation(info);
 
          // Index the packages
          String[] packageNames = policy.getPackageNames();
@@ -1376,14 +1381,20 @@ public abstract class BaseClassLoaderDomain implements Loader
       }
 
       BaseClassLoaderPolicy policy = classLoader.getPolicy();
-      policy.unsetClassLoaderDomain(this);
+      ShutdownPolicy shutdownPolicy = determineShutdownPolicy(policy);
+
+      boolean shutdownNow = (ShutdownPolicy.UNREGISTER == shutdownPolicy);
+      if (shutdownNow)
+         policy.unsetClassLoaderDomain(this);
 
       // FINDBUGS: This synchronization is correct - more than addIfNotPresent behaviour
       synchronized (classLoaders)
       {
          // Remove the classloader
-         ClassLoaderInformation info = infos.remove(classLoader);
+         ClassLoaderInformation info = policy.getInformation();
          classLoaders.remove(info);
+         if (shutdownNow)
+            policy.setInformation(null);
          
          // Remove the package index
          String[] packageNames = policy.getPackageNames();
@@ -1415,6 +1426,39 @@ public abstract class BaseClassLoaderDomain implements Loader
       }
    }
 
+   /**
+    * Determine the shutdown policy for the classloader policy
+    * 
+    * @param policy the classloader policy
+    * @return the shutdown policy
+    */
+   ShutdownPolicy determineShutdownPolicy(BaseClassLoaderPolicy policy)
+   {
+      if (policy == null)
+         throw new IllegalArgumentException("Null policy");
+
+      // From the policy
+      ShutdownPolicy shutdownPolicy = policy.getShutdownPolicy();
+      
+      // From the domain (us)
+      if (shutdownPolicy == null)
+         shutdownPolicy = this.getShutdownPolicy();
+      
+      // From the clasloader system
+      if (shutdownPolicy == null)
+      {
+         BaseClassLoaderSystem system = getClassLoaderSystem();
+         if (system != null)
+         shutdownPolicy = system.getShutdownPolicy();
+      }
+      
+      // The default behaviour
+      if (shutdownPolicy == null)
+         shutdownPolicy = ShutdownPolicy.UNREGISTER;
+      
+      return shutdownPolicy;
+   }
+   
    /**
     * Get all the classloaders
     * 

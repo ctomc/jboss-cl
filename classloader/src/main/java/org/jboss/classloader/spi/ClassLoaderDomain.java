@@ -67,6 +67,9 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
    /** The parent */
    private Loader parent;
    
+   /** The shutdown policy */
+   private ShutdownPolicy shutdownPolicy;
+
    /** The MBeanServer */
    private MBeanServer mbeanServer;
    
@@ -145,6 +148,26 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
    public String getParentPolicyName()
    {
       return parentPolicy.toString();
+   }
+
+   /**
+    * Get the shutdownPolicy.
+    * 
+    * @return the shutdownPolicy.
+    */
+   public ShutdownPolicy getShutdownPolicy()
+   {
+      return shutdownPolicy;
+   }
+
+   /**
+    * Set the shutdownPolicy.
+    * 
+    * @param shutdownPolicy the shutdownPolicy.
+    */
+   public void setShutdownPolicy(ShutdownPolicy shutdownPolicy)
+   {
+      this.shutdownPolicy = shutdownPolicy;
    }
 
    /**

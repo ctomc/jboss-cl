@@ -145,6 +145,15 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
+      <xsd:attribute name="shutdown" type="shutdown-policy" use="optional">
+         <xsd:annotation>
+            <xsd:documentation>
+               <![CDATA[
+               The shutdown policy for the classloader.
+               ]]>
+            </xsd:documentation>
+         </xsd:annotation>
+      </xsd:attribute>
       <xsd:attribute name="included" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
@@ -378,6 +387,19 @@
             Whether to export all, valid values are:
             ALL = export every package
             NON_EMPTY = only export packages that have contents
+            ]]>
+         </xsd:documentation>
+      </xsd:annotation>
+      <xsd:restriction base="xsd:string"/>
+   </xsd:simpleType>
+
+   <xsd:simpleType name="shutdown-policy">
+      <xsd:annotation>
+         <xsd:documentation>
+            <![CDATA[
+            When to shutdown the classloader
+            UNREGISTER - shutdown when the classloader is unregistered (the default)
+            GARBAGE_COLLECTION - shutdown at garbage collection
             ]]>
          </xsd:documentation>
       </xsd:annotation>

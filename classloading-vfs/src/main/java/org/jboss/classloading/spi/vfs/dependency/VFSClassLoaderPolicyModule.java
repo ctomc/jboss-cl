@@ -217,6 +217,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
       policy.setExcludedExport(getExcludedExport());
       policy.setExportAll(getExportAll());
       policy.setImportAll(isImportAll());
+      policy.setShutdownPolicy(getShutdownPolicy());
       policy.setCacheable(isCacheable());
       policy.setBlackListable(isBlackListable());
       policy.setDelegates(getDelegates());

@@ -113,7 +113,7 @@ public class IsolatedClassLoaderUnitTestCase extends IsolatedClassLoaderTest
       }
       catch (Throwable t)
       {
-         checkThrowable(IllegalStateException.class, t);
+         checkThrowable(NoClassDefFoundError.class, t);
       }
       
       try

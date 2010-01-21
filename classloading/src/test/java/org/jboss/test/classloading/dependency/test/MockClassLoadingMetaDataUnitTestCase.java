@@ -28,6 +28,7 @@ import java.util.List;
 import junit.framework.Test;
 
 import org.jboss.classloader.spi.ClassLoaderSystem;
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoaderPolicyModule;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
@@ -148,6 +149,23 @@ public class MockClassLoadingMetaDataUnitTestCase extends AbstractMockClassLoade
       {
          MockClassLoaderPolicyModule module = assertModule(contextA);
          assertEquals(ExportAll.ALL, module.getExportAll());
+      }
+      finally
+      {
+         uninstall(contextA);
+      }
+      assertNoModule(contextA);
+   }
+   
+   public void testShutdownPolicy() throws Exception
+   {
+      MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+      a.setShutdownPolicy(ShutdownPolicy.GARBAGE_COLLECTION);
+      KernelControllerContext contextA = install(a);
+      try
+      {
+         MockClassLoaderPolicyModule module = assertModule(contextA);
+         assertEquals(ShutdownPolicy.GARBAGE_COLLECTION, module.getShutdownPolicy());
       }
       finally
       {

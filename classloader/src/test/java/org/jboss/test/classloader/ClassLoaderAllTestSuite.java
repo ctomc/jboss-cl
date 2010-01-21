@@ -28,6 +28,7 @@ import org.jboss.test.classloader.bootstrap.BootstrapTestSuite;
 import org.jboss.test.classloader.delegate.DelegateTestSuite;
 import org.jboss.test.classloader.domain.ClassLoaderDomainTestSuite;
 import org.jboss.test.classloader.filter.FilterTestSuite;
+import org.jboss.test.classloader.general.GeneralTestSuite;
 import org.jboss.test.classloader.jmx.JMXTestSuite;
 import org.jboss.test.classloader.junit.JUnitTestSuite;
 import org.jboss.test.classloader.notifications.ClassLoaderNotificationsTestSuite;
@@ -69,6 +70,7 @@ public class ClassLoaderAllTestSuite extends TestSuite
       suite.addTest(ClassLoaderDomainTestSuite.suite());
       suite.addTest(ClassLoaderPolicyUnitTestCase.suite());
       suite.addTest(BootstrapTestSuite.suite());
+      suite.addTest(GeneralTestSuite.suite());
       suite.addTest(OldTestSuite.suite());
       suite.addTest(FilterTestSuite.suite());
       suite.addTest(DelegateTestSuite.suite());

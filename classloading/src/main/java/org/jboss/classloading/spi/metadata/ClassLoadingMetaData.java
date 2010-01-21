@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.jboss.classloader.plugins.filter.CombiningClassFilter;
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.filter.PackageClassFilter;
 import org.jboss.classloading.spi.helpers.NameAndVersionSupport;
@@ -65,6 +66,9 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
    
    /** Whether we are blacklistable */
    private boolean blackListable = true;
+   
+   /** The shutdown policy */
+   private ShutdownPolicy shutdownPolicy;
    
    /** Whether to export all */
    private ExportAll exportAll;
@@ -429,6 +433,28 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
    }
 
    /**
+    * Get the shutdown policy
+    * 
+    * @return the shutdown policy.
+    */
+   public ShutdownPolicy getShutdownPolicy()
+   {
+      return shutdownPolicy;
+   }
+
+   /**
+    * Set the shutdown policy.
+    * 
+    * @param shutdownPolicy the sjutdown policy
+    */
+   @ManagementProperty(name="shutdown")
+   @XmlAttribute(name="shutdown")
+   public void setShutdownPolicy(ShutdownPolicy shutdownPolicy)
+   {
+      this.shutdownPolicy = shutdownPolicy;
+   }
+
+   /**
     * Get the capabilities.
     * 
     * @return the capabilities.
@@ -557,6 +583,8 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       if (isImportAll())
          builder.append(" IMPORT-ALL");
       builder.append(" parent-first=").append(isJ2seClassLoadingCompliance());
+      if (shutdownPolicy != null)
+         builder.append(" ").append(shutdownPolicy);
       if (isCacheable() == false)
          builder.append(" NO-CACHE");
       if (isBlackListable() == false)
@@ -589,6 +617,8 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       if (equals(this.getExportAll(), other.getExportAll()) == false)
          return false;
       if (this.isImportAll() != other.isImportAll())
+         return false;
+      if (equals(this.getShutdownPolicy(), other.getShutdownPolicy()) == false)
          return false;
       if (this.isJ2seClassLoadingCompliance() != other.isJ2seClassLoadingCompliance())
          return false;

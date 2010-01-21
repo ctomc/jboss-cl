@@ -21,36 +21,21 @@
 */
 package org.jboss.classloader.spi;
 
-import java.util.Set;
-
-import javax.management.ObjectName;
-
 /**
- * ClassLoaderSystemMBean.
+ * ShutdownPolicy.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public interface ClassLoaderSystemMBean
+public enum ShutdownPolicy
 {
    /**
-    * Get the domains
-    * 
-    * @return the domains
+    * Shutdown the classloader when it is unregistered  
     */
-   Set<ObjectName> getDomains();
-
-   /**
-    * Get the domain names
-    * 
-    * @return the domain names
-    */
-   Set<String> getDomainNames();
+   UNREGISTER,
    
    /**
-    * Get the shutdown policy
-    * 
-    * @return the shutdown policy
+    * Shutdown the classloader when garbage collection is done
     */
-   ShutdownPolicy getShutdownPolicy();
+   GARBAGE_COLLECTION
 }

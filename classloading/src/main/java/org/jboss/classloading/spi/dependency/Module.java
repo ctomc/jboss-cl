@@ -41,6 +41,8 @@ import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.ParentPolicy;
+import org.jboss.classloader.spi.ShutdownPolicy;
+import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.spi.filter.PackageClassFilter;
@@ -58,6 +60,7 @@ import org.jboss.classloading.spi.visitor.ResourceVisitor;
 import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerState;
 import org.jboss.dependency.spi.DependencyInfo;
+import org.jboss.dependency.spi.DependencyItem;
 
 /**
  * Module.
@@ -113,11 +116,16 @@ public abstract class Module extends NameAndVersionSupport
 
       modulesByClassLoader.put(classLoader, module);
 
+      // This is hack - we might not know until the classloader gets constructed whether
+      // it is in a domain that specifies lazy shutdown of the classloader
+      if (module.isCascadeShutdown() == false)
+         module.enableLazyShutdown();
+      
       LifeCycle lifeCycle = module.getLifeCycle();
       if (lifeCycle != null)
          lifeCycle.fireResolved();
    }
-
+   
    /**
     * Register a classloader for a module
     * 
@@ -298,6 +306,33 @@ public abstract class Module extends NameAndVersionSupport
    public ExportAll getExportAll()
    {
       return null;
+   }
+
+   /**
+    * Get the shutdown policy
+    * 
+    * @return the shutdown policy
+    */
+   public ShutdownPolicy getShutdownPolicy()
+   {
+      return null;
+   }
+
+   /**
+    * Whether to casecade the shutdown
+    * 
+    * @return true to cascade the shutdown
+    */
+   public boolean isCascadeShutdown()
+   {
+      // This is ugly
+      ClassLoader cl = getClassLoader();
+      if (cl != null && cl instanceof BaseClassLoader)
+      {
+         ShutdownPolicy shutdownPolicy = ((BaseClassLoader) cl).getShutdownPolicy();
+         return ShutdownPolicy.GARBAGE_COLLECTION != shutdownPolicy;
+      }
+      return true;
    }
 
    /**
@@ -1059,5 +1094,25 @@ public abstract class Module extends NameAndVersionSupport
       if (obj == null || obj instanceof Module == false)
          return false;
       return super.equals(obj);
+   }
+
+   // It is lazy shutdown so remove anything that depends upon us for a requirement
+   // We can still handle it after the classloader gets unregistered
+   private void enableLazyShutdown()
+   {
+      ControllerContext ctx = getControllerContext();
+      if (ctx != null)
+      {
+         DependencyInfo info = ctx.getDependencyInfo();
+         if (info != null)
+         {
+            Set<DependencyItem> items = info.getDependsOnMe(RequirementDependencyItem.class);
+            if (items != null && items.isEmpty() == false)
+            {
+               for (DependencyItem item : items)
+                  info.removeDependsOnMe(item);
+            }
+         }
+      }
    }
 }

@@ -53,6 +53,7 @@ import org.jboss.classloader.spi.ClassNotFoundEvent;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.Loader;
 import org.jboss.classloader.spi.PackageInformation;
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloading.spi.RealClassLoader;
 import org.jboss.logging.Logger;
 import org.jboss.util.collection.Iterators;
@@ -223,6 +224,12 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       Set<URL> result = new TreeSet<URL>(ClassLoaderUtils.URLComparator.INSTANCE);
       result.addAll(resourceCache.values());
       return result;
+   }
+
+   public ShutdownPolicy getShutdownPolicy()
+   {
+      BaseClassLoaderPolicy basePolicy = getPolicy();
+      return basePolicy.determineShutdownPolicy();
    }
 
    /**
@@ -541,7 +548,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
       if (domain != null)
          return domain.getResource(this, name);
-      return null;
+      return getResourceLocally(name, trace);
    }
 
    @Override
@@ -564,6 +571,8 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       Set<URL> resourceURLs = new TreeSet<URL>(ClassLoaderUtils.URLComparator.INSTANCE);
       if (domain != null)
          domain.getResources(this, name, resourceURLs);
+      else
+         getResourcesLocally(name, resourceURLs, trace);
       return resourceURLs;
    }
 
@@ -873,6 +882,14 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          if (result != null && trace)
             log.trace(this + " got class from domain " + ClassLoaderUtils.classToString(result));
          return result;
+      }
+      catch (ClassNotFoundException e)
+      {
+         throw e;
+      }
+      catch (Exception e)
+      {
+         throw new ClassNotFoundException("Class not found " + name, e);
       }
       finally
       {

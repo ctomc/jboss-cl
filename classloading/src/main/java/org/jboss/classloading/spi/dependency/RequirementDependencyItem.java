@@ -118,7 +118,6 @@ public class RequirementDependencyItem extends AbstractDependencyItem
          Object iDependOn = module.getContextName();
          ControllerContext context = controller.getContext(iDependOn, null);
          setIDependOn(context.getName());
-         addDependsOnMe(controller, context);
          setResolved(true);
          return isResolved();
       }
@@ -129,7 +128,8 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       if (context != null)
       {
          setIDependOn(context.getName());
-         addDependsOnMe(controller, context);
+         if (module.isCascadeShutdown())
+            addDependsOnMe(controller, context);
          setResolved(true);
          if (module.getClassLoadingSpace() == null)
             log.warn(getModule() + " resolved " + getRequirement() + " to " + module + " which has import-all=true. Cannot check its consistency.");

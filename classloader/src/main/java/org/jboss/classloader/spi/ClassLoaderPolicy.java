@@ -56,6 +56,9 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
 {
    /** The log */
    private static final Logger log = Logger.getLogger(ClassLoaderPolicy.class);
+   
+   /** The shutdown policy */
+   private ShutdownPolicy shutdownPolicy;
 
    /** The class not found handlers */
    private List<ClassNotFoundHandler> classNotFoundHandlers;
@@ -286,7 +289,27 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
     * @throws IOException for any error
     */
    public abstract void getResources(String name, Set<URL> urls) throws IOException;
-   
+
+   /**
+    * Get the shutdownPolicy.
+    * 
+    * @return the shutdownPolicy.
+    */
+   public ShutdownPolicy getShutdownPolicy()
+   {
+      return shutdownPolicy;
+   }
+
+   /**
+    * Set the shutdownPolicy.
+    * 
+    * @param shutdownPolicy the shutdownPolicy.
+    */
+   public void setShutdownPolicy(ShutdownPolicy shutdownPolicy)
+   {
+      this.shutdownPolicy = shutdownPolicy;
+   }
+
    /**
     * Get the protection domain<p>
     * 

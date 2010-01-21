@@ -43,6 +43,7 @@ import org.jboss.classloader.plugins.jdk.AbstractJDKChecker;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.ParentPolicy;
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.classloading.spi.RealClassLoader;
 import org.jboss.test.classloader.AbstractClassLoaderTest;
@@ -111,6 +112,7 @@ public class JMXUnitTestCase extends AbstractClassLoaderTest
    public void testClassLoaderSystemMBean() throws Exception
    {
       ClassLoaderSystem system = createClassLoaderSystemWithModifiedBootstrap();
+      system.setShutdownPolicy(ShutdownPolicy.UNREGISTER);
       MBeanServer server = MBeanServerFactory.newMBeanServer();
       server.registerMBean(system, CLASSLOADER_SYSTEM_OBJECT_NAME);
       
@@ -123,7 +125,7 @@ public class JMXUnitTestCase extends AbstractClassLoaderTest
       Set<ObjectName> domains = (Set) server.getAttribute(CLASSLOADER_SYSTEM_OBJECT_NAME, "Domains");
       Set<ObjectName> expectedObjectNames = makeSet(defaultDomainObjectName);
       assertEquals(expectedObjectNames, domains);
-      
+      assertEquals(ShutdownPolicy.UNREGISTER, server.getAttribute(CLASSLOADER_SYSTEM_OBJECT_NAME, "ShutdownPolicy"));
       String domainName = (String) server.getAttribute(defaultDomainObjectName, "Name");
       assertEquals(ClassLoaderSystem.DEFAULT_DOMAIN_NAME, domainName);
    }
@@ -218,6 +220,7 @@ public class JMXUnitTestCase extends AbstractClassLoaderTest
 
       ClassLoaderDomain defaultDomain = system.getDefaultDomain();
       ClassLoaderDomain domain = system.createAndRegisterDomain("test", ParentPolicy.AFTER_BUT_JAVA_BEFORE, defaultDomain);
+      domain.setShutdownPolicy(ShutdownPolicy.UNREGISTER);
 
       ObjectName testObjectName = domain.getObjectName();
       assertEquals(CLASSLOADER_SYSTEM_OBJECT_NAME, server.getAttribute(testObjectName, "System"));
@@ -225,6 +228,7 @@ public class JMXUnitTestCase extends AbstractClassLoaderTest
       assertEquals(ParentPolicy.AFTER_BUT_JAVA_BEFORE.toString(), server.getAttribute(testObjectName, "ParentPolicyName"));
       assertEquals(defaultDomain.getObjectName(), server.getAttribute(testObjectName, "ParentDomain"));
       assertEquals(defaultDomain.getName(), server.getAttribute(testObjectName, "ParentDomainName"));
+      assertEquals(ShutdownPolicy.UNREGISTER, server.getAttribute(testObjectName, "ShutdownPolicy"));
    }
 
    public void testRegisterClassLoader() throws Exception
@@ -383,6 +387,7 @@ public class JMXUnitTestCase extends AbstractClassLoaderTest
       assertEquals("test", server.getAttribute(testObjectName, "Name"));
       assertTrue((Boolean) server.getAttribute(testObjectName, "ImportAll"));
       assertTrue((Boolean) server.getAttribute(testObjectName, "Valid"));
+      assertEquals(ShutdownPolicy.UNREGISTER, server.getAttribute(testObjectName, "ShutdownPolicy"));
       Set<String> expectedPackages = makeSet(A.class.getPackage().getName(), B.class.getPackage().getName());
       assertEquals(expectedPackages, server.invoke(testObjectName, "listExportedPackages", null, null));
       List<ObjectName> expectedImports = Arrays.asList(clA.getObjectName(), clB.getObjectName()); 

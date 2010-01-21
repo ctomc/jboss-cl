@@ -23,6 +23,11 @@ package org.jboss.classloader.spi.filter;
 
 import java.io.Serializable;
 
+import org.jboss.classloader.plugins.filter.EverythingClassFilter;
+import org.jboss.classloader.plugins.filter.JavaOnlyClassFilter;
+import org.jboss.classloader.plugins.filter.NothingButJavaClassFilter;
+import org.jboss.classloader.plugins.filter.NothingClassFilter;
+
 /**
  * ClassFilter.
  * 
@@ -31,6 +36,30 @@ import java.io.Serializable;
  */
 public interface ClassFilter extends Serializable
 {
+   /** Match evertything
+    * 
+    *  @deprecated use {@link ClassFilterUtils#EVERYTHING}
+    */
+   ClassFilter EVERYTHING = EverythingClassFilter.INSTANCE;
+
+   /** Match nothing
+    * 
+    *  @deprecated use {@link ClassFilterUtils#NOTHING}
+    */
+   ClassFilter NOTHING = NothingClassFilter.INSTANCE;
+
+   /** Match nothing 
+    * 
+    *  @deprecated use {@link ClassFilterUtils#NOTHING_BUT_JAVA}
+    */
+   ClassFilter NOTHING_BUT_JAVA = NothingButJavaClassFilter.INSTANCE;
+
+   /** Java Only
+    * 
+    *  @deprecated use {@link ClassFilterUtils#JAVA_ONLY}
+    */
+   ClassFilter JAVA_ONLY = JavaOnlyClassFilter.INSTANCE;
+
    /** 
     * Whether the class name matches the filter
     * 

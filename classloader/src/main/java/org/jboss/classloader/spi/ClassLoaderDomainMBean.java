@@ -71,6 +71,13 @@ public interface ClassLoaderDomainMBean
     * @return the parent.
     */
    String getParentDomainName();
+   
+   /**
+    * Get the shutdown policy
+    * 
+    * @return the shutdown policy
+    */
+   ShutdownPolicy getShutdownPolicy();
 
    /**
     * Get the classloaders

@@ -21,6 +21,10 @@
  */
 package org.jboss.test.classloader;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Enumeration;
+
 import junit.framework.TestCase;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
@@ -208,8 +212,8 @@ public abstract class AbstractClassLoaderTest extends AbstractTestCaseWithSetup
    {
       try
       {
-         start.loadClass(name);
-         fail("Should not be here!");
+         Class<?> clazz = start.loadClass(name);
+         fail("Should not be here! " + ClassLoaderUtils.classToString(clazz));
       }
       catch (Exception expected)
       {
@@ -293,6 +297,34 @@ public abstract class AbstractClassLoaderTest extends AbstractTestCaseWithSetup
       Package pkge = clazz.getPackage();
       assertNotNull("Expected a package for " + clazz.getName(), pkge);
       assertEquals(policy.getName(), pkge.getImplementationTitle());
+   }
+   
+   protected URL assertGetResource(Class<?> reference, ClassLoader start) throws IOException
+   {
+      String resourceName = ClassLoaderUtils.classNameToPath(reference);
+      URL expected = getResource("/" + resourceName);
+
+      URL actual = start.getResource(resourceName);
+      getLog().debug("Got resource " + actual + " for " + resourceName);
+      assertEquals(expected, actual);
+      
+      Enumeration<URL> resources = start.getResources(resourceName);
+      assertTrue("Expected to find resources for " + resourceName, resources.hasMoreElements());
+      actual = resources.nextElement();
+      getLog().debug("Got resources " + actual + " for " + resourceName);
+      assertEquals(expected, actual);
+      assertFalse("Expected to find only one resource for " + resourceName, resources.hasMoreElements());
+      return actual;
+   }
+   
+   protected void assertGetResourceFail(Class<?> reference, ClassLoader start) throws IOException
+   {
+      String resourceName = ClassLoaderUtils.classNameToPath(reference);
+      URL actual = start.getResource(resourceName);
+      assertNull("Didn't expect " + actual + " for " + resourceName, start.getResource(resourceName));
+      
+      Enumeration<URL> resources = start.getResources(resourceName);
+      assertFalse("Didn't expected to find resources for " + resourceName, resources.hasMoreElements());
    }
    
    protected void assertFilterMatchesClassName(String test, ClassFilter filter)

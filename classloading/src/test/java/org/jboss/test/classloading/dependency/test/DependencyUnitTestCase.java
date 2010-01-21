@@ -25,6 +25,10 @@ import java.util.Collections;
 import java.util.Set;
 
 import junit.framework.Test;
+
+import org.jboss.classloader.spi.ClassLoaderDomain;
+import org.jboss.classloader.spi.ParentPolicy;
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.Requirement;
@@ -299,6 +303,104 @@ public class DependencyUnitTestCase extends AbstractMockClassLoaderUnitTest
       finally
       {
          uninstall(contextA);
+      }
+      assertNoClassLoader(contextA);
+   }
+   
+   public void testBDependsALazyShutdownA() throws Exception
+   {
+      MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+      a.setPathsAndPackageNames(A.class);
+      a.setShutdownPolicy(ShutdownPolicy.GARBAGE_COLLECTION);
+      KernelControllerContext contextA = install(a);
+      try
+      {
+         ClassLoader clA = assertClassLoader(contextA);
+         assertLoadClass(A.class, clA);
+         assertLoadClassFail(B.class, clA);
+
+         MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+         b.setPathsAndPackageNames(B.class);
+         ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+         Requirement requirement = factory.createRequirePackage(A.class.getPackage().getName());
+         b.setRequirements(Collections.singletonList(requirement));
+         KernelControllerContext contextB = install(b);
+         try
+         {
+            assertLoadClass(A.class, clA);
+            assertLoadClassFail(B.class, clA);
+            ClassLoader clB = assertClassLoader(contextB);
+            assertLoadClass(B.class, clB);
+            assertLoadClass(A.class, clB, clA);
+            
+            uninstall(contextA);
+            assertLoadClass(A.class, clA);
+            assertLoadClassFail(B.class, clA);
+            assertModule(contextB);
+            assertLoadClass(B.class, clB);
+            assertLoadClass(A.class, clB, clA);
+         }
+         finally
+         {
+            uninstall(contextB);
+         }
+         assertLoadClass(A.class, clA);
+         assertLoadClassFail(B.class, clA);
+         assertNoClassLoader(contextB);
+      }
+      finally
+      {
+      }
+      assertNoClassLoader(contextA);
+   }
+   
+   public void testBDependsALazyShutdownAConfiguredOnDomain() throws Exception
+   {
+      ClassLoaderDomain domain = system.createAndRegisterDomain("LazyShutdown", ParentPolicy.BEFORE_BUT_JAVA_ONLY);
+      domain.setShutdownPolicy(ShutdownPolicy.GARBAGE_COLLECTION);
+      
+      MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+      a.setPathsAndPackageNames(A.class);
+      a.setDomain(domain.getName());
+      KernelControllerContext contextA = install(a);
+      try
+      {
+         ClassLoader clA = assertClassLoader(contextA);
+         assertLoadClass(A.class, clA);
+         assertLoadClassFail(B.class, clA);
+
+         MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+         b.setPathsAndPackageNames(B.class);
+         b.setDomain(domain.getName());
+         ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+         Requirement requirement = factory.createRequirePackage(A.class.getPackage().getName());
+         b.setRequirements(Collections.singletonList(requirement));
+         KernelControllerContext contextB = install(b);
+         try
+         {
+            assertLoadClass(A.class, clA);
+            assertLoadClassFail(B.class, clA);
+            ClassLoader clB = assertClassLoader(contextB);
+            assertLoadClass(B.class, clB);
+            assertLoadClass(A.class, clB, clA);
+            
+            uninstall(contextA);
+            assertLoadClass(A.class, clA);
+            assertLoadClassFail(B.class, clA);
+            assertModule(contextB);
+            assertLoadClass(B.class, clB);
+            assertLoadClass(A.class, clB, clA);
+         }
+         finally
+         {
+            uninstall(contextB);
+         }
+         assertLoadClass(A.class, clA);
+         assertLoadClassFail(B.class, clA);
+         assertNoClassLoader(contextB);
+      }
+      finally
+      {
       }
       assertNoClassLoader(contextA);
    }

@@ -29,6 +29,8 @@ import java.util.Set;
 
 import javax.management.ObjectName;
 
+import org.jboss.classloader.spi.ShutdownPolicy;
+
 /**
  * BaseClassLoaderMBean.
  * 
@@ -78,6 +80,13 @@ public interface BaseClassLoaderMBean
     * @return true when still valid
     */
    boolean isValid();
+   
+   /**
+    * Get the shutdown policy
+    * 
+    * @return the shutdown policy
+    */
+   ShutdownPolicy getShutdownPolicy();
    
    /**
     * Get the exported packages

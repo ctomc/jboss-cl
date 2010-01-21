@@ -31,6 +31,7 @@ import javax.management.ObjectName;
 
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.DelegateLoader;
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloader.spi.translator.TranslatorUtils;
 import org.jboss.logging.Logger;
 import org.jboss.util.loading.Translator;
@@ -56,6 +57,9 @@ public abstract class BaseClassLoaderPolicy
    /** The domain for this policy */
    private volatile BaseClassLoaderDomain domain;
 
+   /** The classloader information */
+   private volatile ClassLoaderInformation information;
+   
    /** The access control context for this policy */
    private AccessControlContext access;
 
@@ -74,6 +78,26 @@ public abstract class BaseClassLoaderPolicy
          sm.checkCreateClassLoader();
       
       access = AccessController.getContext();
+   }
+
+   /**
+    * Get the information.
+    * 
+    * @return the information.
+    */
+   ClassLoaderInformation getInformation()
+   {
+      return information;
+   }
+
+   /**
+    * Set the information.
+    * 
+    * @param information the information.
+    */
+   void setInformation(ClassLoaderInformation information)
+   {
+      this.information = information;
    }
 
    /**
@@ -195,6 +219,30 @@ public abstract class BaseClassLoaderPolicy
     * @return the classloader
     */
    protected abstract ClassLoader isJDKRequest(String name);
+
+   /**
+    * Get the shutdownPolicy.
+    * 
+    * @return the shutdownPolicy.
+    */
+   protected abstract ShutdownPolicy getShutdownPolicy();
+
+   /**
+    * Determine the shutdown policy for this domain
+    * 
+    * @return the shutdown policy
+    */
+   ShutdownPolicy determineShutdownPolicy()
+   {
+      BaseClassLoaderDomain domain = getClassLoaderDomain();
+      if (domain == null)
+      {
+         ShutdownPolicy result = getShutdownPolicy();
+         if (result == null)
+            result = ShutdownPolicy.UNREGISTER;
+      }
+      return domain.determineShutdownPolicy(this);
+   }
    
    /**
     * A long version of toString()

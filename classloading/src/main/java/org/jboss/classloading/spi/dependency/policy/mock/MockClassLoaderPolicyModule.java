@@ -274,6 +274,7 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
       policy.setIncluded(metaData.getIncludedClasses());
       policy.setExcluded(metaData.getExcludedClasses());
       policy.setImportAll(isImportAll());
+      policy.setShutdownPolicy(getShutdownPolicy());
       policy.setDelegates(getDelegates());
       return policy;
    }
