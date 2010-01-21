@@ -21,6 +21,7 @@
  */
 package org.jboss.classloader.spi;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -30,7 +31,9 @@ import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.management.MalformedObjectNameException;
@@ -59,6 +62,104 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
 
    /** The class found handlers */
    private List<ClassFoundHandler> classFoundHandlers;
+
+   /** Maps native library to its provider */
+   private Map<String, NativeLibraryProvider> libraryMap;
+   
+   /**
+    * Provides the actual local file location for a native library
+    */
+   public interface NativeLibraryProvider
+   {
+      /** Get the library path */
+      String getLibraryPath();
+      
+      /** Get the local library file location. This may be proved lazily. */
+      File getLibraryLocation() throws IOException;
+   }
+   
+   /**
+    * Get the set of registered native library names.
+    * 
+    * @return Null if there are no native libraries registered.
+    */
+   public Set<String> getNativeLibraryNames()
+   {
+      if (libraryMap == null)
+         return Collections.emptySet();
+      
+      return libraryMap.keySet(); 
+   }
+   
+   /**
+    * Get the native library provider for the given name.
+    * 
+    * @param libname The library name 
+    * @return Null if there is no library with that name.
+    */
+   public NativeLibraryProvider getNativeLibrary(String libname)
+   {
+      return (libraryMap != null ? libraryMap.get(libname) : null);
+   }
+   
+   /**
+    * Add a native library provider.
+    * @param libname The library name 
+    * @param provider The library file provider
+    */
+   public void addNativeLibrary(String libname, NativeLibraryProvider provider)
+   {
+      if (libraryMap == null)
+         libraryMap = new ConcurrentHashMap<String, NativeLibraryProvider>();
+      
+      libraryMap.put(libname, provider);
+   }
+   
+   /**
+    * Remove the native library provider for the given name.
+    * 
+    * @param libname The library name 
+    * @return Null if there is no library with that name.
+    */
+   public NativeLibraryProvider removeNativeLibrary(String libname)
+   {
+      return (libraryMap != null ? libraryMap.remove(libname) : null);
+   }
+   
+   /**
+    * Returns the absolute path name of a native library.
+    * 
+    * @see ClassLoader.findLibrary(String libname)
+    * @param libname The library name 
+    * @return The absolute path of the native library, or null
+    */
+   public String findLibrary(String libname)
+   {
+      if (libraryMap == null)
+         return null;
+      
+      NativeLibraryProvider libProvider = libraryMap.get(libname);
+      
+      // [TODO] why does the TCK use 'Native' to mean 'libNative' ? 
+      if (libProvider == null)
+         libProvider = libraryMap.get("lib" + libname);
+         
+      if (libProvider == null)
+         return null;
+      
+      File libfile;
+      try
+      {
+         libfile = libProvider.getLibraryLocation();
+      }
+      catch (IOException ex)
+      {
+         log.error("Cannot privide native library location for: " + libname, ex);
+         return null;
+      }
+      
+      return libfile.getAbsolutePath();
+   }
    
    /**
     * Get the delegate loader for exported stuff<p>

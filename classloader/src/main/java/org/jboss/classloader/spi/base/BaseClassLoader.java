@@ -374,6 +374,20 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       return domain.checkClassCacheAndBlackList(this, name, null, basePolicy.isImportAll(), false);
    }
 
+   @Override
+   protected String findLibrary(String libname)
+   {
+      String libraryPath = null;
+
+      if (policy != null)
+         libraryPath = policy.findLibrary(libname);
+
+      if (libraryPath == null)
+         libraryPath = super.findLibrary(libname);
+
+      return libraryPath;
+   }
+   
    /**
     * Find the classloader for a class but don't load the class
     *

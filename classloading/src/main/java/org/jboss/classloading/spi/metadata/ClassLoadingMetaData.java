@@ -22,6 +22,7 @@
 package org.jboss.classloading.spi.metadata;
 
 import java.util.List;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -45,7 +46,7 @@ import org.jboss.managed.api.annotation.ManagementProperty;
 public class ClassLoadingMetaData extends NameAndVersionSupport
 {
    /** The serialVersionUID */
-   private static final long serialVersionUID = -2782951093046585620L;
+   private static final long serialVersionUID = 8525659521747922713L;
    
    /** The classloading domain */
    private String domain;
@@ -94,6 +95,9 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
    
    /** The capabilities */
    private CapabilitiesMetaData capabilities = new CapabilitiesMetaData();
+   
+   /** The native code libraries */
+   private NativeLibraryMetaData libraries = new NativeLibraryMetaData();
    
    /**
     * Get the domain.
@@ -485,6 +489,29 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
    }
 
    /**
+    * Get the native libraries.
+    * 
+    * @return the native libraries.
+    */
+   public NativeLibraryMetaData getNativeLibraries()
+   {
+      return libraries;
+   }
+
+   /**
+    * Set the native libraries.
+    * 
+    * @param native libraries the native libraries.
+    * @throws IllegalArgumentException for null native libraries
+    */
+   public void setNativeLibraries(NativeLibraryMetaData nativeLibraries)
+   {
+      if (nativeLibraries == null)
+         throw new IllegalArgumentException("Null libraries");
+      this.libraries = nativeLibraries;
+   }
+
+   /**
     * Set the requirements.
     * 
     * @param requirements the requirements.
@@ -540,6 +567,9 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       List<Requirement> requirements = getRequirements().getRequirements();
       if (requirements != null)
          builder.append(" requirements=").append(requirements);
+      List<NativeLibrary> libraries = getNativeLibraries().getNativeLibraries();
+      if (libraries != null)
+         builder.append(" libraries=").append(libraries);
    }
    
    @Override
@@ -570,6 +600,8 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
          return false;
       if (equals(this.getRequirements().getRequirements(), other.getRequirements().getRequirements()) == false)
          return false;
+      if (equals(this.getNativeLibraries().getNativeLibraries(), other.getNativeLibraries().getNativeLibraries()) == false)
+         return false;
       return true;
    }
    
@@ -593,6 +625,7 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       ClassLoadingMetaData clone = (ClassLoadingMetaData) super.clone();
       requirements = clone.requirements.clone();
       capabilities = clone.capabilities.clone();
+      libraries = clone.libraries.clone();
       return clone;
    }
 }
