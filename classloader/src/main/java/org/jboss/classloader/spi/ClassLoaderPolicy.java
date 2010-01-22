@@ -31,9 +31,7 @@ import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.management.MalformedObjectNameException;
@@ -68,19 +66,18 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
    private List<ClassFoundHandler> classFoundHandlers;
 
    /** Maps native library to its provider */
-   private volatile Map<String, NativeLibraryProvider> libraryMap;
+   private volatile List<NativeLibraryProvider> nativeLibraries;
    
    /**
     * Add a native library provider.
-    * @param libname The library name 
     * @param provider The library file provider
     */
    public void addNativeLibrary(NativeLibraryProvider provider)
    {
-      if (libraryMap == null)
-         libraryMap = new ConcurrentHashMap<String, NativeLibraryProvider>();
+      if (nativeLibraries == null)
+         nativeLibraries = new CopyOnWriteArrayList<NativeLibraryProvider>();
       
-      libraryMap.put(provider.getLibraryName(), provider);
+      nativeLibraries.add(provider);
    }
    
    /**
@@ -91,11 +88,20 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
     */
    public String findLibrary(String libname)
    {
-      Map<String, NativeLibraryProvider> map = libraryMap;
-      if (map == null)
+      List<NativeLibraryProvider> list = nativeLibraries;
+      if (list == null)
          return null;
       
-      NativeLibraryProvider libProvider = map.get(libname);
+      NativeLibraryProvider libProvider = null;
+      for (NativeLibraryProvider aux : list)
+      {
+         if (libname.equals(aux.getLibraryName()))
+         {
+            libProvider = aux;
+            break;
+         }
+      }
+      
       if (libProvider == null)
          return null;
       
@@ -452,44 +458,6 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
          builder.append(" <IMPORT-ALL>");
    }
 
-   /**
-    * Get the set of registered native library names.
-    * 
-    * @return Null if there are no native libraries registered.
-    */
-   Set<String> getNativeLibraryNames()
-   {
-      Map<String, NativeLibraryProvider> map = libraryMap;
-      if (map == null)
-         return Collections.emptySet();
-      
-      return Collections.unmodifiableSet(map.keySet()); 
-   }
-   
-   /**
-    * Get the native library provider for the given name.
-    * 
-    * @param libname The library name 
-    * @return Null if there is no library with that name.
-    */
-   NativeLibraryProvider getNativeLibrary(String libname)
-   {
-      Map<String, NativeLibraryProvider> map = libraryMap;
-      return (map != null ? map.get(libname) : null);
-   }
-   
-   /**
-    * Remove the native library provider for the given name.
-    * 
-    * @param libname The library name 
-    * @return Null if there is no library with that name.
-    */
-   NativeLibraryProvider removeNativeLibrary(String libname)
-   {
-      Map<String, NativeLibraryProvider> map = libraryMap;
-      return (map != null ? map.remove(libname) : null);
-   }
-   
    /**
     * Get the system classloader
     * 
