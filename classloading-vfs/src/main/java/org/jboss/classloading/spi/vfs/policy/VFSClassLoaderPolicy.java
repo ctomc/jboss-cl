@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.Manifest;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
@@ -80,9 +79,6 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    /** The roots */
    private VirtualFile[] roots;
    
-   /** The fragment roots */
-   private List<VirtualFile> fragments;
-   
    /** The excluded roots */
    private VirtualFile[] excludedRoots;
 
@@ -114,7 +110,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    private Map<String, Manifest> manifestCache = new ConcurrentHashMap<String, Manifest>();
    
    /** Cache of virtual file information by path */
-   @SuppressWarnings("unchecked")
+   @SuppressWarnings({ "unchecked", "rawtypes" })
    private Map<String, VirtualFileInfo> vfsCache = Collections.synchronizedMap(new SoftValueHashMap());
    
    /** JBCL-64, JBVFS-77: CodeSource should use real url **/
@@ -267,51 +263,6 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    public String getName()
    {
       return name;
-   }
-
-   /**
-    * Attach a new fragment root to the policy.
-    * @param fragRoot The fragment root file
-    */
-   public void attachFragment(VirtualFile fragRoot)
-   {
-      if (fragRoot == null)
-         throw new IllegalArgumentException("Null fragment file");
-      
-      if (fragments == null)
-         fragments = new CopyOnWriteArrayList<VirtualFile>();
-      
-      fragments.add(fragRoot);
-   }
-   
-   /**
-    * Detach a fragment root from the policy.
-    * @param fragRoot The fragment root file
-    * @return true if the fragment could be detached
-    */
-   public boolean detachFragment(VirtualFile fragRoot)
-   {
-      if (fragRoot == null)
-         throw new IllegalArgumentException("Null fragment file");
-      
-      if (fragments == null)
-         return false;
-      
-      return fragments.remove(fragRoot);
-   }
-   
-   /**
-    * Get the array of attached fragment root files.
-    * @return The array of attached fragment root files or null.
-    */
-   public VirtualFile[] getFragmentRoots()
-   {
-      if (fragments == null)
-         return null;
-      
-      VirtualFile[] retarr = new VirtualFile[fragments.size()];
-      fragments.toArray(retarr);
-      return retarr;
    }
 
    @Override
@@ -643,26 +594,6 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          }
       }
       
-      if (fragments != null)
-      {
-         for (VirtualFile root : fragments)
-         {
-            try
-            {
-               VirtualFile file = root.getChild(path);
-               if (file != null)
-               {
-                  result = new VirtualFileInfo(file, root);
-                  vfsCache.put(path, result);
-                  return result;
-               }
-            }
-            catch (Exception ignored)
-            {
-            }
-         }
-      }
-      
       return null;
    }
    
@@ -762,42 +693,5 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          return true;
       }
       return false;
-   }
-
-   /**
-    * VirtualFileInfo.    */
-   private static class VirtualFileInfo
-   {
-      /** The file */
-      private VirtualFile file;
-      
-      /** The root */
-      private VirtualFile root;
-      
-      public VirtualFileInfo(VirtualFile file, VirtualFile root)
-      {
-         this.file = file;
-         this.root = root;
-      }
-
-      /**
-       * Get the file.
-       * 
-       * @return the file.
-       */
-      public VirtualFile getFile()
-      {
-         return file;
-      }
-
-      /**
-       * Get the root.
-       * 
-       * @return the root.
-       */
-      public VirtualFile getRoot()
-      {
-         return root;
-      }
    }
 }
