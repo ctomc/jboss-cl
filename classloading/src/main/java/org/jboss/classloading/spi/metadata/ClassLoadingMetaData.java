@@ -47,7 +47,7 @@ import org.jboss.managed.api.annotation.ManagementProperty;
 public class ClassLoadingMetaData extends NameAndVersionSupport
 {
    /** The serialVersionUID */
-   private static final long serialVersionUID = 8574522599537469347L;
+   private static final long serialVersionUID = -2782951093046585620L;
    
    /** The classloading domain */
    private String domain;
