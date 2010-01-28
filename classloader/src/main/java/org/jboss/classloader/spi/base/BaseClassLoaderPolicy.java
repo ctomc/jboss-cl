@@ -26,7 +26,10 @@ import java.security.AccessController;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Formattable;
+import java.util.Formatter;
 import java.util.List;
+
 import javax.management.ObjectName;
 
 import org.jboss.classloader.spi.ClassLoaderDomain;
@@ -46,7 +49,7 @@ import org.jboss.util.loading.Translator;
  * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public abstract class BaseClassLoaderPolicy
+public abstract class BaseClassLoaderPolicy implements Formattable
 {
    /** The log */
    private static final Logger log = Logger.getLogger(BaseClassLoaderPolicy.class);
@@ -286,7 +289,13 @@ public abstract class BaseClassLoaderPolicy
       builder.append("{").append(getName()).append("}");
       return builder.toString();
    }
-   
+
+   public void formatTo(Formatter formatter, int flags, int width, int precision)
+   {
+      // TODO perhaps decide which toXString to use depending on args?
+      formatter.format(toLongString());
+   }
+
    /**
     * Get the classloader domain name
     * 

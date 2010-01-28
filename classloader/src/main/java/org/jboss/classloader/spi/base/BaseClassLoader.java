@@ -114,7 +114,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       if (basePolicy.isBlackListable())
          blackList = new ConcurrentHashMap<String, String>();
 
-      log.debug("Created " + this + " with policy " + policy.toLongString());
+      log.debugf("Created %1s with policy %2s", this, policy);
    }
 
    public ObjectName getObjectName()
