@@ -88,6 +88,7 @@ public class JBossXBTestDelegate extends AbstractTestDelegate
       initResolver();
    }
 
+   @SuppressWarnings("unchecked")
    protected void initResolver() throws Exception
    {
       try

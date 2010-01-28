@@ -100,7 +100,7 @@ public class ClientLauncher
     */
    public void setDefaultMode(ControllerMode defaultMode)
    {
-      this.defaultMode = defaultMode;
+      ClientLauncher.defaultMode = defaultMode;
    }
 
    /**

@@ -59,9 +59,6 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
    /** The name of the default domain */
    public static final String DEFAULT_DOMAIN_NAME = "DefaultDomain";
 
-   /** The class loading system builder */
-   private static final ClassLoaderSystemBuilder builder = new ClassLoaderSystemBuilder();
-
    /** The default domain */
    private ClassLoaderDomain defaultDomain;
    
@@ -103,7 +100,7 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
       SecurityManager sm = System.getSecurityManager();
       if (sm != null)
          sm.checkCreateClassLoader();
-      return builder.get();
+      return ClassLoaderSystemBuilder.get();
    }
 
    /**

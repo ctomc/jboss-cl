@@ -64,7 +64,7 @@ public class LoaderUnitTestCase extends AbstractClassLoaderTestWithSecurity
       }
       finally
       {
-         assertTrue("Interrupted state not restored", Thread.currentThread().interrupted());
+         assertTrue("Interrupted state not restored", Thread.interrupted());
       }
    }
    
