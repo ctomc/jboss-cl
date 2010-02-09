@@ -42,6 +42,9 @@ public class IsolatedClassLoaderUnitTestCase extends IsolatedClassLoaderTest
 {
    private static final String NOT_SUPPORT_PACKAGE = "org.jboss.test.classloader.junit.notsupport";
    private static final String NOT_SUPPORT_CLASS = NOT_SUPPORT_PACKAGE + ".NotSupport";
+   private static final String NOT_SUPPORT_CLASS2 = NOT_SUPPORT_PACKAGE + ".NotSupport2";
+   private static final String SUPPORT_PACKAGE = "org.jboss.test.classloader.junit.support";
+   private static final String SUPPORT_CLASS = SUPPORT_PACKAGE + ".Support";
    
    public static Test suite()
    {
@@ -103,12 +106,15 @@ public class IsolatedClassLoaderUnitTestCase extends IsolatedClassLoaderTest
    
    public void testUnregisterClassLoader() throws Exception
    {
+      Class<?> clazz = getClass().getClassLoader().loadClass(SUPPORT_CLASS);
+      assertEquals(getClass().getClassLoader(), clazz.getClassLoader());
+      
       ClassLoader classLoader = createClassLoader("NewClassLoader", NOT_SUPPORT_PACKAGE);
       unregisterClassLoader(classLoader);
       
       try
       {
-         classLoader.loadClass(NOT_SUPPORT_CLASS);
+         classLoader.loadClass(NOT_SUPPORT_CLASS2);
          fail("Should not be here!");
       }
       catch (Throwable t)
@@ -118,7 +124,7 @@ public class IsolatedClassLoaderUnitTestCase extends IsolatedClassLoaderTest
       
       try
       {
-         getClass().getClassLoader().loadClass(NOT_SUPPORT_CLASS);
+         getClass().getClassLoader().loadClass(NOT_SUPPORT_CLASS2);
          fail("Should not be here!");
       }
       catch (Throwable t)

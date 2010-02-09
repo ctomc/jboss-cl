@@ -54,6 +54,7 @@ import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.Loader;
 import org.jboss.classloader.spi.PackageInformation;
 import org.jboss.classloader.spi.ShutdownPolicy;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloading.spi.RealClassLoader;
 import org.jboss.logging.Logger;
 import org.jboss.util.collection.Iterators;
@@ -548,7 +549,12 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
       if (domain != null)
          return domain.getResource(this, name);
-      return getResourceLocally(name, trace);
+      URL url = getResourceLocally(name, trace);
+      if (url != null)
+         return url;
+      if (ClassFilterUtils.JAVA_ONLY.matchesResourcePath(name))
+         return getSystemResource(name);
+      return null;
    }
 
    @Override
@@ -570,9 +576,19 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
       Set<URL> resourceURLs = new TreeSet<URL>(ClassLoaderUtils.URLComparator.INSTANCE);
       if (domain != null)
+      {
          domain.getResources(this, name, resourceURLs);
+      }
       else
+      {
+         if (ClassFilterUtils.JAVA_ONLY.matchesResourcePath(name))
+         {
+            Enumeration<URL> urls = getSystemResources(name);
+            while (urls.hasMoreElements())
+               resourceURLs.add(urls.nextElement());
+         }
          getResourcesLocally(name, resourceURLs, trace);
+      }
       return resourceURLs;
    }
 
@@ -871,6 +887,10 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          {
             Class<?> result = loadClassLocally(name, trace);
 
+            // Try the classpath for java classes
+            if (result == null && ClassFilterUtils.JAVA_ONLY.matchesClassName(name))
+               result = getSystemClassLoader().loadClass(name);
+            
             // So this is almost certainly a classloader leak
             if (result == null)
                throw new IllegalStateException(this + " classLoader is not connected to a domain (probably undeployed?) for class " + name);
