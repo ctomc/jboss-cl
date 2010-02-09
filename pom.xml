@@ -31,14 +31,14 @@
   
   <properties>
     <version.jboss.vfs>2.2.0.Alpha2</version.jboss.vfs>
-    <version.jboss.man>2.1.1.GA</version.jboss.man>
+    <version.jboss.man>2.1.1.SP1</version.jboss.man>
     <version.jboss.mdr>2.2.0.Alpha1</version.jboss.mdr>
     <version.jboss.kernel>2.2.0.Alpha3</version.jboss.kernel>
     <version.jboss.common.core>2.2.17.GA</version.jboss.common.core>
     <version.jboss.logging.spi>2.2.0.CR1</version.jboss.logging.spi>
-    <version.jboss.classloading.spi>5.1.0.SP1</version.jboss.classloading.spi>
+    <version.jboss.classloading.spi>6.0.0-Alpha8</version.jboss.classloading.spi>
     <version.jbossxb>2.0.2.Beta4</version.jbossxb>
-    <version.org.jboss.test>1.1.1.GA</version.org.jboss.test>
+    <version.org.jboss.test>1.1.5.GA</version.org.jboss.test>
     <version.junit>4.4</version.junit>
     <version.javassist>3.11.0.GA</version.javassist>
   </properties>
@@ -233,6 +233,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.jboss.logging</groupId>
+        <artifactId>jboss-logging-log4j</artifactId>
+        <version>${version.jboss.logging.spi}</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.jboss.integration</groupId>
         <artifactId>jboss-classloading-spi</artifactId>
         <version>${version.jboss.classloading.spi}</version>
@@ -257,6 +263,12 @@
         <artifactId>jboss-test</artifactId>
         <version>${version.org.jboss.test}</version>
         <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging-log4j</artifactId>
+          </exclusion>
+        </exclusions>        
       </dependency>
       
       <dependency>

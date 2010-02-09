@@ -90,5 +90,11 @@
       <optional>true</optional>
     </dependency>
 
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging-log4j</artifactId>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 </project>
