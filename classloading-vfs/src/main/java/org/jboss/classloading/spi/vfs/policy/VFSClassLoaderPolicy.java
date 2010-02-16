@@ -28,7 +28,7 @@ import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.Policy;
 import java.security.ProtectionDomain;
-import java.security.cert.Certificate;
+import java.security.CodeSigner;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -48,8 +48,8 @@ import org.jboss.classloading.plugins.vfs.PackageVisitor;
 import org.jboss.classloading.spi.metadata.ExportAll;
 import org.jboss.logging.Logger;
 import org.jboss.util.collection.SoftValueHashMap;
-import org.jboss.virtual.VFSUtils;
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VFSUtils;
+import org.jboss.vfs.VirtualFile;
 
 /**
  * VFSClassLoaderPolicy.
@@ -113,9 +113,6 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
    @SuppressWarnings({ "unchecked", "rawtypes" })
    private Map<String, VirtualFileInfo> vfsCache = Collections.synchronizedMap(new SoftValueHashMap());
    
-   /** JBCL-64, JBVFS-77: CodeSource should use real url **/
-   private boolean useRealURL = true;
-
    /**
     * Determine a name from the roots
     * 
@@ -495,26 +492,6 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       return null;
    }
 
-   /**
-    * Do we use real url.
-    *
-    * @return true if real url should be used
-    */
-   public boolean isUseRealURL()
-   {
-      return useRealURL;
-   }
-
-   /**
-    * Set use real url flag.
-    *
-     * @param useRealURL the real url flag
-    */
-   public void setUseRealURL(boolean useRealURL)
-   {
-      this.useRealURL = useRealURL;
-   }
-
    @Override
    // FindBugs: The Set doesn't use equals/hashCode
    public void getResources(String name, Set<URL> urls) throws IOException
@@ -527,7 +504,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          try
          {
             VirtualFile child = root.getChild(name);
-            if (child != null)
+            if (child.exists())
                urls.add(child.toURL());
          }
          catch (Exception e)
@@ -582,7 +559,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          try
          {
             VirtualFile file = root.getChild(path);
-            if (file != null)
+            if (file.exists())
             {
                result = new VirtualFileInfo(file, root);
                vfsCache.put(path, result);
@@ -655,14 +632,14 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       try
       {
          VirtualFile root = findRoot(path);
-         URL codeSourceURL = isUseRealURL() ? VFSUtils.getRealURL(root) : root.toURL();
+         URL codeSourceURL = root.toURL();
 
          if (log.isTraceEnabled())
             log.trace("getProtectionDomain:className="+ className + " path="+ path + " codeSourceURL=" + codeSourceURL);
 
-         Certificate[] certs = clazz.getCertificates();
-         CodeSource cs = new CodeSource(codeSourceURL, certs);
-         PermissionCollection permissions = Policy.getPolicy().getPermissions(cs);
+         final CodeSigner[] signers = clazz.getCodeSigners();
+         final CodeSource cs = new CodeSource(codeSourceURL, signers);
+         final PermissionCollection permissions = Policy.getPolicy().getPermissions(cs);
          return new ProtectionDomain(cs, permissions);
       }
       catch (Exception e)

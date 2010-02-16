@@ -1,6 +1,6 @@
 package org.jboss.classloading.spi.vfs.policy;
 
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VirtualFile;
 
 /**
  * A cache entry in the policy that combines the entry with its associated root.

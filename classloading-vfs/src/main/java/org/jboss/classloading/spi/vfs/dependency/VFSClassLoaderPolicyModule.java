@@ -21,8 +21,10 @@
 */
 package org.jboss.classloading.spi.vfs.dependency;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -40,8 +42,9 @@ import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
 import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.kernel.spi.dependency.KernelControllerContextAware;
-import org.jboss.virtual.VFS;
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
+import org.jboss.vfs.util.automount.Automounter;
 
 /**
  * VFSClassLoaderPolicyModule.
@@ -59,6 +62,8 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
    
    /** Our cached vfs roots */
    private VirtualFile[] vfsRoots;
+
+   private static final VirtualFile[] NO_VIRTUAL_FILES = new VirtualFile[0];
 
    /**
     * Create a new VFSClassLoaderPolicyModule.
@@ -156,7 +161,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
       
       if (roots == null)
       {
-         vfsRoots = new VirtualFile[0];
+         vfsRoots = NO_VIRTUAL_FILES;
       }
       else
       {
@@ -167,13 +172,9 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
             try
             {
                URI uri = new URI(root);
-               vfsRoots[i] = getVirtualFile(uri);
+               vfsRoots[i] = VFS.getChild(uri);
             }
-            catch (RuntimeException e)
-            {
-               throw e;
-            }
-            catch (Exception e)
+            catch (URISyntaxException e)
             {
                throw new RuntimeException("Error creating VFS file for " + root, e);
             }
@@ -181,21 +182,6 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
          this.vfsRoots = vfsRoots;
       }
       return vfsRoots;
-   }
-
-   /**
-    * Get virtual file for uri.
-    *
-    * @param uri the uri
-    * @return virtual file for uri
-    * @throws Exception for any error
-    */
-   protected VirtualFile getVirtualFile(URI uri) throws Exception
-   {
-      if (isCacheable())
-         return VFS.getRoot(uri);
-      else
-         return VFS.createNewRoot(uri);
    }
 
    @Override
@@ -229,6 +215,33 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
    {
       super.reset();
       vfsRoots = null;
+   }
+
+   /**
+    * Mounts all VFS roots when the module is created. 
+    */
+   public void create()
+   {
+      final VirtualFile[] vfsRoots = determineVFSRoots();
+      for (VirtualFile root : vfsRoots) 
+      {
+         try 
+         {
+            Automounter.mount(this, root);
+         }
+         catch (IOException e) 
+         {
+            throw new RuntimeException("Failed to mount root " + root, e);
+         }
+      }
+   }
+
+   /**
+    * Cleanup all mounts. 
+    */
+   public void destroy() 
+   {
+      Automounter.cleanup(this);
    }
 
    @Override

@@ -22,9 +22,7 @@
 package org.jboss.test.classloading.vfs.metadata.xml;
 
 import java.lang.reflect.Method;
-import java.net.URL;
 
-import org.jboss.net.protocol.URLStreamHandlerFactory;
 import org.jboss.test.AbstractTestDelegate;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
@@ -42,32 +40,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
  */
 public class JBossXBTestDelegate extends AbstractTestDelegate
 {
-   /** Whether initialization has been done */
-   private static boolean done = false;
-
    /** The unmarshaller factory */
    protected UnmarshallerFactory unmarshallerFactory;
 
    /** The resolver */
    protected SchemaBindingResolver defaultResolver;
-
-   /**
-    * Initialize
-    */
-   public synchronized static void init()
-   {
-      if (done)
-         return;
-      done = true;
-      URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory());
-      URLStreamHandlerFactory.preload();
-      String handlerPkgs = System.getProperty("java.protocol.handler.pkgs");
-      if (handlerPkgs != null)
-         handlerPkgs += "|org.jboss.net.protocol";
-      else
-         handlerPkgs = "org.jboss.net.protocol";
-      System.setProperty("java.protocol.handler.pkgs", handlerPkgs);
-   }
 
    /**
     * Create a new JBossXBTestDelegate.
@@ -83,7 +60,6 @@ public class JBossXBTestDelegate extends AbstractTestDelegate
    public void setUp() throws Exception
    {
       super.setUp();
-      init();
       unmarshallerFactory = UnmarshallerFactory.newInstance();
       initResolver();
    }

@@ -26,7 +26,7 @@ import java.io.InputStream;
 import java.io.IOException;
 
 import org.jboss.classloading.plugins.visitor.AbstractResourceContext;
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VirtualFile;
 
 /**
  * VFS resource context.

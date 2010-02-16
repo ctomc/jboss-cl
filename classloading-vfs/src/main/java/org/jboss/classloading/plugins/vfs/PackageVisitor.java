@@ -21,17 +21,16 @@
  */
 package org.jboss.classloading.plugins.vfs;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.spi.metadata.ExportAll;
-import org.jboss.virtual.VirtualFile;
-import org.jboss.virtual.VirtualFileVisitor;
-import org.jboss.virtual.VisitorAttributes;
-import org.jboss.virtual.plugins.vfs.helpers.AbstractVirtualFileFilterWithAttributes;
+import org.jboss.vfs.VirtualFile;
+import org.jboss.vfs.VirtualFileVisitor;
+import org.jboss.vfs.VisitorAttributes;
+import org.jboss.vfs.util.AbstractVirtualFileFilterWithAttributes;
 
 /**
  * Visits a virtual file system recursively
@@ -185,58 +184,51 @@ public class PackageVisitor extends AbstractVirtualFileFilterWithAttributes impl
    
    public void visit(VirtualFile file)
    {
-      try
+      // We only want only directories
+      if (file.isDirectory() && accepts(file))
       {
-         // We only want only directories
-         if (file.isLeaf() == false && accepts(file))
+         boolean empty = true;
+         // Include empty directories?
+         if (exportAll == ExportAll.ALL)
+            empty = false;
+         else
          {
-            boolean empty = true;
-            // Include empty directories?
-            if (exportAll == ExportAll.ALL)
-               empty = false;
-            else
+            // Determine whether there is anything there
+            List<VirtualFile> children = file.getChildren();
+            if (children != null && children.isEmpty() == false)
             {
-               // Determine whether there is anything there
-               List<VirtualFile> children = file.getChildren();
-               if (children != null && children.isEmpty() == false)
+               for (VirtualFile child : children)
                {
-                  for (VirtualFile child : children)
+                  // We must have a leaf to be non-empty
+                  if (child.isFile())
                   {
-                     // We must have a leaf to be non-empty
-                     if (child.isLeaf())
-                     {
-                        empty = false;
-                        break;
-                     }
+                     empty = false;
+                     break;
                   }
                }
             }
-            // This looks interesting
-            if (empty == false)
-            {
-               String path = file.getPathName();
-               if (path.equals(rootPath))
-                  path = "";
-               else if (path.startsWith(rootPathWithSlash))
-                  path = path.substring(rootPathWithSlash.length());
-               String pkg = path.replace('/', '.');
-               
-               // Check for inclusions/exclusions
-               if (included != null && included.matchesPackageName(pkg) == false)
-                  return;
-               if (excluded != null && excluded.matchesPackageName(pkg))
-                  return;
-               if (excludedExport != null && excludedExport.matchesPackageName(pkg))
-                  return;
-               
-               // Ok this is a package for export
-               packages.add(pkg);
-            }
          }
-      }
-      catch (IOException e)
-      {
-         throw new Error("Error visiting " + file, e);
+         // This looks interesting
+         if (empty == false)
+         {
+            String path = file.getPathName();
+            if (path.equals(rootPath))
+               path = "";
+            else if (path.startsWith(rootPathWithSlash))
+               path = path.substring(rootPathWithSlash.length());
+            String pkg = path.replace('/', '.');
+
+            // Check for inclusions/exclusions
+            if (included != null && included.matchesPackageName(pkg) == false)
+               return;
+            if (excluded != null && excluded.matchesPackageName(pkg))
+               return;
+            if (excludedExport != null && excludedExport.matchesPackageName(pkg))
+               return;
+
+            // Ok this is a package for export
+            packages.add(pkg);
+         }
       }
    }
 }

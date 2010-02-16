@@ -21,7 +21,6 @@
 */
 package org.jboss.test.classloading.vfs.policy.test;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -39,8 +38,8 @@ import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloading.spi.metadata.ExportAll;
 import org.jboss.classloading.spi.vfs.policy.VFSClassLoaderPolicy;
 import org.jboss.test.BaseTestCase;
-import org.jboss.virtual.VFS;
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
 
 /**
  * ExportAllUnitTestCase.
@@ -103,28 +102,16 @@ public class ExportAllUnitTestCase extends BaseTestCase
    {
       URL baseURL = getResource("/classloader");
       assertNotNull(baseURL);
-      VirtualFile base = VFS.getRoot(baseURL);
+      VirtualFile base = VFS.getChild(baseURL);
       VirtualFile[] files = new VirtualFile[urls.length];
       for (int i = 0; i < urls.length; ++i)
       {
-         try
+         files[i] = base.getChild(urls[i]);
+         if (files[i].exists() == false && i > 0)
          {
-            files[i] = base.getChild(urls[i]);
+            files[i] = files[0].getChild(urls[i]);
          }
-         catch (IOException ignored)
-         {
-         }
-         if (files[i] == null && i > 0)
-         {
-            try
-            {
-               files[i] = files[0].getChild(urls[i]);
-            }
-            catch (IOException ignored)
-            {
-            }
-         }
-         if (files[i] == null)
+         if (files[i].exists() == false)
             fail("Can't find " + urls[i]);
       }
       
@@ -134,24 +121,12 @@ public class ExportAllUnitTestCase extends BaseTestCase
          excludedFiles = new VirtualFile[excluded.length];
          for (int i = 0; i < excluded.length; ++i)
          {
-            try
+            excludedFiles[i] = base.getChild(excluded[i]);
+            if (excludedFiles[i].exists() == false)
             {
-               excludedFiles[i] = base.getChild(excluded[i]);
+               excludedFiles[i] = files[0].getChild(excluded[i]);
             }
-            catch (IOException ignored)
-            {
-            }
-            if (excludedFiles[i] == null)
-            {
-               try
-               {
-                  excludedFiles[i] = files[0].getChild(excluded[i]);
-               }
-               catch (IOException ignored)
-               {
-               }
-            }
-            if (excludedFiles[i] == null)
+            if (excludedFiles[i].exists() == false)
                fail("Can't find " + excluded[i]);
          }
       }
@@ -168,7 +143,7 @@ public class ExportAllUnitTestCase extends BaseTestCase
          URL url = getResource(urlString);
          if (url != null)
          {
-            files[i]= VFS.getRoot(url);
+            files[i]= VFS.getChild(url);
          }
          else
          {
@@ -189,7 +164,7 @@ public class ExportAllUnitTestCase extends BaseTestCase
             URL url = getResource(urlString);
             if (url != null)
             {
-               excludedFiles[i]= VFS.getRoot(url);
+               excludedFiles[i]= VFS.getChild(url);
             }
             else
             {
@@ -220,7 +195,7 @@ public class ExportAllUnitTestCase extends BaseTestCase
       throws Exception
    {
       URL testjar1URL = getResource("/classloader/testjar1");
-      VirtualFile testjar1 = VFS.getRoot(testjar1URL);
+      VirtualFile testjar1 = VFS.getChild(testjar1URL);
       VFSClassLoaderPolicy policy = VFSClassLoaderPolicy.createVFSClassLoaderPolicy(testjar1);
       policy.setExportAll(ExportAll.ALL);
       
@@ -233,7 +208,7 @@ public class ExportAllUnitTestCase extends BaseTestCase
       throws Exception
    {
       URL testwar1URL = getResource("/classloader/testwar1.war");
-      VirtualFile testwar1 = VFS.getRoot(testwar1URL);
+      VirtualFile testwar1 = VFS.getChild(testwar1URL);
       VFSClassLoaderPolicy policy = VFSClassLoaderPolicy.createVFSClassLoaderPolicy(testwar1);
       policy.setExportAll(ExportAll.NON_EMPTY);
       policy.setImportAll(true);
@@ -381,7 +356,7 @@ public class ExportAllUnitTestCase extends BaseTestCase
       throws Exception
    {
       URL testjar3URL = getResource("/classloader/testjar3");
-      VirtualFile testjar3 = VFS.getRoot(testjar3URL);
+      VirtualFile testjar3 = VFS.getChild(testjar3URL);
       VirtualFile testjar3subjar = testjar3.getChild("subjar1.jar");
       assertNotNull(testjar3subjar);
       VFSClassLoaderPolicy policy = VFSClassLoaderPolicy.createVFSClassLoaderPolicy(testjar3, testjar3subjar);

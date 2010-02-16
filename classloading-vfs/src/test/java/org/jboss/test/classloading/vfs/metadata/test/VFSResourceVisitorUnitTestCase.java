@@ -48,6 +48,7 @@ import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTes
 import org.jboss.test.classloading.vfs.metadata.support.a.A;
 import org.jboss.test.classloading.vfs.metadata.support.b.B;
 import org.jboss.test.classloading.vfs.metadata.support.c.C;
+import org.jboss.vfs.VFS;
 
 /**
  * VFSResourceVisitorUnitTestCase.
@@ -309,7 +310,7 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
             }
          };
 
-         URL aURL = new URL("vfs" + System.getProperty("test.dir") + "/support/a/");
+         URL aURL = new URL(System.getProperty("test.dir") + "/support/a/");
          Module module = assertModule("test:0.0.0");
          module.visit(visitor, visitor.getFilter(), null, aURL);
 
@@ -344,8 +345,8 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
             }
          };
 
-         URL aURL = new URL("vfs" + System.getProperty("test.dir") + "/support/a/");
-         URL bURL = new URL("vfs" + System.getProperty("test.dir") + "/support/b/");
+         URL aURL = new URL(System.getProperty("test.dir") + "/support/a/");
+         URL bURL = new URL(System.getProperty("test.dir") + "/support/b/");
          Module module = assertModule("test:0.0.0");
          module.visit(visitor, visitor.getFilter(), null, aURL, bURL);
 

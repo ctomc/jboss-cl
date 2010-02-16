@@ -28,10 +28,10 @@ import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
-import org.jboss.virtual.VirtualFile;
-import org.jboss.virtual.VirtualFileVisitor;
-import org.jboss.virtual.VisitorAttributes;
-import org.jboss.virtual.plugins.vfs.helpers.AbstractVirtualFileFilterWithAttributes;
+import org.jboss.vfs.VirtualFile;
+import org.jboss.vfs.VirtualFileVisitor;
+import org.jboss.vfs.VisitorAttributes;
+import org.jboss.vfs.util.AbstractVirtualFileFilterWithAttributes;
 
 /**
  * Visits a virtual file system recursively
@@ -244,7 +244,7 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
       try
       {
          // We don't want directories
-         if (file.isLeaf() == false)
+         if (file.isDirectory())
             return;
 
          // Determine the resource name

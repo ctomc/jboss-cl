@@ -35,8 +35,9 @@ import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.classloading.spi.vfs.policy.VFSClassLoaderPolicy;
 import org.jboss.test.BaseTestCase;
-import org.jboss.virtual.VFS;
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
+import org.jboss.vfs.util.automount.Automounter;
 
 /**
  * ShutdownUnitTestCase.
@@ -46,6 +47,26 @@ import org.jboss.virtual.VirtualFile;
  */
 public class ShutdownUnitTestCase extends BaseTestCase
 {
+   
+   private VirtualFile signedJar;
+   
+   @Override
+   protected void setUp() throws Exception
+   {
+      super.setUp();
+      URL signedJarURL = getResource("/classloader/signedjar");
+      VirtualFile signedJarRoot = VFS.getChild(signedJarURL);
+      signedJar = signedJarRoot.getChild("wstx.jar");
+      Automounter.mount(signedJar);
+   }
+
+   @Override
+   protected void tearDown() throws Exception
+   {
+      Automounter.cleanup(signedJar);
+      super.tearDown();
+   }
+
    public void testShutdownUnregisterDefault() throws Exception
    {
       VFSClassLoaderPolicy policy = getClassLoaderPolicy();;
@@ -68,9 +89,6 @@ public class ShutdownUnitTestCase extends BaseTestCase
 
    protected VFSClassLoaderPolicy getClassLoaderPolicy() throws Exception
    {
-      URL signedJarURL = getResource("/classloader/signedjar");
-      VirtualFile signedJarRoot = VFS.getRoot(signedJarURL);
-      VirtualFile signedJar = signedJarRoot.getChild("wstx.jar");
       VFSClassLoaderPolicy policy = VFSClassLoaderPolicy.createVFSClassLoaderPolicy(signedJar);
       return policy;
    }

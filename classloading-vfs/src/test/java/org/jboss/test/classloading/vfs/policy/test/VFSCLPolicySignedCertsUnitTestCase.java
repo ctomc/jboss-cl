@@ -21,9 +21,11 @@
 */
 package org.jboss.test.classloading.vfs.policy.test;
 
+import java.io.Closeable;
 import java.net.URL;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import junit.framework.Test;
 import org.jboss.classloader.plugins.system.DefaultClassLoaderSystem;
@@ -31,8 +33,10 @@ import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloading.spi.metadata.ExportAll;
 import org.jboss.classloading.spi.vfs.policy.VFSClassLoaderPolicy;
 import org.jboss.test.BaseTestCase;
-import org.jboss.virtual.VFS;
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.TempFileProvider;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VFSUtils;
+import org.jboss.vfs.VirtualFile;
 
 /**
  * Unit test JBCL-67
@@ -43,6 +47,8 @@ import org.jboss.virtual.VirtualFile;
  */
 public class VFSCLPolicySignedCertsUnitTestCase extends BaseTestCase
 {
+   private TempFileProvider provider;
+   
    public VFSCLPolicySignedCertsUnitTestCase(String name)
    {
       super(name);
@@ -51,6 +57,19 @@ public class VFSCLPolicySignedCertsUnitTestCase extends BaseTestCase
    public static Test suite()
    {
       return suite(VFSCLPolicySignedCertsUnitTestCase.class);
+   }
+   
+   protected void setUp() throws Exception
+   {
+      super.setUp();
+      provider = TempFileProvider.create("test", new ScheduledThreadPoolExecutor(2));
+   }
+
+   @Override
+   protected void tearDown() throws Exception
+   {
+      VFSUtils.safeClose(provider);
+      super.tearDown();
    }
 
    /**
@@ -63,22 +82,31 @@ public class VFSCLPolicySignedCertsUnitTestCase extends BaseTestCase
    public void testCertificates() throws Exception
    {
       URL signedJarURL = getResource("/classloader/signedjar");
-      VirtualFile signedJarRoot = VFS.getRoot(signedJarURL);
+      VirtualFile signedJarRoot = VFS.getChild(signedJarURL);
       VirtualFile signedJar = signedJarRoot.getChild("wstx.jar");
-      VFSClassLoaderPolicy policy = VFSClassLoaderPolicy.createVFSClassLoaderPolicy(signedJar);
-      policy.setExportAll(ExportAll.ALL);
-
-      ClassLoaderSystem system = new DefaultClassLoaderSystem();
-      ClassLoader classLoader = system.registerClassLoaderPolicy(policy);
-
-      Class<?> clazz = classLoader.loadClass("org.codehaus.stax2.validation.XMLValidator");
-      assertNotNull(clazz);
-      ProtectionDomain pd = clazz.getProtectionDomain();
-      assertNotNull("Protection Domain is null: " + clazz , pd);
-      Certificate[] certs = pd.getCodeSource().getCertificates();
-      assertNotNull("Certs are null: " + pd, certs);
-      assertTrue("Certs are empty.", certs.length > 0);
-      //RH, thawte, thawte root CA
-      assertEquals("Should be 3 certs.", 3, certs.length);
+      Closeable handle = null;
+      try 
+      {
+         handle = VFS.mountZip(signedJar, signedJar, provider);
+         VFSClassLoaderPolicy policy = VFSClassLoaderPolicy.createVFSClassLoaderPolicy(signedJar);
+         policy.setExportAll(ExportAll.ALL);
+   
+         ClassLoaderSystem system = new DefaultClassLoaderSystem();
+         ClassLoader classLoader = system.registerClassLoaderPolicy(policy);
+   
+         Class<?> clazz = classLoader.loadClass("org.codehaus.stax2.validation.XMLValidator");
+         assertNotNull(clazz);
+         ProtectionDomain pd = clazz.getProtectionDomain();
+         assertNotNull("Protection Domain is null: " + clazz , pd);
+         Certificate[] certs = pd.getCodeSource().getCertificates();
+         assertNotNull("Certs are null: " + pd, certs);
+         assertTrue("Certs are empty.", certs.length > 0);
+         //RH, thawte, thawte root CA
+         assertEquals("Should be 3 certs.", 3, certs.length);
+      }
+      finally
+      {
+         VFSUtils.safeClose(handle);
+      }
    }
 }

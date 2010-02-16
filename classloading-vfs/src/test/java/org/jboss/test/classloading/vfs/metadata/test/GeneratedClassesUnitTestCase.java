@@ -22,9 +22,10 @@
 package org.jboss.test.classloading.vfs.metadata.test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.util.concurrent.Executors;
 
 import junit.framework.Test;
 
@@ -38,9 +39,10 @@ import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTes
 import org.jboss.test.classloading.vfs.metadata.support.a.A;
 import org.jboss.test.classloading.vfs.metadata.support.b.B;
 import org.jboss.util.id.GUID;
-import org.jboss.virtual.MemoryFileFactory;
-import org.jboss.virtual.VFS;
-import org.jboss.virtual.plugins.context.memory.MemoryContextFactory;
+import org.jboss.vfs.TempFileProvider;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VFSUtils;
+import org.jboss.vfs.VirtualFile;
 
 /**
  * DomainUnitTestCase.
@@ -53,11 +55,11 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
    final static GeneratedClassInfo NEW_PACKAGE  = new GeneratedClassInfo("newpackage.GeneratedClass");
    final static GeneratedClassInfo OTHER_PACKAGE  = new GeneratedClassInfo("otherpackage.GeneratedClass");
    final static GeneratedClassInfo EXISTING_PACKAGE  = new GeneratedClassInfo("org.jboss.test.classloading.vfs.metadata.support.a.GeneratedClass");
-   static
-   {
-      VFS.init();
-   }
    
+   private Closeable tempDirectoryHandle;
+   private VirtualFile tempDirectory;
+   private TempFileProvider tempFileProvider;
+
    public static Test suite()
    {
       return suite(GeneratedClassesUnitTestCase.class);
@@ -66,6 +68,18 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
    public GeneratedClassesUnitTestCase(String name)
    {
       super(name);
+   }
+   
+   @Override
+   protected void setUp() throws Exception
+   {
+      super.setUp();
+      tempFileProvider = TempFileProvider.create("test", Executors.newScheduledThreadPool(2));
+   }
+
+   protected void tearDown() throws Exception 
+   {
+      VFSUtils.safeClose(tempDirectoryHandle, tempFileProvider);
    }
 
    public void testImportAllGenerateClassInExistingPackage() throws Exception
@@ -86,11 +100,11 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
    private void runImportAllGenerateClass(GeneratedClassInfo info, boolean expectSuccess) throws Exception
    {
       ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
-      String dynamicClassRoot = getDynamicClassRoot();
+      VirtualFile dynamicClassRoot = getDynamicClassRoot();
       VFSClassLoaderFactory a = new VFSClassLoaderFactory("a");
       a.setImportAll(true);
       a.getRoots().add(getRoot(A.class));
-      a.getRoots().add(dynamicClassRoot);
+      a.getRoots().add(dynamicClassRoot.toURL().toString());
       a.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
       KernelDeployment depA = install(a);
 
@@ -138,12 +152,12 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
       }
    }
 
-   private Class<?> generateClass(ClassLoader loader, String dynamicClassRoot, GeneratedClassInfo info) throws Exception
+   private Class<?> generateClass(ClassLoader loader, VirtualFile dynamicClassRoot, GeneratedClassInfo info) throws Exception
    {
-      URL outputURL = new URL(dynamicClassRoot + "/" + info.getResourceName());
-      MemoryContextFactory factory = MemoryContextFactory.getInstance();
-      factory.putFile(outputURL, info.getClassBytes());
+      VirtualFile output = dynamicClassRoot.getChild(info.getResourceName());
       
+      VFSUtils.writeFile(output, info.getClassBytes());
+
       if (loader instanceof RealClassLoader)
       {
          ((RealClassLoader)loader).clearBlackList(info.getResourceName());
@@ -151,11 +165,14 @@ public class GeneratedClassesUnitTestCase extends VFSClassLoadingMicrocontainerT
       return loader.loadClass(info.getClassname());
    }
    
-   private String getDynamicClassRoot() throws Exception
+   private VirtualFile getDynamicClassRoot() throws Exception
    {
-      URL dynamicClassRoot = new URL("vfsmemory", GUID.asString(), "");
-      MemoryFileFactory.createRoot(dynamicClassRoot).getRoot();
-      return dynamicClassRoot.toString();
+      if(tempDirectory == null)
+      {
+         tempDirectory = VFS.getChild("/" + GUID.asString());
+         tempDirectoryHandle = VFS.mountTemp(tempDirectory, tempFileProvider);
+      }
+      return tempDirectory;
    }
 
    private static class GeneratedClassInfo
