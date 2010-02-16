@@ -887,8 +887,8 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          {
             Class<?> result = loadClassLocally(name, trace);
 
-            // Try the classpath for java classes
-            if (result == null && ClassFilterUtils.JAVA_ONLY.matchesClassName(name))
+            // Try the classpath for java classes or requests from the classpath
+            if (result == null && (ClassFilterUtils.JAVA_ONLY.matchesClassName(name) || basePolicy.isJDKRequest(name) != null))
                result = getSystemClassLoader().loadClass(name);
             
             // So this is almost certainly a classloader leak
