@@ -48,7 +48,6 @@ import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTes
 import org.jboss.test.classloading.vfs.metadata.support.a.A;
 import org.jboss.test.classloading.vfs.metadata.support.b.B;
 import org.jboss.test.classloading.vfs.metadata.support.c.C;
-import org.jboss.vfs.VFS;
 
 /**
  * VFSResourceVisitorUnitTestCase.
