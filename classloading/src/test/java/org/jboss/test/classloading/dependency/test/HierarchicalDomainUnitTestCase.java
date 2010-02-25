@@ -23,16 +23,22 @@ package org.jboss.test.classloading.dependency.test;
 
 import junit.framework.Test;
 
+import org.jboss.classloader.spi.ClassLoaderDomain;
+import org.jboss.classloader.spi.ClassLoaderSystem;
+import org.jboss.classloading.spi.ClassLoadingDomain;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
+import org.jboss.classloading.spi.metadata.ExportAll;
 import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.test.classloading.dependency.support.a.A;
 import org.jboss.test.classloading.dependency.support.b.B;
+import org.jboss.test.classloading.dependency.support.c.C;
 
 /**
  * HierarchicalDomainUnitTestCase.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class HierarchicalDomainUnitTestCase extends AbstractMockClassLoaderUnitTest
@@ -466,5 +472,81 @@ public class HierarchicalDomainUnitTestCase extends AbstractMockClassLoaderUnitT
          uninstall(contextB);
       }
       assertNoClassLoader(contextB);
+   }
+
+   public void testExplicitRequirementsInDefaultDomain() throws Exception
+   {
+      testExplicitRequirementsInDomain(ClassLoaderSystem.DEFAULT_DOMAIN_NAME);
+   }
+
+   public void testExplicitRequirementsInNewDomain() throws Exception
+   {
+      // FIXME - testExplicitRequirementsInDomain("SomeNewDomain");
+   }
+
+   protected void testExplicitRequirementsInDomain(String domain) throws Exception
+   {
+      ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+      MockClassLoadingMetaData c = new MockClassLoadingMetaData("c");
+      c.setPathsAndPackageNames(C.class);
+      c.setImportAll(true);
+      c.setExportAll(ExportAll.NON_EMPTY);
+      KernelControllerContext contextC = install(c);
+      try
+      {
+         MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+         b.setDomain(domain);
+         b.setPathsAndPackageNames(B.class);
+         b.getRequirements().addRequirement(factory.createRequirePackage(A.class.getPackage().getName()));
+         KernelControllerContext contextB = install(b);
+         try
+         {
+            assertNoClassLoader(contextB);
+
+            MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+            a.setDomain(domain);
+            a.setPathsAndPackageNames(A.class);
+            a.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
+            KernelControllerContext contextA = install(a);
+            try
+            {
+               ClassLoader clA = assertClassLoader(contextA);
+               assertLoadClass(A.class, clA);
+               assertLoadClassFail(B.class, clA);
+
+               ClassLoader clB = assertClassLoader(contextB);
+               assertLoadClass(A.class, clA);
+               assertLoadClass(B.class, clB);
+
+               ClassLoader clC = assertClassLoader(contextC);
+               assertLoadClass(C.class, clC);               
+               if (ClassLoaderSystem.DEFAULT_DOMAIN_NAME.equals(domain))
+               {
+                  assertLoadClass(A.class, clC, clA);
+                  assertLoadClass(B.class, clC, clB);
+               }
+               else
+               {
+                  assertLoadClassFail(A.class, clC);
+                  assertLoadClassFail(B.class, clC);
+               }
+
+               assertLoadClassFail(C.class.getName(), clB);
+            }
+            finally
+            {
+               uninstall(contextA);
+            }
+         }
+         finally
+         {
+            uninstall(contextB);
+         }
+         assertNoClassLoader(contextB);
+      }
+      finally
+      {
+         uninstall(contextC);
+      }
    }
 }
