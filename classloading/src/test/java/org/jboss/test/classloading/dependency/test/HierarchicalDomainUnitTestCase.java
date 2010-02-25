@@ -22,10 +22,7 @@
 package org.jboss.test.classloading.dependency.test;
 
 import junit.framework.Test;
-
-import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
-import org.jboss.classloading.spi.ClassLoadingDomain;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.ExportAll;
