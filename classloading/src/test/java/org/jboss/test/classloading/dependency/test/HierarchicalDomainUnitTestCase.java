@@ -22,7 +22,9 @@
 package org.jboss.test.classloading.dependency.test;
 
 import junit.framework.Test;
+import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
+import org.jboss.classloader.spi.ParentPolicy;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.ExportAll;
@@ -473,15 +475,29 @@ public class HierarchicalDomainUnitTestCase extends AbstractMockClassLoaderUnitT
 
    public void testExplicitRequirementsInDefaultDomain() throws Exception
    {
-      testExplicitRequirementsInDomain(ClassLoaderSystem.DEFAULT_DOMAIN_NAME);
+      testExplicitRequirementsInDomain(ClassLoaderSystem.DEFAULT_DOMAIN_NAME, true);
    }
 
    public void testExplicitRequirementsInNewDomain() throws Exception
    {
-      // FIXME - testExplicitRequirementsInDomain("SomeNewDomain");
+      testExplicitRequirementsInDomain("SomeNewDomain", false);
    }
 
-   protected void testExplicitRequirementsInDomain(String domain) throws Exception
+   public void testExplicitRequirementsInNewDomainWithFilter() throws Exception
+   {
+      String domainName = "SomeNewDomain";
+      ClassLoaderDomain domain = system.createAndRegisterDomain(domainName, ParentPolicy.BEFORE_BUT_JAVA_ONLY, system.getDefaultDomain());
+      try
+      {
+         testExplicitRequirementsInDomain(domainName, true);
+      }
+      finally
+      {
+         system.unregisterDomain(domain);
+      }
+   }
+
+   protected void testExplicitRequirementsInDomain(String domain, boolean fail) throws Exception
    {
       ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
       MockClassLoadingMetaData c = new MockClassLoadingMetaData("c");
@@ -528,7 +544,10 @@ public class HierarchicalDomainUnitTestCase extends AbstractMockClassLoaderUnitT
                   assertLoadClassFail(B.class, clC);
                }
 
-               assertLoadClassFail(C.class.getName(), clB);
+               if (fail)
+                  assertLoadClassFail(C.class.getName(), clB);
+               else
+                  assertLoadClass(C.class.getName(), clB, clC);
             }
             finally
             {
