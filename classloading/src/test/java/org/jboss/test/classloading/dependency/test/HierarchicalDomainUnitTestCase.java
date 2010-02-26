@@ -25,6 +25,8 @@ import junit.framework.Test;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.ParentPolicy;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
+import org.jboss.classloader.spi.filter.PackageClassFilter;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.ExportAll;
@@ -32,6 +34,7 @@ import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.test.classloading.dependency.support.a.A;
 import org.jboss.test.classloading.dependency.support.b.B;
 import org.jboss.test.classloading.dependency.support.c.C;
+import org.jboss.test.classloading.dependency.support.d.D;
 
 /**
  * HierarchicalDomainUnitTestCase.
@@ -475,21 +478,21 @@ public class HierarchicalDomainUnitTestCase extends AbstractMockClassLoaderUnitT
 
    public void testExplicitRequirementsInDefaultDomain() throws Exception
    {
-      testExplicitRequirementsInDomain(ClassLoaderSystem.DEFAULT_DOMAIN_NAME, true);
+      testExplicitRequirementsInDomain(ClassLoaderSystem.DEFAULT_DOMAIN_NAME, true, true);
    }
 
    public void testExplicitRequirementsInNewDomain() throws Exception
    {
-      testExplicitRequirementsInDomain("SomeNewDomain", false);
+      testExplicitRequirementsInDomain("SomeNewDomain", false, false);
    }
 
-   public void testExplicitRequirementsInNewDomainWithFilter() throws Exception
+   public void testExplicitRequirementsInNewDomainWithJavaOnly() throws Exception
    {
       String domainName = "SomeNewDomain";
       ClassLoaderDomain domain = system.createAndRegisterDomain(domainName, ParentPolicy.BEFORE_BUT_JAVA_ONLY, system.getDefaultDomain());
       try
       {
-         testExplicitRequirementsInDomain(domainName, true);
+         testExplicitRequirementsInDomain(domainName, true, true);
       }
       finally
       {
@@ -497,11 +500,26 @@ public class HierarchicalDomainUnitTestCase extends AbstractMockClassLoaderUnitT
       }
    }
 
-   protected void testExplicitRequirementsInDomain(String domain, boolean fail) throws Exception
+   public void testExplicitRequirementsInNewDomainWithFilter() throws Exception
+   {
+      String domainName = "SomeNewDomain";
+      ParentPolicy parentPolicy = new ParentPolicy(new PackageClassFilter(new String[]{D.class.getPackage().getName()}), ClassFilterUtils.NOTHING);
+      ClassLoaderDomain domain = system.createAndRegisterDomain(domainName, parentPolicy, system.getDefaultDomain());
+      try
+      {
+         testExplicitRequirementsInDomain(domainName, true, false);
+      }
+      finally
+      {
+         system.unregisterDomain(domain);
+      }
+   }
+
+   protected void testExplicitRequirementsInDomain(String domain, boolean failC, boolean failD) throws Exception
    {
       ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
       MockClassLoadingMetaData c = new MockClassLoadingMetaData("c");
-      c.setPathsAndPackageNames(C.class);
+      c.setPathsAndPackageNames(C.class, D.class);
       c.setImportAll(true);
       c.setExportAll(ExportAll.NON_EMPTY);
       KernelControllerContext contextC = install(c);
@@ -544,10 +562,15 @@ public class HierarchicalDomainUnitTestCase extends AbstractMockClassLoaderUnitT
                   assertLoadClassFail(B.class, clC);
                }
 
-               if (fail)
+               if (failC)
                   assertLoadClassFail(C.class.getName(), clB);
                else
                   assertLoadClass(C.class.getName(), clB, clC);
+
+               if (failD)
+                  assertLoadClassFail(D.class.getName(), clB);
+               else
+                  assertLoadClass(D.class.getName(), clB, clC);
             }
             finally
             {

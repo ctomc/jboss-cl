@@ -21,18 +21,14 @@
  */
 package org.jboss.test.classloading.dependency.test;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import junit.framework.Test;
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.filter.PackageClassFilter;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoaderPolicyModule;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
+import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
-import org.jboss.classloading.spi.visitor.ResourceContext;
 import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.test.classloading.dependency.support.MockFederatedResourceVisitor;
 import org.jboss.test.classloading.dependency.support.MockFilteredResourceVisitor;
@@ -41,6 +37,11 @@ import org.jboss.test.classloading.dependency.support.ResourcesAdapter;
 import org.jboss.test.classloading.dependency.support.a.A;
 import org.jboss.test.classloading.dependency.support.b.B;
 import org.jboss.test.classloading.dependency.support.c.C;
+import org.jboss.test.classloading.dependency.support.d.D;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * MockResourceVisitorUnitTestCase.
@@ -54,6 +55,7 @@ public class MockResourceVisitorUnitTestCase extends AbstractMockClassLoaderUnit
       ClassLoaderUtils.packageNameToPath(A.class.getName()),
       ClassLoaderUtils.packageNameToPath(B.class.getName()),
       ClassLoaderUtils.packageNameToPath(C.class.getName()),
+      ClassLoaderUtils.packageNameToPath(D.class.getName()),
    };
 
    private static String[] classes = new String[]
@@ -61,6 +63,7 @@ public class MockResourceVisitorUnitTestCase extends AbstractMockClassLoaderUnit
       ClassLoaderUtils.classNameToPath(A.class),
       ClassLoaderUtils.classNameToPath(B.class),
       ClassLoaderUtils.classNameToPath(C.class),
+      ClassLoaderUtils.classNameToPath(D.class),
    };
 
    public static Test suite()
@@ -84,7 +87,10 @@ public class MockResourceVisitorUnitTestCase extends AbstractMockClassLoaderUnit
    {
       MockClassLoadingMetaData a = createClassLoadingMetaData("a");
       a.setIncluded(new PackageClassFilter(new String[]{A.class.getPackage().getName(), B.class.getPackage().getName()}));
-      testMockClassLoadingMetaData(a);
+      Set<String> resources = new HashSet<String>(Arrays.asList(classes));
+      resources.remove(ClassLoaderUtils.classNameToPath(C.class));
+      resources.remove(ClassLoaderUtils.classNameToPath(D.class));
+      testMockClassLoadingMetaData(a, new MockResourceVisitor(), resources);
    }
 
    public void testExcluded() throws Exception
