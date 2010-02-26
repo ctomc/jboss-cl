@@ -21,7 +21,10 @@
  */
 package org.jboss.test.classloading.dependency.test;
 
-import junit.framework.Test;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.filter.PackageClassFilter;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoaderPolicyModule;
@@ -39,9 +42,7 @@ import org.jboss.test.classloading.dependency.support.b.B;
 import org.jboss.test.classloading.dependency.support.c.C;
 import org.jboss.test.classloading.dependency.support.d.D;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import junit.framework.Test;
 
 /**
  * MockResourceVisitorUnitTestCase.

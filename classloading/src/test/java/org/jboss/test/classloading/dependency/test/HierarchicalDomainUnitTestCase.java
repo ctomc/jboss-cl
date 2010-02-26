@@ -21,7 +21,6 @@
  */
 package org.jboss.test.classloading.dependency.test;
 
-import junit.framework.Test;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.ParentPolicy;
@@ -35,6 +34,8 @@ import org.jboss.test.classloading.dependency.support.a.A;
 import org.jboss.test.classloading.dependency.support.b.B;
 import org.jboss.test.classloading.dependency.support.c.C;
 import org.jboss.test.classloading.dependency.support.d.D;
+
+import junit.framework.Test;
 
 /**
  * HierarchicalDomainUnitTestCase.
