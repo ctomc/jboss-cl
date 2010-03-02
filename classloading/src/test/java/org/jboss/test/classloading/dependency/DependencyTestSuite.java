@@ -25,6 +25,8 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
+import org.jboss.test.classloading.dependency.test.ClassLoadingAdminLazyShutdownUnitTestCase;
+import org.jboss.test.classloading.dependency.test.ClassLoadingAdminUnitTestCase;
 import org.jboss.test.classloading.dependency.test.ConflictingPackageUnitTestCase;
 import org.jboss.test.classloading.dependency.test.ConflictingRequirementUnitTestCase;
 import org.jboss.test.classloading.dependency.test.DependencyUnitTestCase;
@@ -42,7 +44,7 @@ import org.jboss.test.classloading.dependency.test.UsesPackageUnitTestCase;
 import org.jboss.test.classloading.dependency.test.MockResourceVisitorUnitTestCase;
 
 /**
- * Version Test Suite.
+ * Dependency Test Suite.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 37459 $
@@ -83,6 +85,8 @@ public class DependencyTestSuite extends TestSuite
       suite.addTest(ConflictingRequirementUnitTestCase.suite());
       suite.addTest(SplitPackageDependencyUnitTestCase.suite());
       suite.addTest(SelfImportPackageDependencyUnitTestCase.suite());
+      suite.addTest(ClassLoadingAdminUnitTestCase.suite());
+      suite.addTest(ClassLoadingAdminLazyShutdownUnitTestCase.suite());
 
       return suite;
    }

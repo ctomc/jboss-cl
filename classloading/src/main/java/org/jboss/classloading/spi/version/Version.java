@@ -65,6 +65,17 @@ public class Version implements Serializable, Comparable<Version>
 
    /** The qualifier part of the version */
    private String qualifier;
+   
+   /**
+    * Get the version from a string
+    * 
+    * @param string the string
+    * @return the version 
+    */
+   public static Version valueOf(String string)
+   {
+      return parseVersion(string);
+   }
 
    /**
     * Create a new Version.
@@ -147,7 +158,7 @@ public class Version implements Serializable, Comparable<Version>
       }
       catch (NumberFormatException e)
       {
-         throw new IllegalArgumentException("Invalid version format: " + version);
+         throw new IllegalArgumentException("Invalid version format: " + version, e);
       }
 
       this.major = major;

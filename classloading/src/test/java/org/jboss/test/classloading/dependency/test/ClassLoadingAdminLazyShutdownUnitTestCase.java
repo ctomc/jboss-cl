@@ -19,45 +19,24 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.test.classloading.lifecycle;
+package org.jboss.test.classloading.dependency.test;
 
 import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.textui.TestRunner;
-
-import org.jboss.test.classloading.lifecycle.test.LifeCycleUnitTestCase;
-import org.jboss.test.classloading.lifecycle.test.RefreshModulesUnitTestCase;
 
 /**
- * LifeCycle Test Suite.
- * 
- * @author <a href="adrian@jboss.com">Adrian Brock</a>
- * @version $Revision: 37459 $
+ * ClassLoadingAdmin unit tests
+ *
+ * @author adrian@jboss.org
  */
-public class LifeCycleTestSuite extends TestSuite
+public class ClassLoadingAdminLazyShutdownUnitTestCase extends ClassLoadingAdminUnitTestCase
 {
-   /**
-    * For running the testsuite from the command line
-    * 
-    * @param args the command line args
-    */
-   public static void main(String[] args)
-   {
-      TestRunner.run(suite());
-   }
-
-   /**
-    * Create the testsuite
-    * 
-    * @return the testsuite
-    */
    public static Test suite()
    {
-      TestSuite suite = new TestSuite("LifeCycle Tests");
+      return suite(ClassLoadingAdminLazyShutdownUnitTestCase.class);
+   }
 
-      suite.addTest(LifeCycleUnitTestCase.suite());
-      suite.addTest(RefreshModulesUnitTestCase.suite());
-
-      return suite;
+   public ClassLoadingAdminLazyShutdownUnitTestCase(String name)
+   {
+      super(name, true);
    }
 }

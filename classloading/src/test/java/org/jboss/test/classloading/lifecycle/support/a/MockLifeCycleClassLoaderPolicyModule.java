@@ -70,4 +70,18 @@ public class MockLifeCycleClassLoaderPolicyModule extends MockClassLoaderPolicyM
          throw new Error("Error", t);
       }
    }
+   
+   void unresolveIt()
+   {
+      ControllerContext context = getControllerContext();
+      Controller controller = context.getController();
+      try
+      {
+         controller.change(context, ControllerState.CONFIGURED);
+      }
+      catch (Throwable t)
+      {
+         throw new Error("Error", t);
+      }
+   }
 }

@@ -24,12 +24,14 @@ package org.jboss.test.classloading.lifecycle.test;
 import junit.framework.Test;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.test.classloading.lifecycle.support.a.A;
 import org.jboss.test.classloading.lifecycle.support.a.MockLifeCycle;
+import org.jboss.test.classloading.lifecycle.support.a.MockLifeCycleClassLoaderPolicyModule;
 
 /**
  * LifeCycleUnitTestCase.
@@ -79,6 +81,70 @@ public class LifeCycleUnitTestCase extends AbstractMockLifeCycleUnitTest
       finally
       {
          uninstall(context);
+      }
+   }
+   
+   public void testResolveUsingClassLoadingAdmin() throws Exception
+   {
+      MockClassLoadingMetaData metaData1 = new MockClassLoadingMetaData("test1");
+      KernelControllerContext context1 = install(metaData1);
+      try
+      {
+         MockLifeCycleClassLoaderPolicyModule module1 = assertMockClassPolicyModule(context1);
+         assertNotResolved(context1);
+
+         MockClassLoadingMetaData metaData2 = new MockClassLoadingMetaData("test2");
+         KernelControllerContext context2 = install(metaData2);
+         try
+         {
+            MockLifeCycleClassLoaderPolicyModule module2 = assertMockClassPolicyModule(context2);
+            assertNotResolved(context2);
+         
+            assertTrue(classLoading.resolveModules(module1, module2));
+            assertResolved(context1);
+            assertResolved(context2);
+         }
+         finally
+         {
+            uninstall(context2);
+         }
+      }
+      finally
+      {
+         uninstall(context1);
+      }
+   }
+   
+   public void testNotResolvedUsingClassLoadingAdmin() throws Exception
+   {
+      MockClassLoadingMetaData metaData1 = new MockClassLoadingMetaData("test1");
+      KernelControllerContext context1 = install(metaData1);
+      try
+      {
+         MockLifeCycleClassLoaderPolicyModule module1 = assertMockClassPolicyModule(context1);
+         assertNotResolved(context1);
+
+         ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+         MockClassLoadingMetaData metaData2 = new MockClassLoadingMetaData("test2");
+         metaData2.getRequirements().addRequirement(factory.createRequireModule("doesNotExist"));
+         KernelControllerContext context2 = install(metaData2);
+         try
+         {
+            MockLifeCycleClassLoaderPolicyModule module2 = assertMockClassPolicyModule(context2);
+            assertNotResolved(context2);
+         
+            assertFalse(classLoading.resolveModules(module1, module2));
+            assertResolved(context1);
+            assertNotResolved(context2);
+         }
+         finally
+         {
+            uninstall(context2);
+         }
+      }
+      finally
+      {
+         uninstall(context1);
       }
    }
    
@@ -177,7 +243,7 @@ public class LifeCycleUnitTestCase extends AbstractMockLifeCycleUnitTest
       {
          assertNotResolved(context);
          MockLifeCycle lifeCycleA = assertNotResolved(contextA);
-         lifeCycleA.lazyResolve = true;
+         lifeCycleA.setLazyResolve(true);
          
          resolve(context);
          ClassLoader cl = assertResolved(context);
@@ -213,6 +279,30 @@ public class LifeCycleUnitTestCase extends AbstractMockLifeCycleUnitTest
       }
    }
    
+   public void testNotLazyStartWithFilter() throws Exception
+   {
+      MockClassLoadingMetaData metaData = new MockClassLoadingMetaData("test");
+      metaData.setPathsAndPackageNames(A.class);
+      KernelControllerContext context = install(metaData);
+      try
+      {
+         assertNotResolved(context);
+         MockLifeCycle lifeCycle = assertNotResolved(context);
+         lifeCycle.setLazyStart(true);
+         lifeCycle.setLazyStartFilter(ClassFilterUtils.NOTHING);
+         
+         resolve(context);
+         ClassLoader cl = assertResolved(context);
+         assertLoadClass(A.class, cl);
+         assertResolved(context);
+         assertFalse("Should NOT get start invocation", lifeCycle.gotStart);
+      }
+      finally
+      {
+         uninstall(context);
+      }
+   }
+   
    public void testLazyStart() throws Exception
    {
       MockClassLoadingMetaData metaData = new MockClassLoadingMetaData("test");
@@ -221,7 +311,30 @@ public class LifeCycleUnitTestCase extends AbstractMockLifeCycleUnitTest
       try
       {
          MockLifeCycle lifeCycle = assertNotResolved(context);
-         lifeCycle.lazyStart = true;
+         lifeCycle.setLazyStart(true);
+         
+         resolve(context);
+         ClassLoader cl = assertResolved(context);
+         assertLoadClass(A.class, cl);
+         assertTrue("Should get start invocation", lifeCycle.gotStart);
+      }
+      finally
+      {
+         uninstall(context);
+      }
+   }
+   
+   public void testLazyStartWithFilter() throws Exception
+   {
+      MockClassLoadingMetaData metaData = new MockClassLoadingMetaData("test");
+      metaData.setPathsAndPackageNames(A.class);
+      KernelControllerContext context = install(metaData);
+      try
+      {
+         assertNotResolved(context);
+         MockLifeCycle lifeCycle = assertNotResolved(context);
+         lifeCycle.setLazyStart(true);
+         lifeCycle.setLazyStartFilter(ClassFilterUtils.createPackageClassFilter(ClassLoaderUtils.getClassPackageName(A.class.getName())));
          
          resolve(context);
          ClassLoader cl = assertResolved(context);

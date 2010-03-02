@@ -235,6 +235,70 @@ public class VersionRangeUnitTestCase extends AbstractClassLoadingTestWithSecuri
       assertEquals(range, other);
    }
    
+   public void testParseVersionRange() throws Exception
+   {
+      testParseVersionRange("", null, true, null, true);
+
+      testParseVersionRange("[,]", null, true, null, true);
+      testParseVersionRange("[,)", null, true, null, false);
+      testParseVersionRange("(,]", null, false, null, true);
+      testParseVersionRange("(,)", null, false, null, false);
+      
+      testParseVersionRange("2.0.0", "2.0.0", true, "2.0.0", true);
+      testParseVersionRange("[2.0.0]", "2.0.0", true, "2.0.0", true);
+      testParseVersionRange("[2.0.0)", "2.0.0", true, null, false);
+      testParseVersionRange("(2.0.0)", "2.0.0", false, null, false);
+
+      testParseVersionRange("[,2.0.0]", null, true, "2.0.0", true);
+      testParseVersionRange("[1.0.0,]", "1.0.0", true, "1.0.0", true);
+
+      testParseVersionRange("[1.0.0,1.0.0]", "1.0.0", true, "1.0.0", true);
+
+      testParseVersionRange("[1.0.0,2.0.0]", "1.0.0", true, "2.0.0", true);
+      testParseVersionRange("[1.0.0,2.0.0)", "1.0.0", true, "2.0.0", false);
+      testParseVersionRange("(1.0.0,2.0.0]", "1.0.0", false, "2.0.0", true);
+      testParseVersionRange("(1.0.0,2.0.0)", "1.0.0", false, "2.0.0", false);
+
+      testParseVersionRange(" (1.0.0,2.0.0)", "1.0.0", false, "2.0.0", false);
+      testParseVersionRange("( 1.0.0,2.0.0)", "1.0.0", false, "2.0.0", false);
+      testParseVersionRange("(1.0.0 ,2.0.0)", "1.0.0", false, "2.0.0", false);
+      testParseVersionRange("(1.0.0, 2.0.0)", "1.0.0", false, "2.0.0", false);
+      testParseVersionRange("(1.0.0,2.0.0 )", "1.0.0", false, "2.0.0", false);
+      testParseVersionRange("(1.0.0,2.0.0) ", "1.0.0", false, "2.0.0", false);
+
+      testBadParseVersionRange(null, IllegalArgumentException.class);
+      testBadParseVersionRange("x", IllegalArgumentException.class);
+      testBadParseVersionRange("1,", IllegalArgumentException.class);
+      testBadParseVersionRange(",1", IllegalArgumentException.class);
+      testBadParseVersionRange("1,x", IllegalArgumentException.class);
+      testBadParseVersionRange("x,1", IllegalArgumentException.class);
+
+      testBadParseVersionRange("[", IllegalArgumentException.class);
+      testBadParseVersionRange("(", IllegalArgumentException.class);
+      testBadParseVersionRange("]", IllegalArgumentException.class);
+      testBadParseVersionRange(")", IllegalArgumentException.class);
+      testBadParseVersionRange(",", IllegalArgumentException.class);
+      testBadParseVersionRange("[1,2", IllegalArgumentException.class);
+      testBadParseVersionRange("(1,2", IllegalArgumentException.class);
+      testBadParseVersionRange("1,2]", IllegalArgumentException.class);
+      testBadParseVersionRange("1,2)", IllegalArgumentException.class);
+      testBadParseVersionRange("[x]", IllegalArgumentException.class);
+      testBadParseVersionRange("[1,x]", IllegalArgumentException.class);
+      testBadParseVersionRange("[x,1]", IllegalArgumentException.class);
+
+      testBadParseVersionRangeWrongPlace("[");
+      testBadParseVersionRangeWrongPlace("(");
+      testBadParseVersionRangeWrongPlace("]");
+      testBadParseVersionRangeWrongPlace(")");
+      testBadParseVersionRangeWrongPlace(",");
+
+      testBadParseVersionRange("(1.0.0]", IllegalArgumentException.class);
+      testBadParseVersionRange("(1.0.0,0.0.0)", IllegalArgumentException.class);
+      testBadParseVersionRange("(1.0.0,1.0.0)", IllegalArgumentException.class);
+      testBadParseVersionRange("[1.0.0,1.0.0)", IllegalArgumentException.class);
+      testBadParseVersionRange("(1.0.0,1.0.0]", IllegalArgumentException.class);
+   }
+   
    protected void testVersionRangeFromString(String low)
    {
       testVersionRange(low);
@@ -553,5 +617,43 @@ public class VersionRangeUnitTestCase extends AbstractClassLoadingTestWithSecuri
          assertTrue("Expected " + range1 + ".isConsistent(" + range2 + ") to be true", range1.isConsistent(range2));
       else
          assertFalse("Expected " + range1 + ".isConsistent(" + range2 + ") to be false", range1.isConsistent(range2));
+   }
+   
+   protected void testParseVersionRange(String range, String low, boolean lowInclusive, String high, boolean highInclusive) throws Exception
+   {
+      VersionRange expected = new VersionRange(low, lowInclusive, high, highInclusive);
+      VersionRange actual = VersionRange.parseRangeSpec(range);
+      assertEquals(expected, actual);
+   }
+   
+   protected void testBadParseVersionRange(String range, Class<? extends Throwable> expected) throws Exception
+   {
+      try
+      {
+         VersionRange.parseRangeSpec(range);
+         fail("Should not be here: " + range);
+      }
+      catch (Throwable t)
+      {
+         checkThrowable(expected, t);
+      }
+   }
+   
+   protected void testBadParseVersionRangeWrongPlace(String wrong) throws Exception
+   {
+      testBadParseVersionRangeWrongPlace("[", "]", wrong);
+      testBadParseVersionRangeWrongPlace("[", ")", wrong);
+      testBadParseVersionRangeWrongPlace("(", "]", wrong);
+      testBadParseVersionRangeWrongPlace("(", ")", wrong);
+   }
+   
+   protected void testBadParseVersionRangeWrongPlace(String start, String end, String wrong) throws Exception
+   {
+      testBadParseVersionRange(wrong + start + "1,2" + end, IllegalArgumentException.class);
+      testBadParseVersionRange(start + wrong + "1,2" + end, IllegalArgumentException.class);
+      testBadParseVersionRange(start + "1" + wrong + ",2" + end, IllegalArgumentException.class);
+      testBadParseVersionRange(start + "1," + wrong + "2" + end, IllegalArgumentException.class);
+      testBadParseVersionRange(start + "1,2" + wrong + end, IllegalArgumentException.class);
+      testBadParseVersionRange(start + "1,2" + end + wrong, IllegalArgumentException.class);
    }
 }

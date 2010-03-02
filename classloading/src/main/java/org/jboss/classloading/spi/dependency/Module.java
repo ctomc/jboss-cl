@@ -26,6 +26,7 @@ import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderSystem;
@@ -57,10 +59,12 @@ import org.jboss.classloading.spi.metadata.OptionalPackages;
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
+import org.jboss.dependency.spi.Controller;
 import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerState;
 import org.jboss.dependency.spi.DependencyInfo;
 import org.jboss.dependency.spi.DependencyItem;
+import org.jboss.logging.Logger;
 
 /**
  * Module.
@@ -73,8 +77,14 @@ public abstract class Module extends NameAndVersionSupport
    /** The serialVersionUID */
    private static final long serialVersionUID = 1L;
 
+   /** The log */
+   private static final Logger log = Logger.getLogger(Module.class);
+   
    /** The modules by classloader */
    private static Map<ClassLoader, Module> modulesByClassLoader = new ConcurrentHashMap<ClassLoader, Module>();
+   
+   /** The lazily shutdown modules */
+   private static Set<Module> lazyShutdownModules = new CopyOnWriteArraySet<Module>();
    
    /** The context name */
    private String contextName;
@@ -100,6 +110,12 @@ public abstract class Module extends NameAndVersionSupport
    /** Any lifecycle associated with the classloader */
    private LifeCycle lifeCycle;
    
+   /** The remembered policy for cascade shutdown */
+   private Boolean cascadeShutdown;
+   
+   /** Requirements resolved to us */
+   private Set<RequirementDependencyItem> depends = new CopyOnWriteArraySet<RequirementDependencyItem>();
+   
    /**
     * Register a classloader for a module
     * 
@@ -118,7 +134,8 @@ public abstract class Module extends NameAndVersionSupport
 
       // This is hack - we might not know until the classloader gets constructed whether
       // it is in a domain that specifies lazy shutdown of the classloader
-      if (module.isCascadeShutdown() == false)
+      module.cascadeShutdown = module.isCascadeShutdown();
+      if (module.cascadeShutdown == false)
          module.enableLazyShutdown();
       
       LifeCycle lifeCycle = module.getLifeCycle();
@@ -141,10 +158,15 @@ public abstract class Module extends NameAndVersionSupport
          throw new IllegalArgumentException("Null classloader");
 
       modulesByClassLoader.remove(classLoader);
-
+      
+      module.unresolveDependencies();
+      
       LifeCycle lifeCycle = module.getLifeCycle();
       if (lifeCycle != null)
          lifeCycle.fireUnresolved();
+      
+      if (module.isCascadeShutdown() == false && module.depends.isEmpty() == false)
+         lazyShutdownModules.add(module);
    }
    
    /**
@@ -211,7 +233,7 @@ public abstract class Module extends NameAndVersionSupport
       this.domain = domain;
    }
 
-   Domain checkDomain()
+   protected Domain checkDomain()
    {
       Domain result = domain;
       if (result == null)
@@ -325,6 +347,10 @@ public abstract class Module extends NameAndVersionSupport
     */
    public boolean isCascadeShutdown()
    {
+      // Has it been determined?
+      if (cascadeShutdown != null)
+         return cascadeShutdown;
+      
       // This is ugly
       ClassLoader cl = getClassLoader();
       if (cl != null && cl instanceof BaseClassLoader)
@@ -458,6 +484,28 @@ public abstract class Module extends NameAndVersionSupport
    /**
     * Find the module that loads a class
     * 
+    * @param clazz the class
+    * @return the module or null if the class is not loaded by a registered module classloader
+    * @throws IllegalStateException when the module is not associated with a classloader
+    */
+   public static Module getModuleForClass(Class<?> clazz)
+   {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPermission(new RuntimePermission("getClassLoader"));
+
+      ClassLoader cl = getClassLoaderForClass(clazz);
+
+      // Determine the module (if any) for the classloader 
+      if (cl != null)
+         return modulesByClassLoader.get(cl);
+      // Unknown
+      return null;
+   }
+   
+   /**
+    * Find the module that loads a class
+    * 
     * @param className the class name
     * @return the module or null if the class is not loaded by a registered module classloader
     * @throws ClassNotFoundException when the class is not found
@@ -476,6 +524,32 @@ public abstract class Module extends NameAndVersionSupport
          return modulesByClassLoader.get(cl);
       // Unknown
       return null;
+   }
+
+   /**
+    * Get the classloader for a class 
+    * 
+    * @param clazz the class
+    * @return the classloader
+    */
+   protected static ClassLoader getClassLoaderForClass(final Class<?> clazz)
+   {
+      if (clazz == null)
+         throw new IllegalArgumentException("Null class");
+      
+      // Determine the classloader for this class
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+      {
+         return AccessController.doPrivileged(new PrivilegedAction<ClassLoader>()
+         {
+            public ClassLoader run()
+            {
+               return clazz.getClassLoader(); 
+            }
+        });
+      }
+      return clazz.getClassLoader();
    }
 
    /**
@@ -751,6 +825,116 @@ public abstract class Module extends NameAndVersionSupport
    public abstract DelegateLoader getDelegateLoader(Module requiringModule, Requirement requirement);
 
    /**
+    * Get the exported packages
+    * 
+    * @return the exported packages
+    */
+   public Collection<ExportPackage> getExportedPackages()
+   {
+      Collection<ExportPackage> result = new HashSet<ExportPackage>();
+      List<Capability> capabilities = getCapabilitiesRaw();
+      if (capabilities != null && capabilities.isEmpty() == false)
+      {
+         for (Capability capability : capabilities)
+         {
+            if (capability instanceof PackageCapability)
+            {
+               ExportPackage exportPackage = new ExportPackage(this, (PackageCapability) capability);
+               result.add(exportPackage);
+            }
+         }
+      }
+      return result;
+   }
+
+   /**
+    * Refresh the specified modules<p>
+    * 
+    * Pass null to refresh any undeployed lazy shutdown modules dependencies
+    * 
+    * @param modules the modules
+    * @throws Exception for any error
+    */
+   public static void refreshModules(Module... modules) throws Exception
+   {
+      if (modules == null || modules.length == 0)
+      {
+         Set<Module> snapshot = new HashSet<Module>(lazyShutdownModules);
+         modules = snapshot.toArray(new Module[snapshot.size()]);
+      }
+      
+      if (modules.length == 0)
+         return;
+      
+      Set<LifeCycle> lifecycles = new HashSet<LifeCycle>();
+      Set<Module> processed = new HashSet<Module>();
+      for (Module module : modules)
+      {
+         if (module == null)
+            throw new IllegalArgumentException("Null module");
+         module.addRefreshModule(lifecycles, processed);
+      }
+      
+      if (lifecycles.isEmpty() == false)
+      {
+         LifeCycle[] result = lifecycles.toArray(new LifeCycle[lifecycles.size()]);
+         result[0].bounce(result);
+      }
+   }
+   
+   private void addRefreshModule(Set<LifeCycle> lifecycles, Set<Module> processed)
+   {
+      // Avoid recursion
+      if (processed.contains(this))
+         return;
+      processed.add(this);
+      
+      // Add our lifecycle - if we have a classloader
+      if (getClassLoader() != null)
+      {
+         LifeCycle lifeCycle = getLifeCycle();
+         if (lifeCycle != null)
+            lifecycles.add(lifeCycle);
+         else
+            log.warn(this + " has no lifecycle, don't know how to refresh it.");
+      }
+      
+      // Add dependencies that are not already managed
+      if (isCascadeShutdown() == false && depends.isEmpty() == false)
+      {
+         for (RequirementDependencyItem item : depends)
+            item.getModule().addRefreshModule(lifecycles, processed);
+      }
+   }
+
+   public static boolean resolveModules(Module... modules) throws Exception
+   {
+      if (modules == null || modules.length == 0)
+         return true;
+
+      LifeCycle[] lifeCycles = new LifeCycle[modules.length]; 
+      for (int i = 0; i < modules.length; ++i)
+      {
+         Module module = modules[i];
+         if (module == null)
+            throw new IllegalArgumentException("Null module");
+         LifeCycle lifeCycle = module.getLifeCycle();
+         if (lifeCycle == null)
+            log.warn(module + " has no lifecycle, don't know how to resolve it.");
+         lifeCycles[i] = lifeCycle; 
+      }
+
+      lifeCycles[0].resolve(lifeCycles);
+      
+      for (LifeCycle lifeCycle : lifeCycles)
+      {
+         if (lifeCycle.isResolved() == false)
+            return false;
+      }
+      return true;
+   }
+
+   /**
     * Get the capabilities.
     * 
     * @return the capabilities.
@@ -802,6 +986,11 @@ public abstract class Module extends NameAndVersionSupport
       return capabilities;
    }
 
+   List<Capability> getCapabilitiesRaw()
+   {
+      return capabilities;
+   }
+   
    /**
     * Get the package names
     * 
@@ -927,6 +1116,16 @@ public abstract class Module extends NameAndVersionSupport
    }
 
    /**
+    * Get the requirements as they are now.
+    * 
+    * @return the requirements.
+    */
+   List<Requirement> getRequirementsRaw()
+   {
+      return requirements;
+   }
+
+   /**
     * Return a URL where dynamic classes can be stored
     * 
     * @return the url or null if there isn't one
@@ -976,6 +1175,19 @@ public abstract class Module extends NameAndVersionSupport
    }
 
    /**
+    * Unresolve dependencies
+    */
+   protected void unresolveDependencies()
+   {
+      Controller controller = context.getController();
+      if (requirementDependencies != null && requirementDependencies.isEmpty() == false)
+      {
+         for (RequirementDependencyItem item : requirementDependencies)
+            item.unresolved(controller);
+      }
+   }
+
+   /**
     * Get the controller context.
     * 
     * @return the controller context.
@@ -1018,14 +1230,7 @@ public abstract class Module extends NameAndVersionSupport
          throw new IllegalStateException("No controller context");
       
       // Remove the DependsOnMe part of this item
-      Object iDependOn = item.getIDependOn();
-      if (iDependOn != null)
-      {
-         // TODO - we need a better way to cleanup
-         Module otherModule = domain.getModule(iDependOn.toString());
-         if (otherModule != null)
-            otherModule.removeDependsOnMe(item);
-      }
+      item.setResolved(false);
       
       // Remove the IDependOn part of this item
       DependencyInfo dependencyInfo = context.getDependencyInfo();
@@ -1041,11 +1246,54 @@ public abstract class Module extends NameAndVersionSupport
    {
       if (context == null)
          return;
-
+      
       DependencyInfo dependencyInfo = context.getDependencyInfo();
       dependencyInfo.removeDependsOnMe(item);
    }
 
+   /**
+    * Add a dependency resolved against us
+    * 
+    * @param item the dependency
+    */
+   void addDepends(RequirementDependencyItem item)
+   {
+      depends.add(item);
+   }
+
+   /**
+    * Remove a dependency resolved against us
+    * 
+    * @param item the dependency
+    */
+   void removeDepends(RequirementDependencyItem item)
+   {
+      depends.remove(item);
+      if (depends.isEmpty())
+         lazyShutdownModules.remove(this);
+   }
+   
+   /**
+    * Get the importing modules
+    * 
+    * @param type the requirement type to filter on or null for all
+    * @return the importing modules
+    */
+   public Collection<Module> getImportingModules(Class<? extends Requirement> type)
+   {
+      Set<Module> result = new HashSet<Module>();
+      if (depends.isEmpty() == false)
+      {
+         for (RequirementDependencyItem item : depends)
+         {
+            Requirement requirement = item.getRequirement();
+            if (type == null || type.isInstance(requirement))
+               result.add(item.getModule());
+         }
+      }
+      return result;
+   }
+   
    /**
     * Resolve a requirement
     * 

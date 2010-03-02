@@ -21,6 +21,7 @@
  */
 package org.jboss.classloading.spi.dependency;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloading.spi.metadata.Capability;
+import org.jboss.classloading.spi.version.VersionRange;
 import org.jboss.logging.Logger;
 import org.jboss.util.collection.ConcurrentSet;
 
@@ -40,7 +42,7 @@ import org.jboss.util.collection.ConcurrentSet;
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public class ClassLoading implements Resolver
+public class ClassLoading implements Resolver, ClassLoadingAdmin
 {
    /** The log */
    private static final Logger log = Logger.getLogger(ClassLoading.class);
@@ -223,7 +225,7 @@ public class ClassLoading implements Resolver
       // FINDBUGS: This synchronization is correct - more than addIfNotPresent behaviour
       synchronized (domains)
       {
-         domain = getDomain(domainName);
+         domain = domains.get(domainName);
          if (domain == null)
          {
             domain = createDomain(domainName, parentDomainName, parentFirst);
@@ -268,6 +270,58 @@ public class ClassLoading implements Resolver
       return new Domain(this, domainName, parentDomainName, parentFirst);
    }
    
+   public Module getModuleForClass(Class<?> clazz)
+   {
+      return Module.getModuleForClass(clazz);
+   }
+   
+   public Collection<Module> getModules(String name, VersionRange range)
+   {
+      if (name == null)
+         throw new IllegalArgumentException("Null name");
+      
+      Collection<Module> result = new HashSet<Module>();
+      for (Domain domain : domains.values())
+         domain.getModulesInternal(name, range, result);
+      return result;
+   }
+   
+   public Collection<ImportModule> getImportedModules(String name, VersionRange range)
+   {
+      Collection<ImportModule> result = new HashSet<ImportModule>();
+      for (Domain domain : domains.values())
+         domain.getImportingModulesInternal(name, range, result);
+      return result;
+   }
+   
+   public Collection<ExportPackage> getExportedPackages(Module module)
+   {
+      if (module == null)
+         throw new IllegalArgumentException("Null modules");
+      return module.getExportedPackages();
+   }
+
+   public Collection<ExportPackage> getExportedPackages(String name, VersionRange range)
+   {
+      if (name == null)
+         throw new IllegalArgumentException("Null name");
+      
+      Collection<ExportPackage> result = new HashSet<ExportPackage>();
+      for (Domain domain : domains.values())
+         domain.getExportedPackagesInternal(name, range, result);
+      return result;
+   }
+
+   public void refreshModules(Module... modules) throws Exception
+   {
+      Module.refreshModules(modules);
+   }
+
+   public boolean resolveModules(Module... modules) throws Exception
+   {
+      return Module.resolveModules(modules);
+   }
+
    /**
     * Find the module for a classloader
     * 

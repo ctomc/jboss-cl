@@ -22,6 +22,7 @@
 package org.jboss.classloading.spi.version;
 
 import java.io.Serializable;
+import java.util.StringTokenizer;
 
 /**
  * VersionRange.
@@ -48,6 +49,95 @@ public class VersionRange implements Serializable
    
    /** All versions */
    public static final VersionRange ALL_VERSIONS = new VersionRange(Version.DEFAULT_VERSION);
+   
+   /**
+    * Get the version range from a string
+    * 
+    * @param rangeSpec the range spec
+    * @return the version range
+    */
+   public static VersionRange valueOf(String rangeSpec)
+   {
+      return parseRangeSpec(rangeSpec);
+   }
+
+   /**
+    * Parse a range spec
+    * 
+    * @param rangeSpec
+    * @return the version range
+    */
+   public static VersionRange parseRangeSpec(String rangeSpec)
+   {
+      if (rangeSpec == null)
+         throw new IllegalArgumentException("Null rangeSpec");
+      
+      rangeSpec = rangeSpec.trim();
+
+      int length = rangeSpec.length();
+      if (length == 0)
+         return ALL_VERSIONS;
+
+      char start = rangeSpec.charAt(0);
+      // Single version?
+      if (start != '[' && start != '(')
+      {
+         Version version = Version.parseVersion(rangeSpec);
+         return new VersionRange(version, true, version, true);
+      }
+      
+      if (length < 2)
+         throw new IllegalArgumentException("Expected a closing ] or ) for version range: " + rangeSpec);
+
+      boolean floorIsInclusive = true;
+      boolean ceilingIsInclusive = true;
+
+      if (start == '(')
+         floorIsInclusive = false;
+      
+      char end = rangeSpec.charAt(length-1);
+      if (end == ')')
+         ceilingIsInclusive = false;
+      else if (end != ']')
+         throw new IllegalArgumentException("Expected a closing ] or ) for version range: " + rangeSpec);
+
+      Version floor = null;
+      Version ceiling = null;
+      StringTokenizer st = new StringTokenizer(rangeSpec.substring(1, length-1), ",", true);
+      boolean mid = false;
+      while (st.hasMoreTokens())
+      {
+         String token = st.nextToken();
+         if (token.equals(","))
+         {
+            if (mid == true)
+               throw new IllegalArgumentException("Expected only one , in version range: " + rangeSpec);
+            mid = true;
+         }
+         else
+         {
+            try
+            {
+               // A version token
+               if (mid == false)
+                  floor = Version.parseVersion(token);
+               else
+                  ceiling = Version.parseVersion(token);
+            }
+            catch (RuntimeException e)
+            {
+               throw new IllegalArgumentException("Error parsing version '" + token + "' in " + rangeSpec, e);
+            }
+         }
+
+      }
+
+      // This is a hack to support [1.0.0] as a specified version
+      if (ceiling == null && ceilingIsInclusive)
+         ceiling = floor;
+      
+      return new VersionRange(floor, floorIsInclusive, ceiling, ceilingIsInclusive);
+   }
    
    /**
     * Create a new VersionRange with just a low inclusive check

@@ -290,6 +290,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    public void reset()
    {
       super.reset();
+      classLoader = null;
       system = null;
       policy = null;
    }

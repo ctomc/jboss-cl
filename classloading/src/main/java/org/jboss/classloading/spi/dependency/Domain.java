@@ -21,13 +21,19 @@
  */
 package org.jboss.classloading.spi.dependency;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.jboss.classloading.plugins.metadata.ModuleRequirement;
+import org.jboss.classloading.plugins.metadata.PackageCapability;
+import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.Requirement;
+import org.jboss.classloading.spi.version.VersionRange;
 import org.jboss.logging.Logger;
 
 /**
@@ -38,7 +44,7 @@ import org.jboss.logging.Logger;
  * @author Thomas.Diesler@jboss.com
  * @version $Revision: 1.1 $
  */
-public class Domain
+public class Domain implements ClassLoadingAdmin
 {
    /** The log */
    private static final Logger log = Logger.getLogger(Domain.class);
@@ -242,7 +248,16 @@ public class Domain
       {
          LifeCycle lifeCycle = result.getLifeCycle();
          if (lifeCycle != null && lifeCycle.isLazyResolve() && lifeCycle.isResolved() == false)
-            lifeCycle.doResolve();
+         {
+            try
+            {
+               lifeCycle.resolve();
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error in resolve for " + result, t);
+            }
+         }
       }
       
       return result;
@@ -307,6 +322,162 @@ public class Domain
       return null;
    }
    
+   public Module getModuleForClass(Class<?> clazz)
+   {
+      return Module.getModuleForClass(clazz);
+   }
+   
+   public Collection<Module> getModules(String name, VersionRange range)
+   {
+      if (name == null)
+         throw new IllegalArgumentException("Null name");
+      
+      Collection<Module> result = new HashSet<Module>();
+      getModulesInternal(name, range, result);
+      return result;
+   }
+   
+   /**
+    * Get the modules matching the name and range
+    * 
+    * @param name the name
+    * @param range the range
+    * @param result the matching modules
+    */
+   void getModulesInternal(String name, VersionRange range, Collection<Module> result)
+   {
+      if (range == null)
+         range = VersionRange.ALL_VERSIONS;
+      
+      for (Module module : modules)
+      {
+         List<Capability> capabilities = module.getCapabilitiesRaw();
+         if (capabilities != null && capabilities.isEmpty() == false)
+         {
+            ModuleRequirement requirement = new ModuleRequirement(name, range);
+            for (Capability capability : capabilities)
+            {
+               if (capability.resolves(module, requirement))
+               {
+                  result.add(module);
+                  break;
+               }
+            }
+         }
+         else
+         {
+            if (name.equals(module.getName()) && range.isInRange(module.getVersion()))
+            {
+               result.add(module);
+               return;
+            }
+         }
+      }
+   }
+   
+   public Collection<ImportModule> getImportedModules(String name, VersionRange range)
+   {
+      Collection<ImportModule> result = new HashSet<ImportModule>();
+      getImportingModulesInternal(name, range, result);
+      return result;
+   }
+   
+   /**
+    * Get the importing modules matching the name and range
+    * 
+    * @param name the name
+    * @param range the range
+    * @param result the matching modules
+    */
+   void getImportingModulesInternal(String name, VersionRange range, Collection<ImportModule> result)
+   {
+      if (range == null)
+         range = VersionRange.ALL_VERSIONS;
+      
+      for (Module module : modules)
+      {
+         List<RequirementDependencyItem> requirementDependencyItems = module.getDependencies();
+         if (requirementDependencyItems != null && requirementDependencyItems.isEmpty() == false)
+         {
+            for (RequirementDependencyItem dependencyItem : requirementDependencyItems)
+            {
+               Requirement requirement = dependencyItem.getRequirement();
+               if (requirement instanceof ModuleRequirement && dependencyItem.isResolved())
+               {
+                  ModuleRequirement moduleRequirement = (ModuleRequirement) requirement;
+                  if (name == null || name.equals(moduleRequirement.getName()))
+                  {
+                     if (range.isConsistent(moduleRequirement.getVersionRange()))
+                     {
+                        Module other = module.resolveModule(dependencyItem, true);
+                        ImportModule importModule = new ImportModule(other);
+                        result.add(importModule);
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+   
+   public Collection<ExportPackage> getExportedPackages(Module module)
+   {
+      if (module == null)
+         throw new IllegalArgumentException("Null module");
+      return module.getExportedPackages();
+   }
+   
+   public Collection<ExportPackage> getExportedPackages(String name, VersionRange range)
+   {
+      if (name == null)
+         throw new IllegalArgumentException("Null name");
+      
+      Collection<ExportPackage> result = new HashSet<ExportPackage>();
+      getExportedPackagesInternal(name, range, result);
+      return result;
+   }
+   
+   /**
+    * Get the exported packages matching the name and range
+    * 
+    * @param name the name
+    * @param range the range
+    * @param result the matching modules
+    */
+   void getExportedPackagesInternal(String name, VersionRange range, Collection<ExportPackage> result)
+   {
+      if (range == null)
+         range = VersionRange.ALL_VERSIONS;
+      
+      for (Module module : modules)
+      {
+         List<Capability> capabilities = module.getCapabilitiesRaw();
+         if (capabilities != null && capabilities.isEmpty() == false)
+         {
+            PackageRequirement requirement = new PackageRequirement(name, range);
+            for (Capability capability : capabilities)
+            {
+               if (capability instanceof PackageCapability && capability.resolves(module, requirement))
+               {
+                  ExportPackage exportPackage = new ExportPackage(module, (PackageCapability) capability);
+                  result.add(exportPackage);
+                  break;
+               }
+            }
+         }
+      }
+   }
+
+   public void refreshModules(Module... modules) throws Exception
+   {
+      Module.refreshModules(modules);
+   }
+
+   public boolean resolveModules(Module... modules) throws Exception
+   {
+      return Module.resolveModules(modules);
+   }
+
    @Override
    public String toString()
    {

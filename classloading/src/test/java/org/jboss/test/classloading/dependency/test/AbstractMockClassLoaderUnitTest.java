@@ -53,6 +53,8 @@ public abstract class AbstractMockClassLoaderUnitTest extends AbstractClassLoadi
 
    protected ClassLoaderSystem system;
    
+   protected ClassLoading classLoading;
+   
    public static Test suite()
    {
       return suite(AbstractMockClassLoaderUnitTest.class);
@@ -89,10 +91,16 @@ public abstract class AbstractMockClassLoaderUnitTest extends AbstractClassLoadi
 
    protected void assertNoClassLoader(KernelControllerContext context) throws Exception
    {
-      assertNoModule(context);
+      MockClassLoaderPolicyModule module = assertNoModule(context);
+      if (module != null)
+      {
+         ClassLoader cl = module.getClassLoader();
+         if (cl != null)
+            fail("Should not have classloader: " + cl);
+      }
    }
 
-   protected void assertNoModule(KernelControllerContext context) throws Exception
+   protected MockClassLoaderPolicyModule assertNoModule(KernelControllerContext context) throws Exception
    {
       boolean test = ControllerState.INSTALLED.equals(context.getState());
       if (test)
@@ -107,7 +115,9 @@ public abstract class AbstractMockClassLoaderUnitTest extends AbstractClassLoadi
          catch (IllegalStateException expected)
          {
          }
+         return module;
       }
+      return null;
    }
    
    protected KernelControllerContext install(MockClassLoadingMetaData metaData) throws Exception
@@ -170,6 +180,9 @@ public abstract class AbstractMockClassLoaderUnitTest extends AbstractClassLoadi
       builder.addMethodUninstallCallback("removeModule", null, null, ControllerState.CONFIGURED, null);
 
       install(builder.getBeanMetaData());
+      
+      ControllerContext ctx = controller.getInstalledContext("ClassLoading");
+      classLoading = (ClassLoading) ctx.getTarget();
    }
 
    protected void tearDown() throws Exception

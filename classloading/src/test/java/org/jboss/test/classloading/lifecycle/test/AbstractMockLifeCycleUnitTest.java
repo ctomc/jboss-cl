@@ -29,6 +29,7 @@ import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.ParentPolicy;
 import org.jboss.classloading.spi.dependency.ClassLoading;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
+import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerMode;
 import org.jboss.dependency.spi.ControllerState;
 import org.jboss.kernel.Kernel;
@@ -51,6 +52,8 @@ public abstract class AbstractMockLifeCycleUnitTest extends AbstractClassLoading
    private KernelController controller;
 
    protected ClassLoaderSystem system;
+   
+   protected ClassLoading classLoading;
 
    public AbstractMockLifeCycleUnitTest(String name)
    {
@@ -97,6 +100,14 @@ public abstract class AbstractMockLifeCycleUnitTest extends AbstractClassLoading
       MockLifeCycle lifeCycle = assertLifeCycle(context);
       assertTrue(context.getName() + " should be resolved: " + context.getDependencyInfo().getUnresolvedDependencies(null), lifeCycle.isResolved());
       assertTrue(context.getName() + " should be a resolved notification", lifeCycle.gotResolved);
+      assertFalse(context.getName() + " should not be started", lifeCycle.isStarted());
+      return assertClassLoader(context);
+   }
+   
+   protected ClassLoader assertIsResolved(KernelControllerContext context) throws Exception
+   {
+      MockLifeCycle lifeCycle = assertLifeCycle(context);
+      assertTrue(context.getName() + " should be resolved: " + context.getDependencyInfo().getUnresolvedDependencies(null), lifeCycle.isResolved());
       assertFalse(context.getName() + " should not be started", lifeCycle.isStarted());
       return assertClassLoader(context);
    }
@@ -228,6 +239,9 @@ public abstract class AbstractMockLifeCycleUnitTest extends AbstractClassLoading
       builder.addMethodUninstallCallback("removeModule", null, null, ControllerState.CONFIGURED, null);
 
       install(builder.getBeanMetaData());
+      
+      ControllerContext ctx = controller.getInstalledContext("ClassLoading");
+      classLoading = (ClassLoading) ctx.getTarget();
    }
 
    protected void tearDown() throws Exception

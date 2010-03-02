@@ -36,11 +36,9 @@ public class MockLifeCycle extends LifeCycle
    public boolean gotUnresolved = false;
    public boolean gotResolve = false;
    public boolean gotUnresolve = false;
+   public boolean gotBounce = false;
    public boolean gotStart= false;
    public boolean gotStop = false;
-
-   public boolean lazyResolve = false;
-   public boolean lazyStart = false;
    
    public MockLifeCycle(Module module)
    {
@@ -58,6 +56,7 @@ public class MockLifeCycle extends LifeCycle
       gotUnresolved = false;
       gotResolve = false;
       gotUnresolve = false;
+      gotBounce = false;
       gotStart = false;
       gotStop = false;
    }
@@ -70,9 +69,11 @@ public class MockLifeCycle extends LifeCycle
    }
 
    @Override
-   public void resolved()
+   public void bounce()
    {
-      gotResolved = true;
+      gotBounce = true;
+      getModule().unresolveIt();
+      getModule().resolveIt();
    }
 
    @Override
@@ -91,23 +92,18 @@ public class MockLifeCycle extends LifeCycle
    public void unresolve()
    {
       gotUnresolve = true;
+      getModule().unresolveIt();
+   }
+
+   @Override
+   public void resolved()
+   {
+      gotResolved = true;
    }
 
    @Override
    public void unresolved()
    {
       gotUnresolved = true;
-   }
-
-   @Override
-   public boolean isLazyResolve()
-   {
-      return lazyResolve;
-   }
-
-   @Override
-   public boolean isLazyStart()
-   {
-      return lazyStart;
    }
 }

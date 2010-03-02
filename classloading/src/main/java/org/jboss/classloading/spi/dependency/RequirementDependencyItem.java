@@ -47,6 +47,9 @@ public class RequirementDependencyItem extends AbstractDependencyItem
    /** The requirement */
    private Requirement requirement;
 
+   /** The module we resolved to */
+   private Module resolvedModule;
+   
    /**
     * Create a new RequirementDependencyItem.
     * 
@@ -100,6 +103,16 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       return requirement;
    }
 
+   /**
+    * Get the resolvedModule
+    *
+    * @return the resolvedModule
+    */
+   public Module getResolvedModule()
+   {
+      return resolvedModule;
+   }
+
    public boolean resolve(Controller controller)
    {
       Requirement requirement = getRequirement();
@@ -128,6 +141,8 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       if (context != null)
       {
          setIDependOn(context.getName());
+         resolvedModule = module;
+         module.addDepends(this);
          if (module.isCascadeShutdown())
             addDependsOnMe(controller, context);
          setResolved(true);
@@ -146,6 +161,18 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       setIDependOn(null);
       setResolved(false);
       return true;
+   }
+
+   @Override
+   protected void setResolved(boolean resolved)
+   {
+      if (resolved == false && resolvedModule != null)
+      {
+         resolvedModule.removeDepends(this);
+         resolvedModule.removeDependsOnMe(this);
+         resolvedModule = null;
+      }
+      super.setResolved(resolved);
    }
 
    public void toString(JBossStringBuilder buffer)

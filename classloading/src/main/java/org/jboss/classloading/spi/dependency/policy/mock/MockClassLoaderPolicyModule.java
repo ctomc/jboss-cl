@@ -34,6 +34,7 @@ import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.test.support.MockClassLoaderHelper;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.classloading.plugins.visitor.DefaultResourceContext;
+import org.jboss.classloading.spi.dependency.Domain;
 import org.jboss.classloading.spi.dependency.policy.ClassLoaderPolicyModule;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
@@ -65,6 +66,12 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
       super(classLoadingMetaData, contextName);
    }
 
+   @Override
+   public Domain checkDomain()
+   {
+      return super.checkDomain();
+   }
+   
    /**
     * Get collection from string array.
     *
@@ -277,5 +284,11 @@ public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule impleme
       policy.setShutdownPolicy(getShutdownPolicy());
       policy.setDelegates(getDelegates());
       return policy;
+   }
+
+   @Override
+   public ClassLoader getClassLoader()
+   {
+      return super.getClassLoader();
    }
 }

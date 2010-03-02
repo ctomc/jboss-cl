@@ -24,6 +24,8 @@ package org.jboss.classloading.spi.dependency;
 import org.jboss.classloader.spi.ClassFoundEvent;
 import org.jboss.classloader.spi.ClassFoundHandler;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
+import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloading.spi.dependency.policy.ClassLoaderPolicyModule;
 import org.jboss.dependency.spi.Controller;
 import org.jboss.dependency.spi.ControllerContext;
@@ -45,12 +47,17 @@ public class LifeCycle
    /** The module associated with this lifecycle */
    private Module module;
    
-   /** Any lazy start handler */
-   private LazyStartHandler lazyStart;
+   /** Whether to lazy start */
+   private boolean lazyStart = false;
    
-   /** Whether we are already in the lifecycle */
-   // TODO FIX THIS IN THE MC?
-   private boolean lifeCycle = false;
+   /** Whether to lazy resolve */
+   private boolean lazyResolve = false;
+   
+   /** Any lazy start handler */
+   private LazyStartHandler lazyStartHandler;
+   
+   /** The lazy start filter */
+   private ClassFilter lazyStartFilter = ClassFilterUtils.EVERYTHING;
    
    /**
     * Create a new LifeCycle.
@@ -73,6 +80,51 @@ public class LifeCycle
    {
       return module;
    }
+   
+   /**
+    * Whether the context associated with the classloader is lazy start,
+    * i.e. the start method will be invoked on first class load
+    * 
+    * @return true if it is lazy start
+    */
+   public boolean isLazyStart()
+   {
+      return lazyStart;
+   }
+
+   /**
+    * Set the lazyStart 
+    *
+    * @param lazyStart the lazyStart to set
+    */
+   public void setLazyStart(boolean lazyStart)
+   {
+      this.lazyStart = lazyStart;
+      if (lazyStart)
+         setUpLazyStart();
+   }
+
+   /**
+    * Get the lazyStartFilter
+    *
+    * @return the lazyStartFilter
+    */
+   public ClassFilter getLazyStartFilter()
+   {
+      return lazyStartFilter;
+   }
+
+   /**
+    * Set the lazyStartFilter 
+    *
+    * @param lazyStartFilter the lazyStartFilter to set
+    */
+   public void setLazyStartFilter(ClassFilter lazyStartFilter)
+   {
+      if (lazyStartFilter == null)
+         lazyStartFilter = ClassFilterUtils.EVERYTHING;
+      this.lazyStartFilter = lazyStartFilter;
+   }
 
    /**
     * Whether the module is resolved
@@ -92,44 +144,69 @@ public class LifeCycle
     */
    public boolean isLazyResolve()
    {
-      return false;
+      return lazyResolve;
    }
    
    /**
-    * Resolve the classloader
+    * Set the lazyResolve 
+    *
+    * @param lazyResolve the lazyResolve to set
     */
-   void doResolve()
+   public void setLazyResolve(boolean lazyResolve)
    {
-      if (lifeCycle == false)
+      this.lazyResolve = lazyResolve;
+   }
+
+   /**
+    * Resolve the classloader
+    * 
+    * @throws Exception for any error
+    */
+   public void resolve() throws Exception
+   {
+   }
+   
+   /**
+    * Resolve lots of lifecycles
+    * 
+    * @param lifecycles the lifecycles to resolve
+    * @throws Exception for any error
+    */
+   public void resolve(LifeCycle... lifecycles) throws Exception
+   {
+      if (lifecycles == null || lifecycles.length == 0)
+         return;
+      for (LifeCycle lifecycle : lifecycles)
       {
-         lifeCycle = true;
-         try
-         {
-            resolve();
-         }
-         catch (Throwable t)
-         {
-            log.warn("Error in resolve: " + this, t);
-         }
-         finally
-         {
-            lifeCycle = false;
-         }
+         if (lifecycle.isResolved() == false)
+            lifecycle.resolve();
       }
    }
    
    /**
-    * Resolve the classloader
+    * Unresolve the classloader
+    * 
+    * @throws Exception for any error
     */
-   public void resolve()
+   public void unresolve() throws Exception
    {
    }
    
    /**
-    * Unresolve the classloader
+    * Unresolve lots of lifecycles
+    * 
+    * @param lifecycles the lifecycles to unresolve
+    * @throws Exception for any error
     */
-   public void unresolve()
+   public void unresolve(LifeCycle... lifecycles) throws Exception
    {
+      if (lifecycles == null || lifecycles.length == 0)
+         return;
+      for (LifeCycle lifecycle : lifecycles)
+      {
+         if (lifecycle.isResolved())
+            lifecycle.unresolve();
+      }
    }
    
    /**
@@ -144,6 +221,29 @@ public class LifeCycle
     */
    public void unresolved()
    {
+   }
+   
+   /**
+    * Bounce the classloader
+    * 
+    * @throws Exception for any error
+    */
+   public void bounce() throws Exception
+   {
+   }
+   
+   /**
+    * Bounce lots of lifecycles
+    * 
+    * @param lifecycles the lifecycles to bounce
+    * @throws Exception for any error
+    */
+   public void bounce(LifeCycle... lifecycles) throws Exception
+   {
+      if (lifecycles == null || lifecycles.length == 0)
+         return;
+      for (LifeCycle lifecycle : lifecycles)
+         lifecycle.bounce();
    }
    
    /**
@@ -164,73 +264,54 @@ public class LifeCycle
    
    /**
     * Start the context associated with the classloader
-    */
-   void doStart()
-   {
-      if (lifeCycle == false)
-      {
-         lifeCycle = true;
-         try
-         {
-            start();
-         }
-         catch (Throwable t)
-         {
-            log.warn("Error in start: " + this, t);
-         }
-         finally
-         {
-            lifeCycle = false;
-         }
-      }
-   }
-   
-   /**
-    * Start the context associated with the classloader
-    */
-   public void start()
-   {
-   }
-   
-   /**
-    * Stop the context associated with the classloader
-    */
-   void doStop()
-   {
-      if (lifeCycle == false)
-      {
-         lifeCycle = true;
-         try
-         {
-            start();
-         }
-         catch (Throwable t)
-         {
-            log.warn("Error in stop: " + this, t);
-         }
-         finally
-         {
-            lifeCycle = false;
-         }
-      }
-   }
-   
-   /**
-    * Stop the context associated with the classloader
-    */
-   public void stop()
-   {
-   }
-   
-   /**
-    * Whether the context associated with the classloader is lazy start,
-    * i.e. the start method will be invoked on first class load
     * 
-    * @return true if it is lazy start
+    * @throws Exception for any error
     */
-   public boolean isLazyStart()
+   public void start() throws Exception
    {
-      return false;
+   }
+   
+   /**
+    * Start lots of lifecycles
+    * 
+    * @param lifecycles the lifecycles to start
+    * @throws Exception for any error
+    */
+   public void start(LifeCycle... lifecycles) throws Exception
+   {
+      if (lifecycles == null || lifecycles.length == 0)
+         return;
+      for (LifeCycle lifecycle : lifecycles)
+      {
+         if (lifecycle.isStarted() == false)
+            lifecycle.start();
+      }
+   }
+   
+   /**
+    * Stop the context associated with the classloader
+    * 
+    * @throws Exception for any error
+    */
+   public void stop() throws Exception
+   {
+   }
+   
+   /**
+    * Stop lots of lifecycles
+    * 
+    * @param lifecycles the lifecycles to stop
+    * @throws Exception for any error
+    */
+   public void stop(LifeCycle... lifecycles) throws Exception
+   {
+      if (lifecycles == null || lifecycles.length == 0)
+         return;
+      for (LifeCycle lifecycle : lifecycles)
+      {
+         if (lifecycle.isResolved())
+            lifecycle.stop();
+      }
    }
 
    /**
@@ -238,12 +319,14 @@ public class LifeCycle
     */
    protected void setUpLazyStart()
    {
-      if (isStarted())
+      if (isResolved() == false || isStarted())
+         return;
+      if (lazyStartHandler != null)
          return;
       if (module instanceof ClassLoaderPolicyModule)
       {
          ClassLoaderPolicy policy = ((ClassLoaderPolicyModule) module).getPolicy();
-         lazyStart = new LazyStartHandler(policy);
+         lazyStartHandler = new LazyStartHandler(policy);
       }
       else
       {
@@ -256,11 +339,11 @@ public class LifeCycle
     */
    protected void removeLazyStart()
    {
-      if (lazyStart == null)
+      if (lazyStartHandler == null)
          return;
 
-      lazyStart.cleanup();
-      lazyStart = null;
+      lazyStartHandler.cleanup();
+      lazyStartHandler = null;
    }
    
    void fireResolved()
@@ -297,9 +380,21 @@ public class LifeCycle
       
       public void classFound(ClassFoundEvent event)
       {
+         if (getLazyStartFilter().matchesClassName(event.getClassName()) == false)
+            return;
+         
          removeLazyStart();
          if (isStarted() == false)
-            start();
+         {
+            try
+            {
+               start();
+            }
+            catch (Throwable t)
+            {
+               log.warn("Error in lazy start for " + this, t);
+            }
+         }
       }
       
       public void cleanup()
