@@ -924,14 +924,7 @@ public abstract class Module extends NameAndVersionSupport
          lifeCycles[i] = lifeCycle; 
       }
 
-      lifeCycles[0].resolve(lifeCycles);
-      
-      for (LifeCycle lifeCycle : lifeCycles)
-      {
-         if (lifeCycle.isResolved() == false)
-            return false;
-      }
-      return true;
+      return lifeCycles[0].resolve(lifeCycles);
    }
 
    /**

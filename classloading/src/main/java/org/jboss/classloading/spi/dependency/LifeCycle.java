@@ -160,27 +160,35 @@ public class LifeCycle
    /**
     * Resolve the classloader
     * 
+    * @return true if it is actually resolved
     * @throws Exception for any error
     */
-   public void resolve() throws Exception
+   public boolean resolve() throws Exception
    {
+      return true;
    }
    
    /**
     * Resolve lots of lifecycles
     * 
     * @param lifecycles the lifecycles to resolve
+    * @return true if they are all resolved
     * @throws Exception for any error
     */
-   public void resolve(LifeCycle... lifecycles) throws Exception
+   public boolean resolve(LifeCycle... lifecycles) throws Exception
    {
       if (lifecycles == null || lifecycles.length == 0)
-         return;
+         return true;
+      boolean result = true;
       for (LifeCycle lifecycle : lifecycles)
       {
          if (lifecycle.isResolved() == false)
-            lifecycle.resolve();
+         {
+            if (lifecycle.resolve() == false)
+               result = false;
+         }
       }
+      return result;
    }
    
    /**

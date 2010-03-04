@@ -62,10 +62,11 @@ public class MockLifeCycle extends LifeCycle
    }
    
    @Override
-   public void resolve()
+   public boolean resolve()
    {
       gotResolve = true;
       getModule().resolveIt();
+      return isResolved();
    }
 
    @Override
