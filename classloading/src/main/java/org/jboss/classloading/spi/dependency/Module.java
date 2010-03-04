@@ -920,7 +920,7 @@ public abstract class Module extends NameAndVersionSupport
             throw new IllegalArgumentException("Null module");
          LifeCycle lifeCycle = module.getLifeCycle();
          if (lifeCycle == null)
-            log.warn(module + " has no lifecycle, don't know how to resolve it.");
+            throw new IllegalStateException(module + " has no lifecycle, don't know how to resolve it.");
          lifeCycles[i] = lifeCycle; 
       }
 
