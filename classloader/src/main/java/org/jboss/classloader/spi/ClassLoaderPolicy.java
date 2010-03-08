@@ -449,7 +449,20 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
    @Override
    protected void toLongString(StringBuilder builder)
    {
-      builder.append(" delegates=").append(getDelegates());
+      List<? extends DelegateLoader> delegates = getDelegates();
+      if (delegates != null && delegates.isEmpty() == false)
+      {
+         builder.append(" delegates=[");
+         boolean first = true;
+         for (DelegateLoader delegate : delegates)
+         {
+            if (first == false)
+               builder.append(',');
+            first = false;
+            builder.append(delegate.toLongString());
+         }
+         builder.append(']');
+      }
       String[] packageNames = getPackageNames();
       if (packageNames != null)
          builder.append(" exported=").append(Arrays.asList(packageNames));

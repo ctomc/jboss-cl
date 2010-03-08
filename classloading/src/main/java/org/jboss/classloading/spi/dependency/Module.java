@@ -39,15 +39,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.ParentPolicy;
 import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.ClassFilter;
-import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
-import org.jboss.classloader.spi.filter.PackageClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageCapability;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.helpers.NameAndVersionSupport;
@@ -59,6 +56,7 @@ import org.jboss.classloading.spi.metadata.OptionalPackages;
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
+import org.jboss.dependency.plugins.ResolvedState;
 import org.jboss.dependency.spi.Controller;
 import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerState;
@@ -728,8 +726,8 @@ public abstract class Module extends NameAndVersionSupport
       if (dependencies == null || dependencies.isEmpty())
          return;
       
-      // Maps the ClassLoaderPolicy that we get from the iDependOnModule to the list of package names that we are importing
-      Map<ClassLoaderPolicy, List<String>> delegateToRequiredPackages = new LinkedHashMap<ClassLoaderPolicy, List<String>>();
+      // Maps the iDependOnModule to the list of package names that we are importing
+      Map<Module, List<String>> delegateToRequiredPackages = new LinkedHashMap<Module, List<String>>();
       
       for (RequirementDependencyItem item : dependencies)
       {
@@ -749,25 +747,21 @@ public abstract class Module extends NameAndVersionSupport
                dynamic.add(delegate);
                continue;
             }
-
-            String name = (String) item.getIDependOn();
-            if (name == null)
-            {
-               // Optional requirement, just ignore
-               if (requirement.isOptional())
-                  continue;
-               // Something has gone wrong
-               throw new IllegalStateException("No iDependOn for item: " + item);
-            }
             
-            Module iDependOnModule = checkDomain().getModule(name);
+            Module iDependOnModule = item.getResolvedModule();
             if (iDependOnModule == null)
-               throw new IllegalStateException("Module not found with name: " + name);
-
-            // Determine the delegate loader for the module
-            DelegateLoader delegate = iDependOnModule.getDelegateLoader(module, requirement);
-            if (delegate == null)
-               throw new IllegalStateException("Cannot obtain delegate for: " + requirement); 
+            {
+               // Do it the hard way - probably optional or a self dependency?
+               String name = (String) item.getIDependOn();
+               if (name != null)
+                  iDependOnModule = checkDomain().getModule(name);
+               if (iDependOnModule == null)
+               {
+                  if (requirement.isOptional())
+                     continue;
+                  throw new IllegalStateException("Module not found for requirement: " + item);
+               }
+            }
 
             // Check for re-export by the module
             if (requirement.wantReExports())
@@ -779,12 +773,11 @@ public abstract class Module extends NameAndVersionSupport
                // If we are connecting to another module we collect the imported package names per delegate
                if (requirement instanceof PackageRequirement)
                {
-                  ClassLoaderPolicy policy = delegate.getPolicy();
-                  List<String> packageNames = delegateToRequiredPackages.get(policy);
+                  List<String> packageNames = delegateToRequiredPackages.get(iDependOnModule);
                   if (packageNames == null)
                   {
                      packageNames = new ArrayList<String>();
-                     delegateToRequiredPackages.put(policy, packageNames);
+                     delegateToRequiredPackages.put(iDependOnModule, packageNames);
                   }
                   
                   PackageRequirement packageRequirement = (PackageRequirement)requirement;
@@ -792,6 +785,10 @@ public abstract class Module extends NameAndVersionSupport
                }
                else
                {
+                  // Determine the delegate loader for the module
+                  DelegateLoader delegate = iDependOnModule.getDelegateLoader(module, requirement);
+                  if (delegate == null)
+                     throw new IllegalStateException("Cannot obtain delegate for: " + requirement); 
                   delegates.add(delegate);
                }
             }
@@ -799,10 +796,11 @@ public abstract class Module extends NameAndVersionSupport
       }
       
       // Add FilteredDelegateLoaders for all collected package requirements
-      for (Entry<ClassLoaderPolicy, List<String>> entry : delegateToRequiredPackages.entrySet())
+      for (Entry<Module, List<String>> entry : delegateToRequiredPackages.entrySet())
       {
-         PackageClassFilter filter = PackageClassFilter.createPackageClassFilter(entry.getValue());
-         delegates.add(new FilteredDelegateLoader(entry.getKey(), filter));
+         Module iDependOnModule = entry.getKey();
+         DelegateLoader delegate = iDependOnModule.getDelegateLoader(module, entry.getValue());
+         delegates.add(delegate);
       }
    }
 
@@ -823,6 +821,15 @@ public abstract class Module extends NameAndVersionSupport
     * @return the delegate loader
     */
    public abstract DelegateLoader getDelegateLoader(Module requiringModule, Requirement requirement);
+
+   /**
+    * Get a delegate loader filtered by packages
+    * 
+    * @param requiringModule the requiring module
+    * @param packages the packages to filter on
+    * @return the delegate loader
+    */
+   public abstract DelegateLoader getDelegateLoader(Module requiringModule, List<String> packages);
 
    /**
     * Get the exported packages
@@ -1223,7 +1230,7 @@ public abstract class Module extends NameAndVersionSupport
          throw new IllegalStateException("No controller context");
       
       // Remove the DependsOnMe part of this item
-      item.setResolved(false);
+      item.setResolved(ResolvedState.UNRESOLVED);
       
       // Remove the IDependOn part of this item
       DependencyInfo dependencyInfo = context.getDependencyInfo();

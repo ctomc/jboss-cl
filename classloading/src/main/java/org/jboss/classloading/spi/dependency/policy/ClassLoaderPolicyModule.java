@@ -24,6 +24,7 @@ package org.jboss.classloading.spi.dependency.policy;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.List;
 
 import org.jboss.classloader.plugins.loader.ClassLoaderToLoaderAdapter;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
@@ -33,7 +34,9 @@ import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.Loader;
 import org.jboss.classloader.spi.ParentPolicy;
 import org.jboss.classloader.spi.base.BaseClassLoader;
+import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.spi.filter.LazyFilteredDelegateLoader;
+import org.jboss.classloader.spi.filter.PackageClassFilter;
 import org.jboss.classloading.spi.dependency.Domain;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.dependency.RequirementDependencyItem;
@@ -266,24 +269,31 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    @Override
    public DelegateLoader getDelegateLoader(Module requiringModule, Requirement requirement)
    {
-      // self dependency
-      if (this == requiringModule)
+      ClassLoaderPolicyFactory clpf = new ClassLoaderPolicyFactory()
       {
-         ClassLoaderPolicyFactory clpf = new ClassLoaderPolicyFactory()
+         public ClassLoaderPolicy createClassLoaderPolicy()
          {
-            public ClassLoaderPolicy createClassLoaderPolicy()
-            {
-               if (policy == null)
-                  throw new IllegalStateException("ClassLoaderPolicy not available");
-               return policy;
-            }
-         };
-         return new DelegateLoader(clpf);
-      }
-      else
+            if (policy == null)
+               throw new IllegalStateException("ClassLoaderPolicy not available");
+            return policy;
+         }
+      };
+      PackageClassFilter filter = PackageClassFilter.createPackageClassFilter(determinePackageNames(true));
+      return new FilteredDelegateLoader(clpf, filter);
+   }
+
+   @Override
+   public DelegateLoader getDelegateLoader(Module requiringModule, List<String> packages)
+   {
+      ClassLoaderPolicyFactory clpf = new ClassLoaderPolicyFactory()
       {
-         return getPolicy().getExported();
-      }
+         public ClassLoaderPolicy createClassLoaderPolicy()
+         {
+            return getPolicy();
+         }
+      };
+      PackageClassFilter filter = PackageClassFilter.createPackageClassFilter(packages);
+      return new FilteredDelegateLoader(clpf, filter);
    }
 
    @Override

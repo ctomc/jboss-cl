@@ -37,6 +37,7 @@ import org.jboss.dependency.spi.DependencyItem;
 import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.test.classloading.dependency.support.a.A;
 import org.jboss.test.classloading.dependency.support.b.B;
+import org.jboss.test.classloading.dependency.support.c.C;
 
 /**
  * DependencyUnitTestCase.
@@ -401,6 +402,138 @@ public class DependencyUnitTestCase extends AbstractMockClassLoaderUnitTest
       }
       finally
       {
+      }
+      assertNoClassLoader(contextA);
+   }
+   
+   public void testCircularModule() throws Exception
+   {
+      ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+      MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+      a.setPathsAndPackageNames(A.class);
+      a.getRequirements().addRequirement(factory.createRequireModule("b"));
+      KernelControllerContext contextA = install(a);
+      try
+      {
+         assertNoClassLoader(contextA);
+
+         MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+         b.setPathsAndPackageNames(B.class);
+         b.getRequirements().addRequirement(factory.createRequireModule("a"));
+         KernelControllerContext contextB = install(b);
+         try
+         {
+            ClassLoader clA = assertClassLoader(contextA);
+            assertLoadClass(A.class, clA);
+            assertLoadClassFail(B.class, clA);
+            ClassLoader clB = assertClassLoader(contextB);
+            assertLoadClass(B.class, clB);
+            assertLoadClass(A.class, clB, clA);
+         }
+         finally
+         {
+            uninstall(contextB);
+         }
+         assertNoClassLoader(contextA);
+         assertNoClassLoader(contextB);
+      }
+      finally
+      {
+         uninstall(contextA);
+      }
+      assertNoClassLoader(contextA);
+   }
+
+   public void testCircularPackage() throws Exception
+   {
+      ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+      MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+      a.setPathsAndPackageNames(A.class);
+      a.getRequirements().addRequirement(factory.createRequirePackage(B.class.getPackage().getName()));
+      KernelControllerContext contextA = install(a);
+      try
+      {
+         assertNoClassLoader(contextA);
+
+         MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+         b.setPathsAndPackageNames(B.class);
+         b.getRequirements().addRequirement(factory.createRequirePackage(A.class.getPackage().getName()));
+         KernelControllerContext contextB = install(b);
+         try
+         {
+            ClassLoader clA = assertClassLoader(contextA);
+            assertLoadClass(A.class, clA);
+            assertLoadClassFail(B.class, clA);
+            ClassLoader clB = assertClassLoader(contextB);
+            assertLoadClass(B.class, clB);
+            assertLoadClass(A.class, clB, clA);
+         }
+         finally
+         {
+            uninstall(contextB);
+         }
+         assertNoClassLoader(contextA);
+         assertNoClassLoader(contextB);
+      }
+      finally
+      {
+         uninstall(contextA);
+      }
+      assertNoClassLoader(contextA);
+   }
+
+   public void testTransitiveCircularPackage() throws Exception
+   {
+      ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+      MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+      a.setPathsAndPackageNames(A.class);
+      a.getRequirements().addRequirement(factory.createRequirePackage(B.class.getPackage().getName()));
+      KernelControllerContext contextA = install(a);
+      try
+      {
+         assertNoClassLoader(contextA);
+
+         MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+         b.setPathsAndPackageNames(B.class);
+         b.getRequirements().addRequirement(factory.createRequirePackage(C.class.getPackage().getName()));
+         KernelControllerContext contextB = install(b);
+         try
+         {
+            assertNoClassLoader(contextB);
+
+            MockClassLoadingMetaData c = new MockClassLoadingMetaData("c");
+            c.setPathsAndPackageNames(C.class);
+            c.getRequirements().addRequirement(factory.createRequirePackage(A.class.getPackage().getName()));
+            KernelControllerContext contextC = install(c);
+            try
+            {
+               ClassLoader clA = assertClassLoader(contextA);
+               assertLoadClass(A.class, clA);
+               assertLoadClassFail(B.class, clA);
+               ClassLoader clB = assertClassLoader(contextB);
+               assertLoadClass(B.class, clB);
+               assertLoadClass(B.class, clA, clB);
+               ClassLoader clC = assertClassLoader(contextC);
+               assertLoadClass(C.class, clB, clC);
+               assertLoadClass(C.class, clC);
+               assertLoadClass(A.class, clC, clA);
+            }
+            finally
+            {
+               uninstall(contextC);
+            }
+            assertNoClassLoader(contextA);
+            assertNoClassLoader(contextB);
+            assertNoClassLoader(contextC);
+         }
+         finally
+         {
+            uninstall(contextB);
+         }
+      }
+      finally
+      {
+         uninstall(contextA);
       }
       assertNoClassLoader(contextA);
    }

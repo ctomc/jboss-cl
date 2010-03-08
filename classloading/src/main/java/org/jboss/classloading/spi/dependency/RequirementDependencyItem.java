@@ -23,6 +23,7 @@ package org.jboss.classloading.spi.dependency;
 
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.dependency.plugins.AbstractDependencyItem;
+import org.jboss.dependency.plugins.ResolvedState;
 import org.jboss.dependency.spi.Controller;
 import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerState;
@@ -48,7 +49,7 @@ public class RequirementDependencyItem extends AbstractDependencyItem
    private Requirement requirement;
 
    /** The module we resolved to */
-   private Module resolvedModule;
+   private volatile Module resolvedModule;
    
    /**
     * Create a new RequirementDependencyItem.
@@ -128,31 +129,40 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       // Self dependency
       if (module == this.module)
       {
-         Object iDependOn = module.getContextName();
-         ControllerContext context = controller.getContext(iDependOn, null);
+         ControllerContext context = module.getControllerContext();
          setIDependOn(context.getName());
          setResolved(true);
-         return isResolved();
+         return true;
       }
 
-      // Resolved against a context in the dependent state  
-      Object iDependOn = module.getContextName();
-      ControllerContext context = controller.getContext(iDependOn, getDependentState());
+      resolvedModule = module;
+
+      // Use semi-resolve to avoid circular references  
+      ControllerContext context = module.getControllerContext();
       if (context != null)
       {
-         setIDependOn(context.getName());
-         resolvedModule = module;
-         module.addDepends(this);
-         if (module.isCascadeShutdown())
-            addDependsOnMe(controller, context);
-         setResolved(true);
-         if (module.getClassLoadingSpace() == null)
-            log.warn(getModule() + " resolved " + getRequirement() + " to " + module + " which has import-all=true. Cannot check its consistency.");
+         boolean resolved = semiResolve(context);
+         if (resolved)
+         {
+            setIDependOn(context.getName());
+            module.addDepends(this);
+            if (module.getClassLoadingSpace() == null)
+               log.warn(getModule() + " resolved " + getRequirement() + " to " + module + " which has import-all=true. Cannot check its consistency.");
+         }
          return isResolved();
       }
 
       setResolved(false);
       return isResolved();
+   }
+
+   @Override
+   protected void addDependsOnMe(Controller controller, ControllerContext context)
+   {
+      Module resolvedModule = getResolvedModule();
+      if (resolvedModule != null && resolvedModule.isCascadeShutdown() == false)
+         return;
+      super.addDependsOnMe(controller, context);
    }
 
    @Override
@@ -164,9 +174,10 @@ public class RequirementDependencyItem extends AbstractDependencyItem
    }
 
    @Override
-   protected void setResolved(boolean resolved)
+   public void setResolved(ResolvedState resolved)
    {
-      if (resolved == false && resolvedModule != null)
+      Module resolvedModule = getResolvedModule();
+      if (resolved == ResolvedState.UNRESOLVED && resolvedModule != null)
       {
          resolvedModule.removeDepends(this);
          resolvedModule.removeDependsOnMe(this);

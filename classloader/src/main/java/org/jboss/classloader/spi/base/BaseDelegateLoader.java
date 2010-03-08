@@ -113,15 +113,9 @@ public class BaseDelegateLoader implements Loader
    BaseClassLoader getBaseClassLoader(String message, String context)
    {
       BaseClassLoader result = null;
-      try
-      {
-         BaseClassLoaderPolicy policy = getPolicy();
-         if (policy != null)
-            result = policy.getClassLoader();
-      }
-      catch (IllegalStateException ignored)
-      {
-      }
+      BaseClassLoaderPolicy policy = getPolicy();
+      if (policy != null)
+         result = policy.getClassLoaderUnchecked();
       if (result == null)
          log.warn("Not " + message + context + " from policy that has no classLoader: " + toLongString());
       return result;
@@ -185,7 +179,7 @@ public class BaseDelegateLoader implements Loader
       builder.append(getClass().getSimpleName());
       builder.append("@").append(Integer.toHexString(System.identityHashCode(this)));
       if (delegate != null)
-         builder.append("{delegate=").append(delegate.toLongString());
+         builder.append("{delegate=").append(delegate);
       else
          builder.append("{factory=").append(factory);
       toLongString(builder);
