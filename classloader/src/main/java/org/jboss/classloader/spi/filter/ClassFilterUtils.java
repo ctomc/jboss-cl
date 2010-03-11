@@ -23,15 +23,13 @@ package org.jboss.classloader.spi.filter;
 
 import java.util.List;
 
-import org.jboss.classloader.plugins.filter.EverythingClassFilter;
-import org.jboss.classloader.plugins.filter.JavaOnlyClassFilter;
-import org.jboss.classloader.plugins.filter.NothingButJavaClassFilter;
-import org.jboss.classloader.plugins.filter.NothingClassFilter;
+import org.jboss.classloader.plugins.filter.*;
 
 /**
  * ClassFilterUtils.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class ClassFilterUtils
@@ -120,5 +118,17 @@ public class ClassFilterUtils
    public static RecursivePackageClassFilter createRecursivePackageClassFilter(List<String> packageNames)
    {
       return RecursivePackageClassFilter.createRecursivePackageClassFilter(packageNames);
+   }
+
+   /**
+    * Create negating class filter.
+    *
+    * @param filter the filter
+    * @return negating filter for @param filter
+    * @throws IllegalArgumentException for filter
+    */
+   public static ClassFilter negatingClassFilter(ClassFilter filter)
+   {
+      return new NegatingClassFilter(filter);
    }
 }
