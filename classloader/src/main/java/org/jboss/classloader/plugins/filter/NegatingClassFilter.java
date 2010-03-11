@@ -57,4 +57,10 @@ public class NegatingClassFilter implements ClassFilter
    {
       return filter.matchesPackageName(packageName) == false;
    }
+
+   @Override
+   public String toString()
+   {
+      return "EXCLUDE " + filter;      
+   }
 }
