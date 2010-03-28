@@ -76,9 +76,6 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
    /** The resource filter */
    private ResourceFilter recurseFilter;
 
-   /** The current root */
-   private static ThreadLocal<VirtualFile> currentRoot = new ThreadLocal<VirtualFile>();
-
    /**
     * Visit the resources
     * 
@@ -101,16 +98,8 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
          {
             if (urls == null || urls.length == 0 || matchRootWithUrls(root, urls))
             {
-               currentRoot.set(root);
-               try
-               {
-                  vfsVisitor.setRoot(root);
-                  root.visit(vfsVisitor);
-               }
-               finally
-               {
-                  currentRoot.remove();   
-               }
+               vfsVisitor.setRoot(root);
+               root.visit(vfsVisitor);
             }
          }
          catch (Exception e)
@@ -118,16 +107,6 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
             throw new Error("Error visiting " + root, e);
          }
       }
-   }
-
-   /**
-    * Get the current root.
-    *
-    * @return the current root
-    */
-   public static VirtualFile getCurrentRoot()
-   {
-      return currentRoot.get();
    }
 
    /**
@@ -277,7 +256,8 @@ public class VFSResourceVisitor extends AbstractVirtualFileFilterWithAttributes 
          if (excluded != null && excluded.matchesResourcePath(path))
             return;
          
-         ResourceContext resource = new VFSResourceContext(file, path, classLoader);
+         VFSResourceContext resource = new VFSResourceContext(file, path, classLoader);
+         resource.setRoot(root);
          
          //Check the filter and visit
          if (filter == null || filter.accepts(resource))

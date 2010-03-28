@@ -21,9 +21,9 @@
 */
 package org.jboss.classloading.plugins.vfs;
 
-import java.net.URL;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 import org.jboss.classloading.plugins.visitor.AbstractResourceContext;
 import org.jboss.vfs.VirtualFile;
@@ -36,6 +36,7 @@ import org.jboss.vfs.VirtualFile;
 public class VFSResourceContext extends AbstractResourceContext
 {
    private VirtualFile file;
+   private VirtualFile root;
 
    public VFSResourceContext(VirtualFile file, String resourceName, ClassLoader classLoader)
    {
@@ -61,5 +62,30 @@ public class VFSResourceContext extends AbstractResourceContext
    public InputStream getInputStream() throws IOException
    {
       return file.openStream();
+   }
+
+   @Override
+   public URL getRootUrl()
+   {
+      try
+      {
+         return root.toURL();
+      }
+      catch (Exception e)
+      {
+         throw new RuntimeException(e);
+      }
+   }
+
+   /**
+    * Set the root.
+    *
+    * @param root the root
+    */
+   void setRoot(VirtualFile root)
+   {
+      if (root == null)
+         throw new IllegalArgumentException("Null root");
+      this.root = root;
    }
 }

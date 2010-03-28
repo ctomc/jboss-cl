@@ -27,6 +27,7 @@ import java.net.URL;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloading.spi.visitor.ResourceContext;
+import org.jboss.classloading.spi.visitor.RootAwareResource;
 
 /**
  * Abstract resource context.
@@ -35,7 +36,7 @@ import org.jboss.classloading.spi.visitor.ResourceContext;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @author <a href="mailto:ales.justin@jboss.com">Ales Justin</a>
  */
-public abstract class AbstractResourceContext implements ResourceContext
+public abstract class AbstractResourceContext implements ResourceContext, RootAwareResource
 {
    /** The classloader */
    private ClassLoader classLoader;
@@ -58,6 +59,16 @@ public abstract class AbstractResourceContext implements ResourceContext
 
       this.resourceName = resourceName;
       this.classLoader = classLoader;
+   }
+
+   /**
+    * Get root url.
+    *
+    * @return the root url
+    */
+   public URL getRootUrl()
+   {
+      throw new RuntimeException("Not implemented, override in non-abstract class / implementation.");
    }
 
    /**
