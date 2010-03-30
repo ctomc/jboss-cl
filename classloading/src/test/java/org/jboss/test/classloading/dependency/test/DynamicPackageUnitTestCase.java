@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2008, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2008, Red Hat Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -25,6 +25,7 @@ import junit.framework.Test;
 
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
+import org.jboss.classloading.spi.version.VersionRange;
 import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.test.classloading.dependency.support.a.A;
 
@@ -65,7 +66,41 @@ public class DynamicPackageUnitTestCase extends AbstractMockClassLoaderUnitTest
          {
             ClassLoader clA2 = assertClassLoader(contextA2);
             assertLoadClass(A.class, clA2);
-            enableTrace("org.jboss.classloader");
+            assertLoadClass(A.class, clA1, clA2);
+         }
+         finally
+         {
+            uninstall(contextA2);
+         }
+         assertNoClassLoader(contextA2);
+      }
+      finally
+      {
+         uninstall(contextA1);
+      }
+      assertNoClassLoader(contextA1);
+   }
+   
+   public void testDynamicPackageWithOptional() throws Exception
+   {
+      ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+      
+      MockClassLoadingMetaData a1 = new MockClassLoadingMetaData("a1");
+      a1.getRequirements().addRequirement(factory.createRequirePackage(A.class.getPackage().getName(), null, false, false, true));
+      KernelControllerContext contextA1 = install(a1);
+      try
+      {
+         ClassLoader clA1 = assertClassLoader(contextA1);
+         assertLoadClassFail(A.class, clA1);
+
+         MockClassLoadingMetaData a2 = new MockClassLoadingMetaData("a2");
+         a2.setPathsAndPackageNames(A.class);
+         a2.getRequirements().addRequirement(factory.createRequirePackage("doesNotExist", VersionRange.ALL_VERSIONS, true, false, false));
+         KernelControllerContext contextA2 = install(a2);
+         try
+         {
+            ClassLoader clA2 = assertClassLoader(contextA2);
+            assertLoadClass(A.class, clA2);
             assertLoadClass(A.class, clA1, clA2);
          }
          finally
