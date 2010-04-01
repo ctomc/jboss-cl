@@ -65,6 +65,8 @@ public class FederatedResourceVisitor implements ResourceVisitor
       if (recurseFilter == null)
       {
          recurseFlags = new boolean[recurseFilters.length];
+         for (int i = 0; i < recurseFlags.length; i++)
+            recurseFlags[i] = true; // allow recursion at the start, unless said otherwise
          recurseFilter = new FederatedRecurseFilter();
       }
       return recurseFilter;
