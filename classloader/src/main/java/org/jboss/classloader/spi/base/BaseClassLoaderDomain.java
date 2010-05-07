@@ -24,13 +24,7 @@ package org.jboss.classloader.spi.base;
 import java.io.IOException;
 import java.net.URL;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -111,7 +105,7 @@ public abstract class BaseClassLoaderDomain implements Loader
 
    public int getResourceCacheSize()
    {
-      return globalClassCache.size();
+      return globalResourceCache.size();
    }
    
    public Set<String> listClassBlackList()
