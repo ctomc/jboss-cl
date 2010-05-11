@@ -24,17 +24,8 @@ package org.jboss.test.classloading.vfs.metadata.test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.ArrayList;
+import java.util.*;
 
-import junit.framework.Test;
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloading.plugins.visitor.FederatedResourceVisitor;
 import org.jboss.classloading.spi.dependency.Module;
@@ -48,6 +39,10 @@ import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTes
 import org.jboss.test.classloading.vfs.metadata.support.a.A;
 import org.jboss.test.classloading.vfs.metadata.support.b.B;
 import org.jboss.test.classloading.vfs.metadata.support.c.C;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
+
+import junit.framework.Test;
 
 /**
  * VFSResourceVisitorUnitTestCase.
@@ -310,8 +305,9 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
          };
 
          URL aURL = new URL(System.getProperty("test.dir") + "/support/a/");
+         VirtualFile root = VFS.getChild(aURL);
          Module module = assertModule("test:0.0.0");
-         module.visit(visitor, visitor.getFilter(), null, aURL);
+         module.visit(visitor, visitor.getFilter(), null, root.toURL());
 
          assertEquals(1, classes.size());
          assertEquals(classes.iterator().next(), A.class.getSimpleName() + ".class");
@@ -345,9 +341,11 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
          };
 
          URL aURL = new URL(System.getProperty("test.dir") + "/support/a/");
+         VirtualFile rootA = VFS.getChild(aURL);
          URL bURL = new URL(System.getProperty("test.dir") + "/support/b/");
+         VirtualFile rootB = VFS.getChild(bURL);
          Module module = assertModule("test:0.0.0");
-         module.visit(visitor, visitor.getFilter(), null, aURL, bURL);
+         module.visit(visitor, visitor.getFilter(), null, rootA.toURL(), rootB.toURL());
 
          assertEquals(2, classes.size());
          Iterator<String> iterator = classes.iterator();
