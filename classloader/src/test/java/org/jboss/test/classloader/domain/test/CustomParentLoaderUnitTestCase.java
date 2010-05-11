@@ -21,27 +21,21 @@
  */
 package org.jboss.test.classloader.domain.test;
 
+import javax.management.MBeanRegistration;
+
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.management.MBeanRegistration;
-
-import junit.framework.Test;
-
 import org.jboss.classloader.plugins.ClassLoaderUtils;
-import org.jboss.classloader.spi.ClassFoundHandler;
-import org.jboss.classloader.spi.ClassLoaderDomain;
-import org.jboss.classloader.spi.ClassLoaderDomainMBean;
-import org.jboss.classloader.spi.ClassLoaderSystem;
-import org.jboss.classloader.spi.ClassNotFoundHandler;
-import org.jboss.classloader.spi.Loader;
-import org.jboss.classloader.spi.ParentPolicy;
+import org.jboss.classloader.spi.*;
 import org.jboss.classloader.spi.base.BaseClassLoaderDomain;
 import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.test.classloader.AbstractClassLoaderTestWithSecurity;
 import org.jboss.test.classloader.domain.support.MockLoader;
 import org.jboss.test.classloader.domain.support.NoMatchClassFilter;
+
+import junit.framework.Test;
 
 /**
  * ParentPolicyUnitTestCase.
@@ -161,7 +155,7 @@ public class CustomParentLoaderUnitTestCase extends AbstractClassLoaderTestWithS
       ClassLoader classLoader = system.registerClassLoaderPolicy(domain, policy);
       
       assertLoadClass(ClassLoaderDomain.class, classLoader);
-      checkGetResource(loader, ClassLoaderDomain.class, BaseClassLoaderDomain.class, ClassLoaderDomainMBean.class, MBeanRegistration.class, Loader.class, ClassNotFoundHandler.class, ClassFoundHandler.class, Object.class);
+      checkGetResource(loader, ClassLoaderDomain.class, BaseClassLoaderDomain.class, ClassLoaderDomainMBean.class, MBeanRegistration.class, Loader.class, CacheLoader.class, ClassNotFoundHandler.class, ClassFoundHandler.class, Object.class);
       checkLoadClass(loader);
    }
    

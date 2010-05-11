@@ -25,18 +25,19 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
+import org.jboss.classloader.spi.CacheLoader;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
-import org.jboss.classloader.spi.Loader;
 import org.jboss.logging.Logger;
 
 /**
  * Base DelegateLoader.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public class BaseDelegateLoader implements Loader
+public class BaseDelegateLoader implements CacheLoader
 {
    /** The log */
    private static final Logger log = Logger.getLogger(BaseDelegateLoader.class);
@@ -167,7 +168,19 @@ public class BaseDelegateLoader implements Loader
       }
       classLoader.getPackagesLocally(packages);
    }
-   
+
+   public Class<?> checkClassCache(BaseClassLoader classLoader, String name, String path, boolean allExports)
+   {
+      BaseClassLoaderPolicy policy = getPolicy();
+      if (policy != null)
+      {
+         BaseClassLoaderDomain domain = policy.getClassLoaderDomain();
+         if (domain != null)
+            return domain.checkClassCache(classLoader, name, path, allExports);
+      }
+      return null;
+   }
+
    /**
     * A long version of toString()
     * 

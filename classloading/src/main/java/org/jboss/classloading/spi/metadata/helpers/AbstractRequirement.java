@@ -23,17 +23,20 @@ package org.jboss.classloading.spi.metadata.helpers;
 
 import javax.xml.bind.annotation.XmlAttribute;
 
+import org.jboss.classloader.spi.ImportType;
 import org.jboss.classloading.spi.helpers.NameAndVersionRangeSupport;
 import org.jboss.classloading.spi.metadata.Requirement;
+import org.jboss.classloading.spi.metadata.RequirementWithImportType;
 import org.jboss.classloading.spi.version.VersionRange;
 
 /**
  * AbstractRequirement.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public class AbstractRequirement extends NameAndVersionRangeSupport implements Requirement
+public class AbstractRequirement extends NameAndVersionRangeSupport implements RequirementWithImportType
 {
    /** The serialVersionUID */
    private static final long serialVersionUID = -7898148730704557596L;
@@ -46,7 +49,10 @@ public class AbstractRequirement extends NameAndVersionRangeSupport implements R
 
    /** Whether to re-export */
    private boolean reExport = false;
-   
+
+   /** The import type */
+   private ImportType importType = ImportType.BEFORE;
+
    /**
     * Create a new AbstractRequirement
     */
@@ -129,7 +135,18 @@ public class AbstractRequirement extends NameAndVersionRangeSupport implements R
    {
       this.reExport = reExport;
    }
-   
+
+   public ImportType getImportType()
+   {
+      return importType;
+   }
+
+   @XmlAttribute(name = "importType")
+   public void setImportType(ImportType importType)
+   {
+      this.importType = importType;
+   }
+
    public boolean isConsistent(Requirement other)
    {
       return isConsistent(other, null);

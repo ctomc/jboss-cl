@@ -24,15 +24,13 @@ package org.jboss.classloader.plugins.loader;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
+import java.security.*;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Set;
 
-import org.jboss.classloader.spi.Loader;
+import org.jboss.classloader.spi.CacheLoader;
+import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.base.BaseClassLoaderSource;
 import org.jboss.logging.Logger;
 
@@ -40,9 +38,10 @@ import org.jboss.logging.Logger;
  * ClassLoaderToLoaderAdapter.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements Loader
+public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements CacheLoader
 {
    /** The log */
    private static final Logger log = Logger.getLogger(ClassLoaderToLoaderAdapter.class);
@@ -56,6 +55,9 @@ public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements
    /** The get packages method */
    private static Method getPackages;
    
+   /** The find class method */
+   private static Method findLoadedClass;
+
    static
    {
       AccessController.doPrivileged(new PrivilegedAction<Object>()
@@ -75,6 +77,15 @@ public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements
             {
                getPackages = ClassLoader.class.getDeclaredMethod("getPackages");
                getPackages.setAccessible(true);
+            }
+            catch (Exception e)
+            {
+               log.warn("Unable to set accessible on ClassLoader.getPackages()", e);
+            }
+            try
+            {
+               findLoadedClass = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
+               findLoadedClass.setAccessible(true);
             }
             catch (Exception e)
             {
@@ -180,10 +191,10 @@ public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements
 
    public Package getPackage(String name)
    {
-      final ClassLoader classLoader = getClassLoader();
       if (getPackage == null)
          return null;
 
+      final ClassLoader classLoader = getClassLoader();
       try
       {
          return (Package) getPackage.invoke(classLoader, name);
@@ -197,17 +208,36 @@ public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements
 
    public void getPackages(Set<Package> packages)
    {
-      final ClassLoader classLoader = getClassLoader();
       if (getPackages == null)
          return;
 
+      final ClassLoader classLoader = getClassLoader();
       try
       {
-         getPackages.invoke(classLoader);
+         Package[] pckgs = (Package[]) getPackages.invoke(classLoader);
+         if (pckgs != null)
+            packages.addAll(Arrays.asList(pckgs));
       }
       catch (Exception e)
       {
          log.warn("Unexpected error retrieving packages from classloader " + classLoader, e);
+      }
+   }
+
+   public Class<?> checkClassCache(BaseClassLoader bcl, String name, String path, boolean allExports)
+   {
+      if (findLoadedClass == null)
+         return null;
+
+      final ClassLoader classLoader = getClassLoader();
+      try
+      {
+         return (Class<?>) findLoadedClass.invoke(classLoader, name);
+      }
+      catch (Exception e)
+      {
+         log.warn("Unexpected error retrieving found class " + name + " from classloader " + classLoader, e);
+         return null;
       }
    }
 

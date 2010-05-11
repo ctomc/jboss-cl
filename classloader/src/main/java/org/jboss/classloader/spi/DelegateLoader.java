@@ -27,10 +27,14 @@ import org.jboss.classloader.spi.base.BaseDelegateLoader;
  * DelegateLoader.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public class DelegateLoader extends BaseDelegateLoader implements Loader
+public class DelegateLoader extends BaseDelegateLoader
 {
+   /** The import type */
+   private ImportType importType = ImportType.BEFORE;
+
    /**
     * Create a new DelegateLoader.
     * 
@@ -60,5 +64,27 @@ public class DelegateLoader extends BaseDelegateLoader implements Loader
    public ClassLoaderPolicy getPolicy()
    {
       return (ClassLoaderPolicy)super.getPolicy();
+   }
+
+   /**
+    * Get import type.
+    *
+    * @return the import type
+    */
+   public ImportType getImportType()
+   {
+      return importType;
+   }
+
+   /**
+    * Set import type.
+    *
+    * @param importType the import type
+    */
+   public void setImportType(ImportType importType)
+   {
+      if (importType == null)
+         throw new IllegalArgumentException("Null import type");
+      this.importType = importType;
    }
 }

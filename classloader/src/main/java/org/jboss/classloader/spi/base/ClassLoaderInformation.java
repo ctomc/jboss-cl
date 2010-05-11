@@ -22,17 +22,19 @@
 package org.jboss.classloader.spi.base;
 
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.classloader.spi.DelegateLoader;
+import org.jboss.classloader.spi.ImportType;
 import org.jboss.classloader.spi.Loader;
+import org.jboss.util.collection.ConcurrentSet;
 
 /**
  * ClassLoaderInformation.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class ClassLoaderInformation
@@ -47,7 +49,7 @@ public class ClassLoaderInformation
    private int order;
    
    /** The delegates */
-   private List<? extends DelegateLoader> delegates; 
+   private Map<ImportType, List<DelegateLoader>> delegates;
    
    /** The exports of the classloader */
    private BaseDelegateLoader exported;
@@ -56,13 +58,13 @@ public class ClassLoaderInformation
    private Map<String, Loader> classCache;
    
    /** The class black list */
-   private Map<String, String> classBlackList;
+   private Set<String> classBlackList;
    
    /** The resource cache */
    private Map<String, URL> resourceCache;
    
    /** The resource black list */
-   private Map<String, String> resourceBlackList;
+   private Set<String> resourceBlackList;
 
    /**
     * Create a new ClassLoaderInformation.
@@ -82,16 +84,33 @@ public class ClassLoaderInformation
       this.policy = policy;
       this.order = order;
       this.exported = policy.getExported();
-      this.delegates = policy.getDelegates();
       
       boolean canCache = policy.isCacheable();
       boolean canBlackList = policy.isBlackListable();
+
+      List<? extends DelegateLoader> delegates = policy.getDelegates();
       if (delegates != null && delegates.isEmpty() == false)
       {
+         this.delegates = new HashMap<ImportType, List<DelegateLoader>>();
+         // prepare ALL
+         List<DelegateLoader> all = new ArrayList<DelegateLoader>();
+         this.delegates.put(ImportType.ALL, all);
+
          for (DelegateLoader delegate : delegates)
          {
             if (delegate == null)
                throw new IllegalStateException(policy + " null delegate in " + delegates);
+
+            ImportType importType = delegate.getImportType();
+            List<DelegateLoader> loaders = this.delegates.get(importType);
+            if (loaders == null)
+            {
+               loaders = new ArrayList<DelegateLoader>();
+               this.delegates.put(importType, loaders);
+            }
+            loaders.add(delegate); // add to specific type
+            all.add(delegate); // add to all
+
             BaseDelegateLoader baseDelegate = delegate;
             BaseClassLoaderPolicy delegatePolicy = baseDelegate.getPolicy();
             if (delegatePolicy == null || delegatePolicy.isCacheable() == false)
@@ -109,8 +128,8 @@ public class ClassLoaderInformation
       
       if (canBlackList)
       {
-         classBlackList = new ConcurrentHashMap<String, String>();
-         resourceBlackList = new ConcurrentHashMap<String, String>();
+         classBlackList = new ConcurrentSet<String>();
+         resourceBlackList = new ConcurrentSet<String>();
       }
    }
 
@@ -173,12 +192,28 @@ public class ClassLoaderInformation
     * Get the delegates.
     * 
     * @return the delegates.
+    * @deprecated use same method with import type parameter
     */
+   @Deprecated
    public List<? extends DelegateLoader> getDelegates()
    {
-      return delegates;
+      return getDelegates(ImportType.BEFORE);
    }
    
+   /**
+    * Get the delegates.
+    *
+    * @param type the import type
+    * @return the delegates.
+    */
+   public List<? extends DelegateLoader> getDelegates(ImportType type)
+   {
+      if (delegates == null)
+         return Collections.emptyList();
+
+      return delegates.get(type);
+   }
+
    /**
     * Get the cached loader for a class 
     * 
@@ -214,10 +249,8 @@ public class ClassLoaderInformation
     */
    public boolean isBlackListedClass(String name)
    {
-      Map<String, String> classBlackList = this.classBlackList;
-      if (classBlackList != null)
-         return classBlackList.containsKey(name);
-      return false;
+      Set<String> classBlackList = this.classBlackList;
+      return classBlackList != null && classBlackList.contains(name);
    }
    
    /**
@@ -227,9 +260,9 @@ public class ClassLoaderInformation
     */
    public void blackListClass(String name)
    {
-      Map<String, String> classBlackList = this.classBlackList;
+      Set<String> classBlackList = this.classBlackList;
       if (classBlackList != null)
-         classBlackList.put(name, name);
+         classBlackList.add(name);
    }
    
    /**
@@ -267,10 +300,8 @@ public class ClassLoaderInformation
     */
    public boolean isBlackListedResource(String name)
    {
-      Map<String, String> resourceBlackList = this.resourceBlackList;
-      if (resourceBlackList != null)
-         return resourceBlackList.containsKey(name);
-      return false;
+      Set<String> resourceBlackList = this.resourceBlackList;
+      return resourceBlackList != null && resourceBlackList.contains(name);
    }
    
    /**
@@ -280,9 +311,9 @@ public class ClassLoaderInformation
     */
    public void blackListResource(String name)
    {
-      Map<String, String> resourceBlackList = this.resourceBlackList;
+      Set<String> resourceBlackList = this.resourceBlackList;
       if (resourceBlackList != null)
-         resourceBlackList.put(name, name);
+         resourceBlackList.add(name);
    }
    
    /**

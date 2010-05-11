@@ -30,11 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
-import org.jboss.classloader.spi.ClassLoaderPolicy;
-import org.jboss.classloader.spi.DelegateLoader;
-import org.jboss.classloader.spi.Loader;
-import org.jboss.classloader.spi.ShutdownPolicy;
+import org.jboss.classloader.spi.*;
 import org.jboss.logging.Logger;
+import org.jboss.util.collection.ConcurrentSet;
 
 /**
  * BaseClassLoaderDomain.<p>
@@ -43,9 +41,10 @@ import org.jboss.logging.Logger;
  * package access to the protected methods.
  *
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public abstract class BaseClassLoaderDomain implements Loader
+public abstract class BaseClassLoaderDomain implements CacheLoader
 {
    /** The log */
    private static final Logger log = Logger.getLogger(BaseClassLoaderDomain.class);
@@ -63,13 +62,15 @@ public abstract class BaseClassLoaderDomain implements Loader
    private Map<String, ClassCacheItem> globalClassCache = new ConcurrentHashMap<String, ClassCacheItem>();
    
    /** The global class black list */
-   private Map<String, String> globalClassBlackList = new ConcurrentHashMap<String, String>();
-   
+   private Set<String> globalClassBlackList = new ConcurrentSet<String>();
+
+   // TODO -- why the inconsistency / difference between classes and resources?
+
    /** The global resource cache */
    private Map<String, URL> globalResourceCache = new ConcurrentHashMap<String, URL>();
    
    /** The global resource black list */
-   private Map<String, String> globalResourceBlackList = new ConcurrentHashMap<String, String>();
+   private Set<String> globalResourceBlackList = new ConcurrentSet<String>();
    
    /** Keep track of the added order */
    private int order = 0;
@@ -100,7 +101,7 @@ public abstract class BaseClassLoaderDomain implements Loader
 
    public int getResourceBlackListSize()
    {
-      return globalClassBlackList.size();
+      return globalResourceBlackList.size();
    }
 
    public int getResourceCacheSize()
@@ -110,7 +111,7 @@ public abstract class BaseClassLoaderDomain implements Loader
    
    public Set<String> listClassBlackList()
    {
-      return Collections.unmodifiableSet(globalClassBlackList.keySet());
+      return Collections.unmodifiableSet(globalClassBlackList);
    }
 
    public Map<String, String> listClassCache()
@@ -123,7 +124,7 @@ public abstract class BaseClassLoaderDomain implements Loader
 
    public Set<String> listResourceBlackList()
    {
-      return Collections.unmodifiableSet(globalResourceBlackList.keySet());
+      return Collections.unmodifiableSet(globalResourceBlackList);
    }
 
    public Map<String, URL> listResourceCache()
@@ -249,10 +250,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       {
          Class<?> clazz = loadClassBefore(name);
          if (clazz != null)
-         {
-            globalClassCache.put(path, new ClassCacheItem(clazz));
             return clazz;
-         }
       }
       
       Loader loader = findLoader(classLoader, path, allExports, findInParent);
@@ -273,10 +271,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       {
          Class<?> clazz = loadClassAfter(name);
          if (clazz != null)
-         {
-            globalClassCache.put(path, new ClassCacheItem(clazz));
             return clazz;
-         }
       }
 
       // Finally see whether this is the JDK assuming it can load its classes from any classloader
@@ -318,16 +313,16 @@ public abstract class BaseClassLoaderDomain implements Loader
     * Find a loader for a class
     * 
     * @param classLoader the classloader
-    * @param name the class resource name
+    * @param path the class resource name
     * @param allExports whether we should look at all exports
     * @param findInParent should we try the parent
     * @return the loader
     */
-   Loader findLoader(BaseClassLoader classLoader, String name, boolean allExports, boolean findInParent)
+   Loader findLoader(BaseClassLoader classLoader, String path, boolean allExports, boolean findInParent)
    {
       boolean trace = log.isTraceEnabled();
       if (trace)
-         log.trace(this + " findLoader " + name + " classLoader=" + classLoader + " allExports=" + allExports + " findInParent=" + findInParent);
+         log.trace(this + " findLoader " + path + " classLoader=" + classLoader + " allExports=" + allExports + " findInParent=" + findInParent);
       
       if (getClassLoaderSystem() == null)
          throw new IllegalStateException("Domain is not registered with a classloader system: " + toLongString());
@@ -335,7 +330,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       // Try the before attempt (e.g. from the parent)
       Loader loader = null;
       if (findInParent)
-         loader = findBeforeLoader(name);
+         loader = findBeforeLoader(path);
       if (loader != null)
          return loader;
 
@@ -353,17 +348,17 @@ public abstract class BaseClassLoaderDomain implements Loader
       // Next we try the old "big ball of mud" model      
       if (allExports)
       {
-         loader = findLoaderInExports(classLoader, name, trace);
+         loader = findLoaderInExports(classLoader, path, trace);
          if (loader != null)
             return loader;
       }
       else if (trace)
-         log.trace(this + " not loading " + name + " from all exports");
+         log.trace(this + " not loading " + path + " from all exports");
       
-      // Next we try the imports
+      // Next we try the before imports
       if (info != null)
       {
-         loader = findLoaderInImports(info, name, trace);
+         loader = findLoaderInImports(info, path, ImportType.BEFORE, trace);
          if (loader != null)
             return loader;
       }
@@ -372,14 +367,28 @@ public abstract class BaseClassLoaderDomain implements Loader
       if (classLoader != null)
       {
          if (trace)
-            log.trace(this + " trying to load " + name + " from requesting " + classLoader);
-         if (classLoader.getResourceLocally(name) != null)
-            return classLoader.getLoader();
+            log.trace(this + " trying to load " + path + " from requesting " + classLoader);
+         if (classLoader.getResourceLocally(path) != null)
+         {
+            loader = classLoader.getLoader();
+            policy = classLoader.getPolicy();
+            if (policy.isCacheable())
+               globalClassCache.put(path, new ClassCacheItem(loader));
+            return loader;
+         }
+      }
+
+      // Next we try the after imports
+      if (info != null)
+      {
+         loader = findLoaderInImports(info, path, ImportType.AFTER, trace);
+         if (loader != null)
+            return loader;
       }
 
       // Try the after attempt (e.g. from the parent)
       if (findInParent)
-         return findAfterLoader(name);
+         return findAfterLoader(path);
       
       return null;
    }
@@ -395,6 +404,9 @@ public abstract class BaseClassLoaderDomain implements Loader
    URL getResource(BaseClassLoader classLoader, String name, boolean allExports)
    {
       boolean trace = log.isTraceEnabled();
+
+      // TODO -- check why is this different?
+      // TODO -- why only checking for cache and blacklisting in exports?
 
       // Try the classloader first
       if (classLoader != null)
@@ -442,7 +454,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       // Next we try the imports
       if (info != null)
       {
-         result = getResourceFromImports(info, name, trace);
+         result = getResourceFromImports(info, name, ImportType.ALL, trace);
          if (result != null)
             return result;
       }
@@ -495,7 +507,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       
       // Next we try the imports
       if (info != null)
-         getResourcesFromImports(info, name, urls, trace);
+         getResourcesFromImports(info, name, urls, ImportType.ALL, trace);
 
       // Finally use any requesting classloader
       if (classLoader != null)
@@ -550,10 +562,10 @@ public abstract class BaseClassLoaderDomain implements Loader
       else if (trace)
          log.trace(this + " not getting package " + name + " from all exports");
       
-      // Next we try the imports
+      // Next we try the before imports
       if (info != null)
       {
-         result = getPackageFromImports(info, name, trace);
+         result = getPackageFromImports(info, name, ImportType.BEFORE, trace);
          if (result != null)
             return result;
       }
@@ -570,6 +582,14 @@ public abstract class BaseClassLoaderDomain implements Loader
                log.trace(this + " got package from requesting " + classLoader + " " + result);
             return result;
          }
+      }
+
+      // Next we try the after imports
+      if (info != null)
+      {
+         result = getPackageFromImports(info, name, ImportType.AFTER, trace);
+         if (result != null)
+            return result;
       }
 
       // Try the after attempt
@@ -617,7 +637,7 @@ public abstract class BaseClassLoaderDomain implements Loader
       
       // Next we try the imports
       if (info != null)
-         getPackagesFromImports(info, packages, trace);
+         getPackagesFromImports(info, packages, ImportType.ALL, trace);
 
       // Finally use any requesting classloader
       if (classLoader != null)
@@ -653,12 +673,13 @@ public abstract class BaseClassLoaderDomain implements Loader
          }
       }
 
-      if (globalClassBlackList.containsKey(name))
+      if (isBlackListedClass(name))
       {
          if (trace)
             log.trace(this + " class is black listed " + name);
          return null;
       }
+
       boolean canCache = true;
       boolean canBlackList = true;
       
@@ -689,11 +710,22 @@ public abstract class BaseClassLoaderDomain implements Loader
       }
       // Here is not found in the exports so can we blacklist it?
       if (canBlackList)
-         globalClassBlackList.put(name, name);
+         globalClassBlackList.add(name); // TODO -- why already blacklisting here?
       
       return null;
    }
-   
+
+   /**
+    * Check whether this is a black listed class
+    *
+    * @param name the class name
+    * @return true when black listed, false otherwise
+    */
+   protected boolean isBlackListedClass(String name)
+   {
+      return globalClassBlackList.contains(name);
+   }
+
    /**
     * Load a resource from the exports
     * 
@@ -711,12 +743,13 @@ public abstract class BaseClassLoaderDomain implements Loader
             log.trace(this + " got resource from cache " + name);
       }
       
-      if (globalResourceBlackList.containsKey(name))
+      if (globalResourceBlackList.contains(name))
       {
          if (trace)
             log.trace(this + " resource is black listed, not looking at exports " + name);
          return null;
       }
+
       boolean canCache = true;
       boolean canBlackList = true;
       
@@ -748,7 +781,8 @@ public abstract class BaseClassLoaderDomain implements Loader
       }
       // Here is not found in the exports so can we blacklist it?
       if (canBlackList)
-         globalResourceBlackList.put(name, name);
+         globalResourceBlackList.add(name);
+      
       return null;
    }
    
@@ -829,15 +863,16 @@ public abstract class BaseClassLoaderDomain implements Loader
 
    /**
     * Find a loader for a class in imports
-    * 
+    *
     * @param info the classloader information
     * @param name the class resource name
+    * @param type the import type
     * @param trace whether trace is enabled
     * @return the loader
     */
-   Loader findLoaderInImports(ClassLoaderInformation info, String name, boolean trace)
+   Loader findLoaderInImports(ClassLoaderInformation info, String name, ImportType type, boolean trace)
    {
-      List<? extends DelegateLoader> delegates = info.getDelegates();
+      List<? extends DelegateLoader> delegates = info.getDelegates(type);
       if (delegates == null || delegates.isEmpty())
       {
          if (trace)
@@ -870,7 +905,8 @@ public abstract class BaseClassLoaderDomain implements Loader
             return delegate;
          }
       }
-      info.blackListClass(name);
+      if (type == ImportType.AFTER) // TODO -- is this really OK?
+         info.blackListClass(name);
       return null;
    }
    
@@ -879,12 +915,13 @@ public abstract class BaseClassLoaderDomain implements Loader
     * 
     * @param info the classloader information
     * @param name the resource name
+    * @param type the import type
     * @param trace whether trace is enabled
     * @return the url
     */
-   private URL getResourceFromImports(ClassLoaderInformation info, String name, boolean trace)
+   private URL getResourceFromImports(ClassLoaderInformation info, String name, ImportType type, boolean trace)
    {
-      List<? extends DelegateLoader> delegates = info.getDelegates();
+      List<? extends DelegateLoader> delegates = info.getDelegates(type);
       if (delegates == null || delegates.isEmpty())
       {
          if (trace)
@@ -919,7 +956,8 @@ public abstract class BaseClassLoaderDomain implements Loader
             return result;
          }
       }
-      info.blackListResource(name);
+      if (type == ImportType.AFTER) // TODO -- check
+         info.blackListResource(name);
       return null;
    }
    
@@ -929,13 +967,14 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param info the classloader info
     * @param name the resource name
     * @param urls the urls to add to
+    * @param type the import type
     * @param trace whether trace is enabled
     * @throws IOException for any error
     */
    // FindBugs: The Set doesn't use equals/hashCode
-   void getResourcesFromImports(ClassLoaderInformation info, String name, Set<URL> urls, boolean trace) throws IOException
+   void getResourcesFromImports(ClassLoaderInformation info, String name, Set<URL> urls, ImportType type, boolean trace) throws IOException
    {
-      List<? extends DelegateLoader> delegates = info.getDelegates();
+      List<? extends DelegateLoader> delegates = info.getDelegates(type);
       if (delegates == null || delegates.isEmpty())
       {
          if (trace)
@@ -953,12 +992,13 @@ public abstract class BaseClassLoaderDomain implements Loader
     * 
     * @param info the classloader information
     * @param name the pacakge name
+    * @param type the import type
     * @param trace whether trace is enabled
     * @return the package
     */
-   private Package getPackageFromImports(ClassLoaderInformation info, String name, boolean trace)
+   private Package getPackageFromImports(ClassLoaderInformation info, String name, ImportType type, boolean trace)
    {
-      List<? extends DelegateLoader> delegates = info.getDelegates();
+      List<? extends DelegateLoader> delegates = info.getDelegates(type);
       if (delegates == null || delegates.isEmpty())
       {
          if (trace)
@@ -983,11 +1023,12 @@ public abstract class BaseClassLoaderDomain implements Loader
     * 
     * @param info the classloader info
     * @param packages the packages to add to
+    * @param type the import type
     * @param trace whether trace is enabled
     */
-   void getPackagesFromImports(ClassLoaderInformation info, Set<Package> packages, boolean trace)
+   void getPackagesFromImports(ClassLoaderInformation info, Set<Package> packages, ImportType type, boolean trace)
    {
-      List<? extends DelegateLoader> delegates = info.getDelegates();
+      List<? extends DelegateLoader> delegates = info.getDelegates(type);
       if (delegates == null || delegates.isEmpty())
       {
          if (trace)
@@ -1499,6 +1540,23 @@ public abstract class BaseClassLoaderDomain implements Loader
       return result;
    }
 
+   public Class<?> checkClassCache(BaseClassLoader classLoader, String name, String path, boolean allExports)
+   {
+      Class<?> result = checkCacheBefore(classLoader, name, path, allExports);
+      if (result != null)
+         return result;
+
+      result = checkCacheAfter(classLoader, name, path, allExports);
+      if (result != null)
+         return result;
+
+      result = checkClassCacheLocally(classLoader, name, path, allExports);
+      if (result != null)
+         return result;
+
+      return null;
+   }
+
    /**
     * Check the class cache
     * 
@@ -1508,7 +1566,7 @@ public abstract class BaseClassLoaderDomain implements Loader
     * @param allExports whether to look at all exports
     * @return the class if cached
     */
-   Class<?> checkClassCache(BaseClassLoader classLoader, String name, String path, boolean allExports)
+   Class<?> checkClassCacheLocally(BaseClassLoader classLoader, String name, String path, boolean allExports)
    {
       if (allExports)
       {
@@ -1516,7 +1574,7 @@ public abstract class BaseClassLoaderDomain implements Loader
          if (item != null)
          {
             if (log.isTraceEnabled())
-               log.trace("Found " + name + " in global cache");
+               log.trace("Found " + name + " in global cache: " + this);
             return item.clazz;
          }
       }
@@ -1539,7 +1597,7 @@ public abstract class BaseClassLoaderDomain implements Loader
    {
       if (allExports)
       {
-         if (failIfBlackListed && globalClassBlackList.containsKey(path))
+         if (failIfBlackListed && isBlackListedClass(path))
          {
             if (log.isTraceEnabled())
                log.trace("Found " + name + " in global blacklist");
@@ -1566,13 +1624,43 @@ public abstract class BaseClassLoaderDomain implements Loader
    {
       if (path == null)
          path = ClassLoaderUtils.classNameToPath(name);
-      
-      Class<?> result = checkClassCache(classLoader, name, path, allExports);
-      if (result != null)
-         return result;
-      
+
+      Class<?> cached = checkClassCache(classLoader, name, path, allExports);
+      if (cached != null)
+         return cached;
+
       checkClassBlackList(classLoader, name, path, allExports, failIfBlackListed);
       
+      return null;
+   }
+
+   /**
+    * Check the cache before checking this domain.
+    * e.g. check parent's domain cache
+    *
+    * @param classLoader the classloader (possibly null)
+    * @param name the name
+    * @param path the path of the class resource
+    * @param allExports whether to look at all exports
+    * @return the class when found in the cache
+    */
+   protected Class<?> checkCacheBefore(BaseClassLoader classLoader, String name, String path, boolean allExports)
+   {
+      return null;
+   }
+
+   /**
+    * Check the cache after checking before domain.
+    * e.g. check parent's domain cache only if this one blacklisted the resource
+    *
+    * @param classLoader the classloader (possibly null)
+    * @param name the name
+    * @param path the path of the class resource
+    * @param allExports whether to look at all exports
+    * @return the class when found in the cache
+    */
+   protected Class<?> checkCacheAfter(BaseClassLoader classLoader, String name, String path, boolean allExports)
+   {
       return null;
    }
 

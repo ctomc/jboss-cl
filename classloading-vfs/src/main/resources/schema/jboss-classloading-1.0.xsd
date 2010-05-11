@@ -345,6 +345,15 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
+      <xsd:attribute name="importType" type="xsd:string" use="optional">
+         <xsd:annotation>
+            <xsd:documentation>
+               <![CDATA[
+               Define requirements import type.
+               ]]>
+            </xsd:documentation>
+         </xsd:annotation>
+      </xsd:attribute>
    </xsd:complexType>
 
    <xsd:simpleType name="version">

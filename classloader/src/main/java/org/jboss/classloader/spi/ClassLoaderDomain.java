@@ -21,26 +21,21 @@
  */
 package org.jboss.classloader.spi;
 
-import java.io.IOException;
-import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.Map.Entry;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import java.io.IOException;
+import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.plugins.loader.ClassLoaderToLoaderAdapter;
+import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.base.BaseClassLoaderDomain;
 import org.jboss.classloader.spi.base.BaseClassLoaderSource;
 import org.jboss.classloader.spi.filter.ClassFilter;
@@ -51,9 +46,10 @@ import org.jboss.logging.Logger;
  * ClassLoaderDomain.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, ClassLoaderDomainMBean, MBeanRegistration, ClassNotFoundHandler, ClassFoundHandler
+public class ClassLoaderDomain extends BaseClassLoaderDomain implements ClassLoaderDomainMBean, MBeanRegistration, ClassNotFoundHandler, ClassFoundHandler
 {
    /** The log */
    private static final Logger log = Logger.getLogger(ClassLoaderDomain.class);
@@ -1041,5 +1037,44 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements Loader, 
             log.warn("Error unregistering classloader: " + cl, e);
          }
       }
+   }
+
+   @Override
+   protected Class<?> checkCacheBefore(BaseClassLoader classLoader, String name, String path, boolean allExports)
+   {
+      if (parent == null || parent instanceof CacheLoader == false)
+         return null;
+
+      ClassFilter filter = getParentPolicy().getBeforeFilter();
+      if (filter.matchesClassName(name))
+      {
+         CacheLoader loader = (CacheLoader) parent;
+         return loader.checkClassCache(classLoader, name, path, allExports);
+      }
+      return null;
+   }
+
+   /**
+    * Only check parent after if we already blacklisted this resource.
+    *
+    * @param classLoader the classloader (possibly null)
+    * @param name the name
+    * @param path the path of the class resource
+    * @param allExports whether to look at all exports
+    * @return cached result if found in parent
+    */
+   @Override
+   protected Class<?> checkCacheAfter(BaseClassLoader classLoader, String name, String path, boolean allExports)
+   {
+      if (parent == null || parent instanceof CacheLoader == false || isBlackListedClass(name) == false)
+         return null;
+
+      ClassFilter filter = getParentPolicy().getAfterFilter();
+      if (filter.matchesClassName(name))
+      {
+         CacheLoader loader = (CacheLoader) parent;
+         return loader.checkClassCache(classLoader, name, path, allExports);
+      }
+      return null;
    }
 }

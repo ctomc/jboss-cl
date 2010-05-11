@@ -25,49 +25,30 @@ import java.io.IOException;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.jboss.classloader.spi.ClassLoaderSystem;
-import org.jboss.classloader.spi.DelegateLoader;
-import org.jboss.classloader.spi.ParentPolicy;
-import org.jboss.classloader.spi.ShutdownPolicy;
+import org.jboss.classloader.spi.*;
 import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageCapability;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.helpers.NameAndVersionSupport;
-import org.jboss.classloading.spi.metadata.Capability;
-import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
-import org.jboss.classloading.spi.metadata.ExportAll;
-import org.jboss.classloading.spi.metadata.ExportPackages;
-import org.jboss.classloading.spi.metadata.OptionalPackages;
-import org.jboss.classloading.spi.metadata.Requirement;
+import org.jboss.classloading.spi.metadata.*;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
 import org.jboss.dependency.plugins.ResolvedState;
-import org.jboss.dependency.spi.Controller;
-import org.jboss.dependency.spi.ControllerContext;
-import org.jboss.dependency.spi.ControllerState;
-import org.jboss.dependency.spi.DependencyInfo;
-import org.jboss.dependency.spi.DependencyItem;
+import org.jboss.dependency.spi.*;
 import org.jboss.logging.Logger;
 
 /**
  * Module.
  * 
  * @author <a href="adrian@jboss.org">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public abstract class Module extends NameAndVersionSupport
@@ -744,6 +725,7 @@ public abstract class Module extends NameAndVersionSupport
             if (requirement.isDynamic())
             {
                DelegateLoader delegate = createLazyDelegateLoader(checkDomain(), item);
+               delegate.setImportType(getImportType(requirement));
                dynamic.add(delegate);
                continue;
             }
@@ -788,7 +770,8 @@ public abstract class Module extends NameAndVersionSupport
                   // Determine the delegate loader for the module
                   DelegateLoader delegate = iDependOnModule.getDelegateLoader(module, requirement);
                   if (delegate == null)
-                     throw new IllegalStateException("Cannot obtain delegate for: " + requirement); 
+                     throw new IllegalStateException("Cannot obtain delegate for: " + requirement);
+                  delegate.setImportType(getImportType(requirement));
                   delegates.add(delegate);
                }
             }
@@ -802,6 +785,23 @@ public abstract class Module extends NameAndVersionSupport
          DelegateLoader delegate = iDependOnModule.getDelegateLoader(module, entry.getValue());
          delegates.add(delegate);
       }
+   }
+
+   /**
+    * Get requirement's import type.
+    * By default we return BEFORE.
+    *
+    * @param requirement the requirement to check
+    * @return requirement's import type
+    */
+   protected static ImportType getImportType(Requirement requirement)
+   {
+      if (requirement instanceof RequirementWithImportType)
+      {
+         RequirementWithImportType rwit = (RequirementWithImportType) requirement;
+         return rwit.getImportType();
+      }
+      return ImportType.BEFORE;
    }
 
    /**

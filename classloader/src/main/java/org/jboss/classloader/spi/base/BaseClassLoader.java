@@ -21,39 +21,19 @@
  */
 package org.jboss.classloader.spi.base;
 
+import javax.management.ObjectName;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.CodeSource;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
-import java.security.ProtectionDomain;
-import java.security.SecureClassLoader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.security.*;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.management.ObjectName;
-
 import org.jboss.classloader.plugins.ClassLoaderUtils;
-import org.jboss.classloader.spi.ClassFoundEvent;
-import org.jboss.classloader.spi.ClassLoaderDomain;
-import org.jboss.classloader.spi.ClassLoaderPolicy;
-import org.jboss.classloader.spi.ClassNotFoundEvent;
-import org.jboss.classloader.spi.DelegateLoader;
-import org.jboss.classloader.spi.Loader;
-import org.jboss.classloader.spi.PackageInformation;
-import org.jboss.classloader.spi.ShutdownPolicy;
+import org.jboss.classloader.spi.*;
 import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloading.spi.RealClassLoader;
 import org.jboss.logging.Logger;
@@ -65,6 +45,7 @@ import org.jboss.util.collection.Iterators;
  * [TODO] Add meaningful javadoc
  *
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class BaseClassLoader extends SecureClassLoader implements BaseClassLoaderMBean, RealClassLoader
@@ -379,7 +360,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       if (domain == null)
          return null;
 
-      return domain.checkClassCacheAndBlackList(this, name, null, basePolicy.isImportAll(), false);
+      return domain.checkClassCacheAndBlackList(this, name, null, basePolicy.isImportAll(), failIfBlackListed);
    }
 
    @Override
@@ -925,8 +906,14 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    public Class<?> getCachedClass(String name)
    {
-      // TODO look in global and/or local cache
-      return null;
+      try
+      {
+         return checkCacheAndBlackList(name, false, log.isTraceEnabled());
+      }
+      catch (ClassNotFoundException ignored)
+      {
+         return null;
+      }
    }
 
    public URL getCachedResource(String name)
