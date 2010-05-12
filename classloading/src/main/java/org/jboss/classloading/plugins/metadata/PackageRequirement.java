@@ -24,6 +24,10 @@ package org.jboss.classloading.plugins.metadata;
 import java.util.Collections;
 import java.util.Set;
 
+import org.jboss.classloader.plugins.filter.EverythingClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.PackageClassFilter;
+import org.jboss.classloader.spi.filter.RecursivePackageClassFilter;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.metadata.OptionalPackages;
 import org.jboss.classloading.spi.metadata.Requirement;
@@ -76,6 +80,35 @@ public class PackageRequirement extends AbstractRequirement implements OptionalP
       if (isOptional() == false)
          return null;
       return Collections.singleton(getName());
+   }
+
+   /**
+    * Gets the {@link ClassFilter} that corrsponds to this PackageRequiment.
+    * 
+    * This methods supports explicit packages, wildcard sub packages (e.g. org.foo.*)
+    * and the everything wildcard (i.e. '*')
+    * 
+    * @return 
+    */
+   public ClassFilter toClassFilter()
+   {
+      ClassFilter filter;
+      String packageName = getName();
+      if ("*".equals(packageName))
+      {
+         filter = EverythingClassFilter.INSTANCE;
+
+      }
+      else if (packageName.endsWith(".*"))
+      {
+         packageName = packageName.substring(0, packageName.length() - 2);
+         filter = RecursivePackageClassFilter.createRecursivePackageClassFilter(packageName);
+      }
+      else
+      {
+         filter = PackageClassFilter.createPackageClassFilter(packageName);
+      }
+      return filter;
    }
 
    @Override

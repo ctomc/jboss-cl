@@ -27,8 +27,14 @@ import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
 import org.jboss.classloader.plugins.loader.ClassLoaderToLoaderAdapter;
-import org.jboss.classloader.spi.*;
+import org.jboss.classloader.spi.ClassLoaderPolicy;
+import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
+import org.jboss.classloader.spi.ClassLoaderSystem;
+import org.jboss.classloader.spi.DelegateLoader;
+import org.jboss.classloader.spi.Loader;
+import org.jboss.classloader.spi.ParentPolicy;
 import org.jboss.classloader.spi.base.BaseClassLoader;
+import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.spi.filter.LazyFilteredDelegateLoader;
 import org.jboss.classloader.spi.filter.PackageClassFilter;
@@ -53,16 +59,16 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
 {
    /** The serialVersionUID */
    private static final long serialVersionUID = -3357427104777457717L;
-   
+
    /** Our cached policy */
    private ClassLoaderPolicy policy;
-   
+
    /** The classloader system we are registered with */
    private ClassLoaderSystem system;
-   
+
    /** The classloader */
    private ClassLoader classLoader;
-   
+
    /** An optional classloader policy factory */
    private ClassLoaderPolicyFactory policyFactory;
 
@@ -91,11 +97,11 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    {
       if (classLoader == null)
          throw new IllegalStateException("No classloader for module " + this);
-      
+
       if (classLoader instanceof BaseClassLoader == false)
          return super.getClassLoaderForClass(className);
-      
-      final BaseClassLoader bcl = (BaseClassLoader) classLoader;
+
+      final BaseClassLoader bcl = (BaseClassLoader)classLoader;
       SecurityManager sm = System.getSecurityManager();
       if (sm != null)
       {
@@ -105,7 +111,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
             {
                public ClassLoader run() throws Exception
                {
-                  return bcl.findClassLoader(className); 
+                  return bcl.findClassLoader(className);
                }
             });
          }
@@ -113,15 +119,15 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
          {
             Throwable t = e.getCause();
             if (t instanceof ClassNotFoundException)
-               throw (ClassNotFoundException) t;
+               throw (ClassNotFoundException)t;
             if (t instanceof Error)
-               throw (Error) t;
+               throw (Error)t;
             if (t instanceof RuntimeException)
-               throw (RuntimeException) t;
+               throw (RuntimeException)t;
             throw new RuntimeException("Error during findClassLoader for " + className, e);
          }
       }
-      return bcl.findClassLoader(className); 
+      return bcl.findClassLoader(className);
    }
 
    /**
@@ -137,7 +143,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
 
       if (isValid() == false)
          throw new IllegalStateException("Module " + this + " is not registered, see previous error messages");
-      
+
       String domainName = getDeterminedDomainName();
       ParentPolicy parentPolicy = getDeterminedParentPolicy();
       String parentName = getDeterminedParentDomainName();
@@ -147,7 +153,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       registerModuleClassLoader(this, result);
       return result;
    }
-   
+
    /**
     * Register the classloader policy with a classloader system
     *
@@ -166,12 +172,12 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
          throw new IllegalStateException("Module " + this + " is not registered, see previous error messages");
 
       Loader loader = new ClassLoaderToLoaderAdapter(parent);
-      ClassLoader result = registerClassLoaderPolicy(system, loader); 
+      ClassLoader result = registerClassLoaderPolicy(system, loader);
       this.classLoader = result;
       registerModuleClassLoader(this, result);
       return result;
    }
-   
+
    /**
     * Register the classloader policy with a classloader system
     *
@@ -186,7 +192,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
 
       if (isValid() == false)
          throw new IllegalStateException("Module " + this + " is not registered, see previous error messages");
-      
+
       String domainName = getDeterminedDomainName();
       ParentPolicy parentPolicy = getDeterminedParentPolicy();
       ClassLoader result = system.registerClassLoaderPolicy(domainName, parentPolicy, loader, getPolicy());
@@ -205,10 +211,10 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    {
       if (policy != null)
          return policy;
-      
+
       if (policyFactory == null)
          policyFactory = this;
-      
+
       policy = policyFactory.createClassLoaderPolicy();
       return policy;
    }
@@ -229,7 +235,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       system = null;
       policy = null;
    }
-   
+
    /**
     * Default implementation of class loader policy factory 
     */
@@ -250,7 +256,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
    {
       return classLoader;
    }
-   
+
    @Override
    public DelegateLoader createLazyDelegateLoader(Domain domain, RequirementDependencyItem item)
    {
@@ -258,15 +264,14 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       if (context == null)
          throw new IllegalStateException("No controller context");
       Controller controller = context.getController();
-         
+
       DynamicClassLoaderPolicyFactory factory = new DynamicClassLoaderPolicyFactory(controller, domain, item);
 
       Requirement requirement = item.getRequirement();
       if (requirement instanceof PackageRequirement)
       {
-         PackageRequirement pr = (PackageRequirement) requirement;
-         PackageClassFilter filter = PackageClassFilter.createPackageClassFilter(pr.getName());
-         return new FilteredDelegateLoader(factory, filter);
+         PackageRequirement pr = (PackageRequirement)requirement;
+         return new FilteredDelegateLoader(factory, pr.toClassFilter());
       }
       else
       {
@@ -286,11 +291,11 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
             return policy;
          }
       };
-      PackageClassFilter filter;
+      ClassFilter filter;
       if (requirement instanceof PackageRequirement)
       {
-         PackageRequirement pr = (PackageRequirement) requirement;
-         filter = PackageClassFilter.createPackageClassFilter(pr.getName());
+         PackageRequirement pr = (PackageRequirement)requirement;
+         filter = pr.toClassFilter();
       }
       else
       {

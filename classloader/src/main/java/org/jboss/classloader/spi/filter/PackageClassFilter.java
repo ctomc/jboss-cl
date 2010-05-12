@@ -59,6 +59,10 @@ public class PackageClassFilter extends PatternClassFilter
          if (packageNames[i] == null)
             throw new IllegalArgumentException("Null package name in " + Arrays.asList(packageNames));
 
+         // Wildcards should be handled external to this
+         if (packageNames[i].indexOf('*') >= 0)
+            throw new IllegalArgumentException("Invalid package name: " + packageNames[i]);
+         
          if (packageNames[i].length() == 0)
             // Base package - it is a match if there is no . in the class name
             patterns[i] = "[^.]*";
