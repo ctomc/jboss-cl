@@ -30,6 +30,7 @@ import org.jboss.classloading.spi.version.VersionRange;
  * DefaultClassLoadingMetaDataFactory.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class DefaultClassLoadingMetaDataFactory extends ClassLoadingMetaDataFactory
@@ -66,6 +67,13 @@ public class DefaultClassLoadingMetaDataFactory extends ClassLoadingMetaDataFact
    {
       UsesPackageRequirement result = new UsesPackageRequirement(name, versionRange);
       result.setReExport(reExport);
+      return result;
+   }
+
+   public Requirement createWildcardPackage(String name, VersionRange versionRange)
+   {
+      PackageRequirement result = new WildcardPackageRequirement(name, versionRange);
+      result.setDynamic(true);
       return result;
    }
 }

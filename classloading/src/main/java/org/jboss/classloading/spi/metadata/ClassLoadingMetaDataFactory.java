@@ -27,6 +27,7 @@ import org.jboss.classloading.spi.version.VersionRange;
  * ClassLoadingMetaDataFactory.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public abstract class ClassLoadingMetaDataFactory
@@ -274,4 +275,29 @@ public abstract class ClassLoadingMetaDataFactory
     * @throws IllegalArgumentException for a null name
     */
    public abstract Requirement createUsesPackage(String name, VersionRange versionRange, boolean reExport);
+
+   /**
+    * Create a new usespackagerequirement with no version constraint
+    *
+    * @param name the name
+    * @return the package requirement
+    * @throws IllegalArgumentException for a null name
+    */
+   public Requirement createWildcardPackage(String name)
+   {
+      return createWildcardPackage(name, null);
+   }
+
+   /**
+    * Create a new uses package requirement
+    *
+    * @param name the name
+    * @param versionRange the version range
+    * @return the package requirement
+    * @throws IllegalArgumentException for a null name
+    */
+   public Requirement createWildcardPackage(String name, VersionRange versionRange)
+   {
+      throw new IllegalArgumentException("Not yet implemented"); // TODO -- should be abstract method
+   }
 }
