@@ -21,8 +21,6 @@
  */
 package org.jboss.test.classloading.dependency.test;
 
-import junit.framework.Test;
-
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.version.VersionRange;
@@ -30,10 +28,13 @@ import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.test.classloading.dependency.support.a.A;
 import org.jboss.test.classloading.dependency.support.b.B;
 
+import junit.framework.Test;
+
 /**
  * PackageDependencyUnitTestCase.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class PackageDependencyUnitTestCase extends AbstractMockClassLoaderUnitTest
@@ -167,5 +168,40 @@ public class PackageDependencyUnitTestCase extends AbstractMockClassLoaderUnitTe
          uninstall(contextA);
       }
       assertNoClassLoader(contextA);
+   }
+
+   public void testImportAexportAandB() throws Exception
+   {
+      ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+
+      MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+      b.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
+      b.getCapabilities().addCapability(factory.createPackage(B.class.getPackage().getName()));
+      b.setPathsAndPackageNames(A.class, B.class);
+      KernelControllerContext contextB = install(b);
+      try
+      {
+         assertClassLoader(contextB); // force CL install
+
+         MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+         a.getRequirements().addRequirement(factory.createRequirePackage(A.class.getPackage().getName()));
+         a.setPaths(A.class);
+         KernelControllerContext contextA = install(a);
+         try
+         {
+            ClassLoader clA = assertClassLoader(contextA);
+            assertLoadClassFail(B.class, clA);
+         }
+         finally
+         {
+            uninstall(contextA);
+         }
+         assertNoClassLoader(contextA);
+      }
+      finally
+      {
+         uninstall(contextB);
+      }
+      assertNoClassLoader(contextB);
    }
 }

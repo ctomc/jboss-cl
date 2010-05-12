@@ -27,16 +27,12 @@ import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
 import org.jboss.classloader.plugins.loader.ClassLoaderToLoaderAdapter;
-import org.jboss.classloader.spi.ClassLoaderPolicy;
-import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
-import org.jboss.classloader.spi.ClassLoaderSystem;
-import org.jboss.classloader.spi.DelegateLoader;
-import org.jboss.classloader.spi.Loader;
-import org.jboss.classloader.spi.ParentPolicy;
+import org.jboss.classloader.spi.*;
 import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.spi.filter.LazyFilteredDelegateLoader;
 import org.jboss.classloader.spi.filter.PackageClassFilter;
+import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.dependency.Domain;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.dependency.RequirementDependencyItem;
@@ -50,6 +46,7 @@ import org.jboss.dependency.spi.ControllerContext;
  * ClassLoaderPolicyModule.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule implements ClassLoaderPolicyFactory
@@ -263,7 +260,18 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       Controller controller = context.getController();
          
       DynamicClassLoaderPolicyFactory factory = new DynamicClassLoaderPolicyFactory(controller, domain, item);
-      return new LazyFilteredDelegateLoader(factory);
+
+      Requirement requirement = item.getRequirement();
+      if (requirement instanceof PackageRequirement)
+      {
+         PackageRequirement pr = (PackageRequirement) requirement;
+         PackageClassFilter filter = PackageClassFilter.createPackageClassFilter(pr.getName());
+         return new FilteredDelegateLoader(factory, filter);
+      }
+      else
+      {
+         return new LazyFilteredDelegateLoader(factory);
+      }
    }
 
    @Override
@@ -278,7 +286,16 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
             return policy;
          }
       };
-      PackageClassFilter filter = PackageClassFilter.createPackageClassFilter(determinePackageNames(true));
+      PackageClassFilter filter;
+      if (requirement instanceof PackageRequirement)
+      {
+         PackageRequirement pr = (PackageRequirement) requirement;
+         filter = PackageClassFilter.createPackageClassFilter(pr.getName());
+      }
+      else
+      {
+         filter = PackageClassFilter.createPackageClassFilter(determinePackageNames(true));
+      }
       return new FilteredDelegateLoader(clpf, filter);
    }
 

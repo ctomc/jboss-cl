@@ -21,18 +21,23 @@
  */
 package org.jboss.test.classloading.dependency.test;
 
-import junit.framework.Test;
-
+import org.jboss.classloader.spi.ImportType;
 import org.jboss.classloading.spi.dependency.policy.mock.MockClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
+import org.jboss.classloading.spi.metadata.Requirement;
+import org.jboss.classloading.spi.metadata.helpers.AbstractRequirement;
 import org.jboss.classloading.spi.version.VersionRange;
 import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.test.classloading.dependency.support.a.A;
+import org.jboss.test.classloading.dependency.support.b.B;
+
+import junit.framework.Test;
 
 /**
  * ReExportPackageUnitTestCase.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class DynamicPackageUnitTestCase extends AbstractMockClassLoaderUnitTest
@@ -114,5 +119,84 @@ public class DynamicPackageUnitTestCase extends AbstractMockClassLoaderUnitTest
          uninstall(contextA1);
       }
       assertNoClassLoader(contextA1);
+   }
+
+   // deploy A first, B second
+   public void testDynamicImportAexportAandB1() throws Exception
+   {
+      ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+      MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+
+      Requirement aPackage = factory.createRequirePackage(A.class.getPackage().getName(), null, false, false, true);
+      ((AbstractRequirement)aPackage).setImportType(ImportType.AFTER);
+
+      a.getRequirements().addRequirement(aPackage);
+      a.setPaths(A.class);
+      KernelControllerContext contextA = install(a);
+      try
+      {
+         MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+         b.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
+         b.getCapabilities().addCapability(factory.createPackage(B.class.getPackage().getName()));
+         b.setPathsAndPackageNames(A.class, B.class);
+         KernelControllerContext contextB = install(b);
+         try
+         {
+            assertClassLoader(contextB); // force install
+            
+            ClassLoader clA = assertClassLoader(contextA);
+            assertLoadClassFail(B.class, clA);
+         }
+         finally
+         {
+            uninstall(contextB);
+         }
+         assertNoClassLoader(contextB);
+      }
+      finally
+      {
+         uninstall(contextA);
+      }
+      assertNoClassLoader(contextA);
+   }
+
+   // deploy B first, then A
+   public void testDynamicImportAexportAandB2() throws Exception
+   {
+      ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+
+      MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+      b.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
+      b.getCapabilities().addCapability(factory.createPackage(B.class.getPackage().getName()));
+      b.setPathsAndPackageNames(A.class, B.class);
+      KernelControllerContext contextB = install(b);
+      try
+      {
+         assertClassLoader(contextB); // force CL install
+
+         MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+
+         Requirement aPackage = factory.createRequirePackage(A.class.getPackage().getName(), null, false, false, true);
+         ((AbstractRequirement)aPackage).setImportType(ImportType.AFTER);
+
+         a.getRequirements().addRequirement(aPackage);
+         a.setPaths(A.class);
+         KernelControllerContext contextA = install(a);
+         try
+         {
+            ClassLoader clA = assertClassLoader(contextA);
+            assertLoadClassFail(B.class, clA);
+         }
+         finally
+         {
+            uninstall(contextA);
+         }
+         assertNoClassLoader(contextA);
+      }
+      finally
+      {
+         uninstall(contextB);
+      }
+      assertNoClassLoader(contextB);
    }
 }
