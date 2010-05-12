@@ -38,6 +38,7 @@ import org.jboss.classloading.spi.version.VersionRange;
  * PackageRequirement.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class PackageRequirement extends AbstractRequirement implements OptionalPackages
@@ -88,7 +89,7 @@ public class PackageRequirement extends AbstractRequirement implements OptionalP
     * This methods supports explicit packages, wildcard sub packages (e.g. org.foo.*)
     * and the everything wildcard (i.e. '*')
     * 
-    * @return 
+    * @return class filter corresponding the package name
     */
    public ClassFilter toClassFilter()
    {
@@ -97,7 +98,6 @@ public class PackageRequirement extends AbstractRequirement implements OptionalP
       if ("*".equals(packageName))
       {
          filter = EverythingClassFilter.INSTANCE;
-
       }
       else if (packageName.endsWith(".*"))
       {
@@ -109,6 +109,17 @@ public class PackageRequirement extends AbstractRequirement implements OptionalP
          filter = PackageClassFilter.createPackageClassFilter(packageName);
       }
       return filter;
+   }
+
+   /**
+    * Is this package requirement wildcard.
+    * e.g. we check if it ends with '*'
+    *
+    * @return true if wildcard, false otherwise
+    */
+   public boolean isWildcard()
+   {
+      return getName().endsWith("*");
    }
 
    @Override

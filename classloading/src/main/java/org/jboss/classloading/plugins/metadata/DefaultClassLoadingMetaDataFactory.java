@@ -72,8 +72,6 @@ public class DefaultClassLoadingMetaDataFactory extends ClassLoadingMetaDataFact
 
    public Requirement createWildcardPackage(String name, VersionRange versionRange)
    {
-      PackageRequirement result = new WildcardPackageRequirement(name, versionRange);
-      result.setDynamic(true);
-      return result;
+      return new WildcardPackageRequirement(name, versionRange);
    }
 }

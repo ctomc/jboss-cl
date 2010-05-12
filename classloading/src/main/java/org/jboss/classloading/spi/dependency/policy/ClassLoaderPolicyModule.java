@@ -27,12 +27,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
 import org.jboss.classloader.plugins.loader.ClassLoaderToLoaderAdapter;
-import org.jboss.classloader.spi.ClassLoaderPolicy;
-import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
-import org.jboss.classloader.spi.ClassLoaderSystem;
-import org.jboss.classloader.spi.DelegateLoader;
-import org.jboss.classloader.spi.Loader;
-import org.jboss.classloader.spi.ParentPolicy;
+import org.jboss.classloader.spi.*;
 import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
@@ -271,6 +266,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       if (requirement instanceof PackageRequirement)
       {
          PackageRequirement pr = (PackageRequirement)requirement;
+         // TODO -- handle wildcards
          return new FilteredDelegateLoader(factory, pr.toClassFilter());
       }
       else

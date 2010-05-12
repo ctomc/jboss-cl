@@ -43,7 +43,7 @@ public class WildcardPackageRequirement extends PackageRequirement
     */
    public WildcardPackageRequirement(String name)
    {
-      super(name);
+      this(name, null);
    }
 
    /**
@@ -56,6 +56,15 @@ public class WildcardPackageRequirement extends PackageRequirement
    public WildcardPackageRequirement(String name, VersionRange versionRange)
    {
       super(name, versionRange);
+      init();
+   }
+
+   /**
+    * Initialise the requirement
+    */
+   protected void init()
+   {
+      setDynamic(true);
    }
 
    /**
@@ -66,5 +75,10 @@ public class WildcardPackageRequirement extends PackageRequirement
    public ClassFilter toClassFilter()
    {
       return RecursivePackageClassFilter.createRecursivePackageClassFilter(getName());
+   }
+
+   public boolean isWildcard()
+   {
+      return true;
    }
 }
