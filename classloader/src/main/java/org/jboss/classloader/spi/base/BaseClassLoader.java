@@ -37,6 +37,7 @@ import org.jboss.classloader.spi.*;
 import org.jboss.classloader.spi.filter.ClassFilterUtils;
 import org.jboss.classloading.spi.RealClassLoader;
 import org.jboss.logging.Logger;
+import org.jboss.util.collection.ConcurrentSet;
 import org.jboss.util.collection.Iterators;
 
 /**
@@ -63,13 +64,13 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
    private DelegateLoader loader;
 
    /** The loaded classes */
-   private Map<String, String> loadedClasses = new ConcurrentHashMap<String, String>();
+   private Set<String> loadedClasses = new ConcurrentSet<String>();
 
    /** Our resource cache */
    private Map<String, URL> resourceCache;
 
    /** Our black list */
-   private Map<String, String> blackList;
+   private Set<String> blackList;
 
    /**
     * Create a new ClassLoader with no parent.
@@ -94,7 +95,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          resourceCache = new ConcurrentHashMap<String, URL>();
 
       if (basePolicy.isBlackListable())
-         blackList = new ConcurrentHashMap<String, String>();
+         blackList = new ConcurrentSet<String>();
 
       log.debugf("Created %1s with policy %2s", this, policy);
    }
@@ -188,7 +189,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    public Set<String> listLoadedClasses()
    {
-      return Collections.unmodifiableSet(loadedClasses.keySet());
+      return Collections.unmodifiableSet(loadedClasses);
    }
 
    public Set<String> listLoadedResourceNames()
@@ -655,7 +656,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          }
       }, policy.getAccessControlContext());
 
-      loadedClasses.put(name, name);
+      loadedClasses.add(name);
       policy.classFound(new ClassFoundEvent(this, result));
 
       return result;
@@ -697,7 +698,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
       }
 
       // Is this resource blacklisted?
-      if (blackList != null && blackList.containsKey(name))
+      if (blackList != null && blackList.contains(name))
       {
          if (trace)
             log.trace(this + " resource is blacklisted " + name);
@@ -729,7 +730,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
       // Blacklist when not found
       if (blackList != null && result == null)
-         blackList.put(name, name);
+         blackList.add(name);
 
       return result;
    }
@@ -924,7 +925,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    public int getResourceBlackListSize()
    {
-      Map<String, String> blackList = this.blackList;
+      Set<String> blackList = this.blackList;
       if (blackList == null)
          return 0;
       return blackList.size();
@@ -940,10 +941,10 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
 
    public Set<String> listResourceBlackList()
    {
-      Map<String, String> blackList = this.blackList;
+      Set<String> blackList = this.blackList;
       if (blackList == null)
          return Collections.emptySet();
-      return Collections.unmodifiableSet(blackList.keySet());
+      return Collections.unmodifiableSet(blackList);
    }
 
    public Map<String, URL> listResourceCache()
@@ -958,7 +959,7 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
    {
       if (blackList != null)
       {
-         for (String name : blackList.keySet())
+         for (String name : blackList)
             clearBlackList(name);
       }
    }

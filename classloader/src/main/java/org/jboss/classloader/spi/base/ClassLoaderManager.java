@@ -21,12 +21,7 @@
  */
 package org.jboss.classloader.spi.base;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
 
 import org.jboss.classloader.spi.Loader;
 import org.jboss.classloader.spi.base.ClassLoadingTask.ThreadTask;
@@ -344,7 +339,12 @@ public class ClassLoaderManager
       List<ThreadTask> taskList;
 
       BaseClassLoader classLoader = null;
-      if (loader instanceof BaseDelegateLoader)
+      if (loader instanceof ClassLoadingTaskAwareLoader)
+      {
+         ClassLoadingTaskAwareLoader cltal = (ClassLoadingTaskAwareLoader) loader;
+         classLoader = cltal.getBaseClassLoader(task);
+      }
+      if (classLoader == null && loader instanceof BaseDelegateLoader)
       {
          BaseDelegateLoader delegateLoader = (BaseDelegateLoader) loader;
          BaseClassLoaderPolicy policy = delegateLoader.getPolicy();

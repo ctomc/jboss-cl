@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
+import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.CacheLoader;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
@@ -110,8 +111,15 @@ public class BaseDelegateLoader implements CacheLoader
    {
       // Nothing by default
    }
-   
-   BaseClassLoader getBaseClassLoader(String message, String context)
+
+   /**
+    * Get BaseClassLoader.
+    *
+    * @param message the msg
+    * @param context the context; make sure this is always resource path
+    * @return policy's BaseClassLoader
+    */
+   protected BaseClassLoader getBaseClassLoader(String message, String context)
    {
       BaseClassLoader result = null;
       BaseClassLoaderPolicy policy = getPolicy();
@@ -124,7 +132,8 @@ public class BaseDelegateLoader implements CacheLoader
    
    public Class<?> loadClass(String className)
    {
-      BaseClassLoader classLoader = getBaseClassLoader("loading class ", className);
+      String path = ClassLoaderUtils.classNameToPath(className);
+      BaseClassLoader classLoader = getBaseClassLoader("loading class ", path);
       if (classLoader != null)
          return classLoader.loadClassLocally(className);
       return null;
@@ -156,17 +165,12 @@ public class BaseDelegateLoader implements CacheLoader
 
    public void getPackages(Set<Package> packages)
    {
-      BaseClassLoader classLoader;
-      try
-      {
-         classLoader = delegate.getClassLoader();
-      }
-      catch (IllegalStateException e)
-      {
-         log.warn("Not getting packages from policy that has no classLoader: " + toLongString());
+      if (delegate == null)
          return;
-      }
-      classLoader.getPackagesLocally(packages);
+
+      BaseClassLoader classLoader = delegate.getClassLoaderUnchecked();
+      if (classLoader != null)
+         classLoader.getPackagesLocally(packages);
    }
 
    public Class<?> checkClassCache(BaseClassLoader classLoader, String name, String path, boolean allExports)

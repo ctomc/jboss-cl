@@ -99,6 +99,16 @@ public class Domain implements ClassLoadingAdmin
    }
 
    /**
+    * Get ClassLoading.
+    *
+    * @return the classloading
+    */
+   public ClassLoading getClassLoading()
+   {
+      return classLoading;
+   }
+
+   /**
     * Get the parentDomainName.
     * 
     * @return the parentDomainName.

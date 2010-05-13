@@ -260,17 +260,25 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
          throw new IllegalStateException("No controller context");
       Controller controller = context.getController();
 
-      DynamicClassLoaderPolicyFactory factory = new DynamicClassLoaderPolicyFactory(controller, domain, item);
-
       Requirement requirement = item.getRequirement();
       if (requirement instanceof PackageRequirement)
       {
          PackageRequirement pr = (PackageRequirement)requirement;
-         // TODO -- handle wildcards
-         return new FilteredDelegateLoader(factory, pr.toClassFilter());
+         ClassFilter filter = pr.toClassFilter();
+         if (pr.isWildcard())
+         {
+            ClassLoaderPolicyFactory factory = new WildcardClassLoaderPolicyFactory(domain, item);
+            return new WildcardDelegateLoader(factory, filter);
+         }
+         else
+         {
+            ClassLoaderPolicyFactory factory = new DynamicClassLoaderPolicyFactory(controller, domain, item);
+            return new FilteredDelegateLoader(factory, filter);
+         }
       }
       else
       {
+         ClassLoaderPolicyFactory factory = new DynamicClassLoaderPolicyFactory(controller, domain, item);
          return new LazyFilteredDelegateLoader(factory);
       }
    }

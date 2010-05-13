@@ -46,6 +46,9 @@ public class PackageRequirement extends AbstractRequirement implements OptionalP
    /** The serialVersionUID */
    private static final long serialVersionUID = -7552921085464308835L;
 
+   /** The filter */
+   private transient ClassFilter filter;
+
    /**
     * Create a new PackageRequirement.
     */
@@ -93,20 +96,22 @@ public class PackageRequirement extends AbstractRequirement implements OptionalP
     */
    public ClassFilter toClassFilter()
    {
-      ClassFilter filter;
-      String packageName = getName();
-      if ("*".equals(packageName))
+      if (filter == null)
       {
-         filter = EverythingClassFilter.INSTANCE;
-      }
-      else if (packageName.endsWith(".*"))
-      {
-         packageName = packageName.substring(0, packageName.length() - 2);
-         filter = RecursivePackageClassFilter.createRecursivePackageClassFilter(packageName);
-      }
-      else
-      {
-         filter = PackageClassFilter.createPackageClassFilter(packageName);
+         String packageName = getName();
+         if ("*".equals(packageName))
+         {
+            filter = EverythingClassFilter.INSTANCE;
+         }
+         else if (packageName.endsWith(".*"))
+         {
+            packageName = packageName.substring(0, packageName.length() - 2);
+            filter = RecursivePackageClassFilter.createRecursivePackageClassFilter(packageName);
+         }
+         else
+         {
+            filter = PackageClassFilter.createPackageClassFilter(packageName);
+         }
       }
       return filter;
    }

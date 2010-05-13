@@ -21,16 +21,12 @@
  */
 package org.jboss.classloader.spi.base;
 
+import javax.management.ObjectName;
+
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Formattable;
-import java.util.Formatter;
-import java.util.List;
-
-import javax.management.ObjectName;
+import java.util.*;
 
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.DelegateLoader;
@@ -241,8 +237,7 @@ public abstract class BaseClassLoaderPolicy implements Formattable
       if (domain == null)
       {
          ShutdownPolicy result = getShutdownPolicy();
-         if (result == null)
-            result = ShutdownPolicy.UNREGISTER;
+         return (result != null) ? result : ShutdownPolicy.UNREGISTER;
       }
       return domain.determineShutdownPolicy(this);
    }

@@ -37,9 +37,10 @@ import org.jboss.logging.Logger;
  * 
  * @author Scott.Stark@jboss.org
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-class ClassLoadingTask
+class ClassLoadingTask implements ClassLoadingTaskInfo
 {
    /** The log */
    protected static Logger log = Logger.getLogger("org.jboss.detailed.classloader.ClassLoadingTask");
@@ -108,7 +109,7 @@ class ClassLoadingTask
     * 
     * @return the className.
     */
-   String getClassName()
+   public String getClassName()
    {
       return className;
    }
@@ -401,15 +402,21 @@ class ClassLoadingTask
        */
       BaseClassLoader getClassLoader()
       {
-         if (loader instanceof BaseDelegateLoader)
+         BaseClassLoader classLoader = null;
+         if (loader instanceof ClassLoadingTaskAwareLoader)
+         {
+            ClassLoadingTaskAwareLoader cltal = (ClassLoadingTaskAwareLoader) loader;
+            classLoader = cltal.getBaseClassLoader(getLoadTask());
+         }
+         if (classLoader == null && loader instanceof BaseDelegateLoader)
          {
             BaseDelegateLoader delegateLoader = (BaseDelegateLoader) loader;
             BaseClassLoaderPolicy policy = delegateLoader.getPolicy();
             if (policy == null)
                throw new IllegalStateException("Null classloader policy for " + loader);
-            return policy.getClassLoader();
+            classLoader = policy.getClassLoader();
          }
-         return null;
+         return classLoader;
       }
       
       /**

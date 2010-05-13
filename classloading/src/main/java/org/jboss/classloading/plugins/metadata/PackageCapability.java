@@ -24,6 +24,7 @@ package org.jboss.classloading.plugins.metadata;
 import java.util.Collections;
 import java.util.Set;
 
+import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.metadata.ExportPackages;
 import org.jboss.classloading.spi.metadata.Requirement;
@@ -50,7 +51,7 @@ public class PackageCapability extends AbstractCapability implements ExportPacka
       Last, 
       /** Split packages generate an error. This is the default. */
       Error 
-   };
+   }
    
    /** The split package policy. Default is {@link SplitPackagePolicy#Error} */
    private SplitPackagePolicy splitPolicy = SplitPackagePolicy.Error;
@@ -123,9 +124,19 @@ public class PackageCapability extends AbstractCapability implements ExportPacka
    {
       if (requirement instanceof PackageRequirement == false)
          return false;
+
       PackageRequirement requirePackage = (PackageRequirement) requirement;
-      if (getName().equals(requirePackage.getName()) == false)
-         return false;
+      if (requirePackage.isWildcard())
+      {
+         ClassFilter filter = requirePackage.toClassFilter();
+         if (filter.matchesPackageName(getName()) == false)
+            return false;
+      }
+      else // for non-wildcard, we intentionaly still use direct string equals
+      {
+         if (getName().equals(requirePackage.getName()) == false)
+            return false;
+      }
       return requirePackage.getVersionRange().isInRange(getVersion());
    }
    

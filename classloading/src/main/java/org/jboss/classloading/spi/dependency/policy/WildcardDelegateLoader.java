@@ -1,0 +1,62 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2010, Red Hat Middleware LLC, and individual contributors
+ * as indicated by the @author tags. See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+
+package org.jboss.classloading.spi.dependency.policy;
+
+import org.jboss.classloader.plugins.ClassLoaderUtils;
+import org.jboss.classloader.spi.ClassLoaderPolicy;
+import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
+import org.jboss.classloader.spi.base.BaseClassLoader;
+import org.jboss.classloader.spi.base.ClassLoadingTaskAwareLoader;
+import org.jboss.classloader.spi.base.ClassLoadingTaskInfo;
+import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
+
+/**
+ * Wildcard delegate loader.
+ *
+ * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
+ */
+public class WildcardDelegateLoader extends FilteredDelegateLoader implements ClassLoadingTaskAwareLoader
+{
+   public WildcardDelegateLoader(ClassLoaderPolicyFactory factory, ClassFilter filter)
+   {
+      super(factory, filter);
+   }
+
+   @Override
+   protected BaseClassLoader getBaseClassLoader(String message, String context)
+   {
+      ClassLoaderPolicy policy = getPolicy();
+      if (policy instanceof WildcardClassLoaderPolicy == false)
+         throw new IllegalArgumentException("Can only handle wildcard policy: " + policy);
+
+      WildcardClassLoaderPolicy wclp = (WildcardClassLoaderPolicy) policy;
+      return wclp.getBaseClassLoader(context);
+   }
+
+   public BaseClassLoader getBaseClassLoader(ClassLoadingTaskInfo task)
+   {
+      String path = ClassLoaderUtils.classNameToPath(task.getClassName());
+      return getBaseClassLoader(null, path);
+   }
+}

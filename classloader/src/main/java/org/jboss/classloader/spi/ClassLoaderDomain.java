@@ -1066,7 +1066,7 @@ public class ClassLoaderDomain extends BaseClassLoaderDomain implements ClassLoa
    @Override
    protected Class<?> checkCacheAfter(BaseClassLoader classLoader, String name, String path, boolean allExports)
    {
-      if (parent == null || parent instanceof CacheLoader == false || isBlackListedClass(name) == false)
+      if (parent == null || parent instanceof CacheLoader == false || isBlackListedClass(path) == false)
          return null;
 
       ClassFilter filter = getParentPolicy().getAfterFilter();
