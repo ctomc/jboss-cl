@@ -179,12 +179,11 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       if (md != null && module.canResolve(requirement))
       {
          boolean isAncestor = (domain != md); // not the same domain, so it must be ancestor
-         boolean isParentFirst = domain.isParentFirst();
          synchronized (this)
          {
             if (isAncestor)
             {
-               if (isParentFirst)
+               if (domain.isParentFirst())
                {
                   modules.add(0, module);
                   parentsBefore++;
@@ -212,8 +211,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
             {
                Domain md = getDomain(module);
                boolean isAncestor = (domain != md);
-               boolean isParentFirst = domain.isParentFirst();
-               if (isAncestor && isParentFirst)
+               if (isAncestor && domain.isParentFirst())
                   parentsBefore--;
 
                reset();
