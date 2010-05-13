@@ -23,8 +23,12 @@ package org.jboss.classloading.spi.dependency.policy;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
@@ -32,7 +36,10 @@ import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.base.ClassLoadingTask;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
-import org.jboss.classloading.spi.dependency.*;
+import org.jboss.classloading.spi.dependency.ClassLoading;
+import org.jboss.classloading.spi.dependency.Domain;
+import org.jboss.classloading.spi.dependency.Module;
+import org.jboss.classloading.spi.dependency.ModuleRegistry;
 
 /**
  * WildcardClassLoaderPolicy.
@@ -47,11 +54,14 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
    /** The package requirement */
    private PackageRequirement requirement;
 
-   /** The moduke */
+   /** The module */
    private Module module;
 
    /** The matching imported modules */
-   private volatile List<Module> modules;
+   private List<Module> modules = new CopyOnWriteArrayList<Module>();
+
+   /** The parents before index */
+   private int parentsBefore;
 
    /** The resources cache */
    private Map<String, Module> resourceCache = new ConcurrentHashMap<String, Module>();
@@ -84,7 +94,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       ClassFilter filter = requirement.toClassFilter();
       if (filter.matchesResourcePath(resource))
       {
-         for (Module m : getModules())
+         for (Module m : modules)
          {
             URL url = m.getResource(resource);
             if (url != null)
@@ -106,7 +116,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       ClassFilter filter = requirement.toClassFilter();
       if (filter.matchesResourcePath(path))
       {
-         for (Module m : getModules())
+         for (Module m : modules)
          {
             URL url = m.getResource(path);
             if (url != null)
@@ -124,7 +134,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       ClassFilter filter = requirement.toClassFilter();
       if (filter.matchesResourcePath(name))
       {
-         for (Module m : getModules())
+         for (Module m : modules)
          {
             Enumeration<URL> eu = m.getResources(name);
             while (eu.hasMoreElements())
@@ -139,93 +149,85 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       return false; // don't cache
    }
 
-   protected void reset(Module module)
+   /**
+    * Get module's domain if it's connected to ours, null otherwise.
+    *
+    * @param module the module
+    * @return module's domain if we're connected, null otherwise
+    */
+   protected Domain getDomain(Module module)
    {
       String domainName = module.getDeterminedDomainName();
       Domain current = domain;
       while (current != null && domainName.equals(domain.getName()) == false)
          current = current.getParentDomain();
 
-      // We have a domain match, do reset
-      if (current != null)
-      {
-         modules = null;
-         resourceCache.clear();
-      }
+      return current;
+   }
+
+   /**
+    * Clear this policy.
+    */
+   protected void reset()
+   {
+      resourceCache.clear();
    }
 
    public void addModule(Module module)
    {
-      reset(module);
+      Domain md = getDomain(module);
+      if (md != null && module.canResolve(requirement))
+      {
+         boolean isAncestor = (domain != md); // not the same domain, so it must be ancestor
+         boolean isParentFirst = domain.isParentFirst();
+         synchronized (this)
+         {
+            if (isAncestor)
+            {
+               if (isParentFirst)
+               {
+                  modules.add(0, module);
+                  parentsBefore++;
+               }
+               else
+                  modules.add(module);
+            }
+            else
+               modules.add(parentsBefore, module);
+         }
+
+         reset();
+      }
    }
 
    public void removeModule(Module module)
    {
-      reset(module);
+      boolean sameModule = (this.module == module);
+
+      if (sameModule == false)
+      {
+         synchronized (this)
+         {
+            if (modules.remove(module))
+            {
+               Domain md = getDomain(module);
+               boolean isAncestor = (domain != md);
+               boolean isParentFirst = domain.isParentFirst();
+               if (isAncestor && isParentFirst)
+                  parentsBefore--;
+
+               reset();
+            }
+         }
+      }
 
       // Unregister this policy as module listener
-      if (module == this.module)
+      if (sameModule)
       {
          ClassLoading classLoading = domain.getClassLoading();
          classLoading.removeModuleRegistry(this);
          this.module = null;
       }
-   }
-
-   /**
-    * Lazy get modules.
-    *
-    * @return the matching modules
-    */
-   private List<Module> getModules()
-   {
-      if (modules == null)
-      {
-         List<Module> tmp = new ArrayList<Module>();
-         List<ExportPackage> eps = getExportedPackages();
-         for (ExportPackage ep : eps)
-         {
-            Module m = ep.getModule();
-            if (m != module) // sanity check
-               tmp.add(m);
-         }
-         modules = tmp;
-      }
-      return modules;
-   }
-
-   /**
-    * Get matching imported modules.
-    *
-    * @return the matching import modules
-    */
-   private List<ExportPackage> getExportedPackages()
-   {
-      List<ExportPackage> modules = new ArrayList<ExportPackage>();
-      fillModules(domain, modules);
-      return modules;
-   }
-
-   /**
-    * Fill modules according to domain rules.
-    *
-    * @param domain  the current domain
-    * @param modules the modules to fill
-    */
-   private void fillModules(Domain domain, List<ExportPackage> modules)
-   {
-      Domain parent = domain.getParentDomain();
-      boolean parentFirst = domain.isParentFirst();
-
-      if (parent != null && parentFirst)
-         fillModules(parent, modules);
-
-      Collection<ExportPackage> eps = domain.getExportedPackages(requirement.getName(), requirement.getVersionRange());
-      if (eps != null && eps.isEmpty() == false)
-         modules.addAll(eps);
-
-      if (parent != null && parentFirst == false)
-         fillModules(parent, modules);
    }
 
    /**

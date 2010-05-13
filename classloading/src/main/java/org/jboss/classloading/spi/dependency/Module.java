@@ -935,6 +935,26 @@ public abstract class Module extends NameAndVersionSupport
    }
 
    /**
+    * The requirement can be resolved by the module.
+    *
+    * @param requirement the requirement
+    * @return true if the module can resolve requirement
+    */
+   public boolean canResolve(Requirement requirement)
+   {
+      List<Capability> capabilities = getCapabilitiesRaw();
+      if (capabilities != null && capabilities.isEmpty() == false)
+      {
+         for (Capability capability : capabilities)
+         {
+            if (capability.resolves(this, requirement))
+               return true;
+         }
+      }
+      return false;
+   }
+
+   /**
     * Get the capabilities.
     * 
     * @return the capabilities.
