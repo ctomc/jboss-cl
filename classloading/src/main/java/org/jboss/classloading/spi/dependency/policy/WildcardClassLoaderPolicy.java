@@ -58,6 +58,12 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
 
    public WildcardClassLoaderPolicy(Domain domain, PackageRequirement requirement, Module module)
    {
+      if (domain == null)
+         throw new IllegalArgumentException("Null domain");
+      if (requirement == null)
+         throw new IllegalArgumentException("Null reqirement");
+      if (module == null)
+         throw new IllegalArgumentException("Null module");
       this.domain = domain;
       this.requirement = requirement;
       this.module = module;
