@@ -26,8 +26,10 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.base.BaseClassLoader;
+import org.jboss.classloader.spi.base.ClassLoadingTask;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.dependency.*;
@@ -236,5 +238,15 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
             return BaseClassLoader.class.cast(cl);
       }
       return null;
+   }
+
+   @Override
+   protected BaseClassLoader getClassLoader(ClassLoadingTask task)
+   {
+      if (task == null)
+         throw new IllegalArgumentException("Null task");
+
+      String path = ClassLoaderUtils.classNameToPath(task.getClassName());
+      return getBaseClassLoader(path);
    }
 }

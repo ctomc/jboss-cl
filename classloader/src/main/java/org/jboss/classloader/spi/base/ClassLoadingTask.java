@@ -34,13 +34,17 @@ import org.jboss.logging.Logger;
 
 /**
  * ClassLoadingTask.
+ *
+ * Make the class public, so others can use it,
+ * but the ctor is still package protected
+ * so only classes in this package can instantiate it.
  * 
  * @author Scott.Stark@jboss.org
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-class ClassLoadingTask implements ClassLoadingTaskInfo
+public class ClassLoadingTask
 {
    /** The log */
    protected static Logger log = Logger.getLogger("org.jboss.detailed.classloader.ClassLoadingTask");
@@ -403,18 +407,13 @@ class ClassLoadingTask implements ClassLoadingTaskInfo
       BaseClassLoader getClassLoader()
       {
          BaseClassLoader classLoader = null;
-         if (loader instanceof ClassLoadingTaskAwareLoader)
-         {
-            ClassLoadingTaskAwareLoader cltal = (ClassLoadingTaskAwareLoader) loader;
-            classLoader = cltal.getBaseClassLoader(getLoadTask());
-         }
-         if (classLoader == null && loader instanceof BaseDelegateLoader)
+         if (loader instanceof BaseDelegateLoader)
          {
             BaseDelegateLoader delegateLoader = (BaseDelegateLoader) loader;
             BaseClassLoaderPolicy policy = delegateLoader.getPolicy();
             if (policy == null)
                throw new IllegalStateException("Null classloader policy for " + loader);
-            classLoader = policy.getClassLoader();
+            classLoader = policy.getClassLoader(getLoadTask());
          }
          return classLoader;
       }
@@ -452,7 +451,7 @@ class ClassLoadingTask implements ClassLoadingTaskInfo
       /**
        * Run the class load
        * 
-       * @throws ClassNotFoundException
+       * @throws ClassNotFoundException if class cannot be loaded
        */
       void run() throws ClassNotFoundException
       {

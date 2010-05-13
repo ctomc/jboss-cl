@@ -22,12 +22,9 @@
 
 package org.jboss.classloading.spi.dependency.policy;
 
-import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
 import org.jboss.classloader.spi.base.BaseClassLoader;
-import org.jboss.classloader.spi.base.ClassLoadingTaskAwareLoader;
-import org.jboss.classloader.spi.base.ClassLoadingTaskInfo;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 
@@ -36,7 +33,7 @@ import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
  *
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class WildcardDelegateLoader extends FilteredDelegateLoader implements ClassLoadingTaskAwareLoader
+public class WildcardDelegateLoader extends FilteredDelegateLoader
 {
    public WildcardDelegateLoader(ClassLoaderPolicyFactory factory, ClassFilter filter)
    {
@@ -52,11 +49,5 @@ public class WildcardDelegateLoader extends FilteredDelegateLoader implements Cl
 
       WildcardClassLoaderPolicy wclp = (WildcardClassLoaderPolicy) policy;
       return wclp.getBaseClassLoader(context);
-   }
-
-   public BaseClassLoader getBaseClassLoader(ClassLoadingTaskInfo task)
-   {
-      String path = ClassLoaderUtils.classNameToPath(task.getClassName());
-      return getBaseClassLoader(null, path);
    }
 }

@@ -339,18 +339,13 @@ public class ClassLoaderManager
       List<ThreadTask> taskList;
 
       BaseClassLoader classLoader = null;
-      if (loader instanceof ClassLoadingTaskAwareLoader)
-      {
-         ClassLoadingTaskAwareLoader cltal = (ClassLoadingTaskAwareLoader) loader;
-         classLoader = cltal.getBaseClassLoader(task);
-      }
-      if (classLoader == null && loader instanceof BaseDelegateLoader)
+      if (loader instanceof BaseDelegateLoader)
       {
          BaseDelegateLoader delegateLoader = (BaseDelegateLoader) loader;
          BaseClassLoaderPolicy policy = delegateLoader.getPolicy();
          if (policy == null)
             throw new IllegalStateException("Null policy for " + delegateLoader);
-         classLoader = policy.getClassLoader();
+         classLoader = policy.getClassLoader(task);
       }
       
       synchronized (loadClassThreads)

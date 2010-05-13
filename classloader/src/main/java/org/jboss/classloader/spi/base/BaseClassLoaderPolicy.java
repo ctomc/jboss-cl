@@ -350,7 +350,22 @@ public abstract class BaseClassLoaderPolicy implements Formattable
       shutdownPolicy();
       this.domain = null;
    }
-   
+
+   /**
+    * Get the classloader based on classloading task.
+    *
+    * Since ClassLoadingTask ctor is package protected
+    * this method cannot be easily abused, since the only
+    * code that can instantiate ClassLoadingTask is our ClassLoaderManager.
+    *
+    * @param task the classloading task info
+    * @return the classloader
+    */
+   protected synchronized BaseClassLoader getClassLoader(ClassLoadingTask task)
+   {
+      return getClassLoader();
+   }
+
    /**
     * Get the classloader
     * 
