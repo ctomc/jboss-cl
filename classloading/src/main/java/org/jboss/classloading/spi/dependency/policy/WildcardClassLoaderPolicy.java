@@ -217,20 +217,23 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
 
    public void removeModule(Module module)
    {
+      boolean sameModule = this.module == module;
+
       synchronized (this)
       {
          if (modules.remove(module))
          {
-            Domain md = getDomain(module);
-            boolean isAncestor = (domain != md);
-            if (isAncestor && domain.isParentFirst())
-               parentsBefore--;
+            if (sameModule == false)
+            {
+               Domain md = getDomain(module);
+               boolean isAncestor = (domain != md);
+               if (isAncestor && domain.isParentFirst())
+                  parentsBefore--;
 
+            }
             reset();
          }
       }
-
-      boolean sameModule = this.module == module;
 
       // Unregister this policy as module listener
       if (sameModule)
