@@ -218,6 +218,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
    public void removeModule(Module module)
    {
       boolean sameModule = this.module == module;
+      boolean resolvedModule = false;
 
       synchronized (this)
       {
@@ -225,6 +226,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
          {
             if (sameModule == false)
             {
+               resolvedModule = true; // we were part of matching modules, but not our module
                Domain md = getDomain(module);
                boolean isAncestor = (domain != md);
                if (isAncestor && domain.isParentFirst())
@@ -244,7 +246,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       }
 
       // It's not us (we're already uninstalling) and we used this, let's bounce.
-      if (used.remove(module) && sameModule == false)
+      if (resolvedModule && used.remove(module))
       {
          LifeCycle lifeCycle = this.module.getLifeCycle();
          if (lifeCycle != null && module.isCascadeShutdown() == false)
