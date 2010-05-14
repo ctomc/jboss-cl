@@ -189,10 +189,10 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       resourceCache.clear();
    }
 
-   public void addModule(Module module)
+   public void addModule(Module current)
    {
-      Domain md = getDomain(module);
-      if (md != null && module.canResolve(requirement))
+      Domain md = getDomain(current);
+      if (md != null && current.canResolve(requirement))
       {
          boolean isAncestor = (domain != md); // not the same domain, so it must be ancestor
          synchronized (this)
@@ -201,33 +201,33 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
             {
                if (domain.isParentFirst())
                {
-                  modules.add(0, module);
+                  modules.add(0, current);
                   parentsBefore++;
                }
                else
-                  modules.add(module);
+                  modules.add(current);
             }
             else
-               modules.add(parentsBefore, module);
+               modules.add(parentsBefore, current);
          }
 
          reset();
       }
    }
 
-   public void removeModule(Module module)
+   public void removeModule(Module current)
    {
-      boolean sameModule = this.module == module;
+      boolean sameModule = module == current;
       boolean resolvedModule = false;
 
       synchronized (this)
       {
-         if (modules.remove(module))
+         if (modules.remove(current))
          {
             if (sameModule == false)
             {
                resolvedModule = true; // we were part of matching modules, but not our module
-               Domain md = getDomain(module);
+               Domain md = getDomain(current);
                boolean isAncestor = (domain != md);
                if (isAncestor && domain.isParentFirst())
                   parentsBefore--;
@@ -246,18 +246,25 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       }
 
       // It's not us (we're already uninstalling) and we used this, let's bounce.
-      if (resolvedModule && used.remove(module))
+      if (resolvedModule && used.remove(current))
       {
-         LifeCycle lifeCycle = this.module.getLifeCycle();
-         if (lifeCycle != null && module.isCascadeShutdown() == false)
+         LifeCycle lifeCycle = module.getLifeCycle();
+         if (lifeCycle != null)
          {
-            try
+            if (current.isCascadeShutdown())
             {
-               lifeCycle.bounce();
+               try
+               {
+                  lifeCycle.bounce(); // let's refresh the wired resources
+               }
+               catch (Exception e)
+               {
+                  throw new RuntimeException("Error bouncing module: " + this.module, e);
+               }
             }
-            catch (Exception e)
+            else
             {
-               throw new RuntimeException("Error bouncing module: " + this.module, e);
+               // TODO -- make this module somehow available for refresh   
             }
          }
       }

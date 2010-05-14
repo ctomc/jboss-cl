@@ -181,7 +181,7 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       {
          resolvedModule.removeDepends(this);
          resolvedModule.removeDependsOnMe(this);
-         resolvedModule = null;
+         this.resolvedModule = null;
       }
       super.setResolved(resolved);
    }

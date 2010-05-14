@@ -111,7 +111,7 @@ public abstract class Module extends NameAndVersionSupport
 
       modulesByClassLoader.put(classLoader, module);
 
-      // This is hack - we might not know until the classloader gets constructed whether
+      // This is a hack - we might not know until the classloader gets constructed whether
       // it is in a domain that specifies lazy shutdown of the classloader
       module.cascadeShutdown = module.isCascadeShutdown();
       if (module.cascadeShutdown == false)
