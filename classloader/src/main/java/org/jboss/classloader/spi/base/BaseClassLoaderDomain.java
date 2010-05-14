@@ -1484,7 +1484,7 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
       {
          BaseClassLoaderSystem system = getClassLoaderSystem();
          if (system != null)
-         shutdownPolicy = system.getShutdownPolicy();
+            shutdownPolicy = system.getShutdownPolicy();
       }
       
       // The default behaviour
