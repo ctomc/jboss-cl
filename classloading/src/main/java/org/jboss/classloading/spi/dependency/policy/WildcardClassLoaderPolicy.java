@@ -36,10 +36,8 @@ import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.base.ClassLoadingTask;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
-import org.jboss.classloading.spi.dependency.ClassLoading;
-import org.jboss.classloading.spi.dependency.Domain;
-import org.jboss.classloading.spi.dependency.Module;
-import org.jboss.classloading.spi.dependency.ModuleRegistry;
+import org.jboss.classloading.spi.dependency.*;
+import org.jboss.util.collection.ConcurrentSet;
 
 /**
  * WildcardClassLoaderPolicy.
@@ -66,6 +64,9 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
    /** The resources cache */
    private Map<String, Module> resourceCache = new ConcurrentHashMap<String, Module>();
 
+   /** The used modules - track what we're using, so we know when to bounce */
+   private Set<Module> used = new ConcurrentSet<Module>();
+
    public WildcardClassLoaderPolicy(Domain domain, PackageRequirement requirement, Module module)
    {
       if (domain == null)
@@ -74,6 +75,11 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
          throw new IllegalArgumentException("Null reqirement");
       if (module == null)
          throw new IllegalArgumentException("Null module");
+
+      // does our module resolve our requirement
+      if (module.canResolve(requirement))
+         modules.add(module);
+
       this.domain = domain;
       this.requirement = requirement;
       this.module = module;
@@ -100,6 +106,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
             if (url != null)
             {
                resourceCache.put(resource, m);
+               used.add(m);
                return m;
             }
          }
@@ -122,6 +129,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
             if (url != null)
             {
                resourceCache.put(path, m);
+               used.add(m);
                return url;
             }
          }
@@ -136,9 +144,17 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       {
          for (Module m : modules)
          {
+            boolean visited = false;
             Enumeration<URL> eu = m.getResources(name);
             while (eu.hasMoreElements())
+            {
+               if (visited == false)
+               {
+                  used.add(m);
+                  visited = true;
+               }
                urls.add(eu.nextElement());
+            }
          }
       }
    }
@@ -201,23 +217,20 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
 
    public void removeModule(Module module)
    {
-      boolean sameModule = (this.module == module);
-
-      if (sameModule == false)
+      synchronized (this)
       {
-         synchronized (this)
+         if (modules.remove(module))
          {
-            if (modules.remove(module))
-            {
-               Domain md = getDomain(module);
-               boolean isAncestor = (domain != md);
-               if (isAncestor && domain.isParentFirst())
-                  parentsBefore--;
+            Domain md = getDomain(module);
+            boolean isAncestor = (domain != md);
+            if (isAncestor && domain.isParentFirst())
+               parentsBefore--;
 
-               reset();
-            }
+            reset();
          }
       }
+
+      boolean sameModule = this.module == module;
 
       // Unregister this policy as module listener
       if (sameModule)
@@ -225,6 +238,23 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
          ClassLoading classLoading = domain.getClassLoading();
          classLoading.removeModuleRegistry(this);
          this.module = null;
+      }
+
+      // It's not us (we're already uninstalling) and we used this, let's bounce.
+      if (used.remove(module) && sameModule == false)
+      {
+         LifeCycle lifeCycle = this.module.getLifeCycle();
+         if (lifeCycle != null && module.isCascadeShutdown() == false)
+         {
+            try
+            {
+               lifeCycle.bounce();
+            }
+            catch (Exception e)
+            {
+               throw new IllegalArgumentException("Error bouncing module: " + this.module);
+            }
+         }
       }
    }
 
