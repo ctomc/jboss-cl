@@ -257,7 +257,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
             }
             catch (Exception e)
             {
-               throw new IllegalArgumentException("Error bouncing module: " + this.module);
+               throw new RuntimeException("Error bouncing module: " + this.module, e);
             }
          }
       }
