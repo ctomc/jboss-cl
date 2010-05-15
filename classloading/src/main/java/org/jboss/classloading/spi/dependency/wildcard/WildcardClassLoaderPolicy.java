@@ -19,7 +19,7 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-package org.jboss.classloading.spi.dependency.policy;
+package org.jboss.classloading.spi.dependency.wildcard;
 
 import java.io.IOException;
 import java.net.URL;
@@ -34,12 +34,11 @@ import org.jboss.classloader.spi.base.ClassLoadingTask;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.dependency.*;
+import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.util.collection.ConcurrentSet;
 
 /**
  * WildcardClassLoaderPolicy.
- *
- * TODO -- module order rules actually need more work; parent of a parent, ...
  *
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  */
@@ -47,6 +46,9 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
 {
    /** The domain */
    private Domain domain;
+
+   /** The wildcard requirement dependency item */
+   private WildcardRequirementDependencyItem item;
 
    /** The package requirement */
    private PackageRequirement requirement;
@@ -66,18 +68,26 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
    /** The used modules - track what we're using, so we know when to bounce */
    private Set<Module> used = new ConcurrentSet<Module>();
 
-   public WildcardClassLoaderPolicy(Domain domain, PackageRequirement requirement, Module module)
+   public WildcardClassLoaderPolicy(Domain domain, WildcardRequirementDependencyItem item)
    {
       if (domain == null)
          throw new IllegalArgumentException("Null domain");
-      if (requirement == null)
-         throw new IllegalArgumentException("Null reqirement");
-      if (module == null)
+      if (item == null)
+         throw new IllegalArgumentException("Null item");
+
+      Requirement requirement = item.getRequirement();
+      if (requirement == null || requirement instanceof PackageRequirement == false)
+         throw new IllegalArgumentException("Illegal requirement: " + requirement);
+      PackageRequirement pr = (PackageRequirement) requirement;
+      if (pr.isWildcard() == false)
+         throw new IllegalArgumentException("Requirement is not wildcard: " + pr);
+      if (item.getModule() == null)
          throw new IllegalArgumentException("Null module");
 
       this.domain = domain;
-      this.requirement = requirement;
-      this.module = module;
+      this.item = item;
+      this.requirement = pr;
+      this.module = item.getModule();
 
       fillModules(domain);
    }
@@ -92,6 +102,18 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
    {
       ClassLoader cl = ClassLoading.getClassLoaderForModule(m);
       return cl != null;
+   }
+
+   /**
+    * Add used.
+    *
+    * @param m the module
+    */
+   protected void addUsed(Module m)
+   {
+      // Add refresh info if the module is not cascade shutdown.
+      if (used.add(m) && m.isCascadeShutdown() == false)
+         item.addIDependOn(m);
    }
 
    /**
@@ -117,7 +139,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
                if (url != null)
                {
                   resourceCache.put(resource, m);
-                  used.add(m);
+                  addUsed(m);
                   return m;
                }
             }
@@ -143,7 +165,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
                if (url != null)
                {
                   resourceCache.put(path, m);
-                  used.add(m);
+                  addUsed(m);
                   return url;
                }
             }
@@ -167,7 +189,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
                {
                   if (visited == false)
                   {
-                     used.add(m);
+                     addUsed(m);
                      visited = true;
                   }
                   urls.add(eu.nextElement());
@@ -294,10 +316,6 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
                {
                   throw new RuntimeException("Error bouncing module: " + this.module, e);
                }
-            }
-            else
-            {
-               // TODO -- make this module somehow available for refresh   
             }
          }
       }

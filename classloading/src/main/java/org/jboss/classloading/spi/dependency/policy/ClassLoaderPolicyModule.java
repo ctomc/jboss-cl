@@ -38,6 +38,8 @@ import org.jboss.classloading.spi.dependency.Domain;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.dependency.RequirementDependencyItem;
 import org.jboss.classloading.spi.dependency.helpers.ClassLoadingMetaDataModule;
+import org.jboss.classloading.spi.dependency.wildcard.WildcardClassLoaderPolicyFactory;
+import org.jboss.classloading.spi.dependency.wildcard.WildcardDelegateLoader;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.dependency.spi.Controller;

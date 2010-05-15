@@ -19,16 +19,13 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-package org.jboss.classloading.spi.dependency.policy;
+package org.jboss.classloading.spi.dependency.wildcard;
 
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
-import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.dependency.ClassLoading;
 import org.jboss.classloading.spi.dependency.Domain;
-import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.dependency.RequirementDependencyItem;
-import org.jboss.classloading.spi.metadata.Requirement;
 
 /**
  * WildcardClassLoaderPolicyFactory.
@@ -40,11 +37,8 @@ public class WildcardClassLoaderPolicyFactory implements ClassLoaderPolicyFactor
    /** The domain */
    private Domain domain;
 
-   /** The package requirement */
-   private PackageRequirement requirement;
-
-   /** The module */
-   private Module module;
+   /** The requirement dependency item */
+   private WildcardRequirementDependencyItem item;
 
    /**
     * Create a new WildcardClassLoaderPolicyFactory.
@@ -56,24 +50,16 @@ public class WildcardClassLoaderPolicyFactory implements ClassLoaderPolicyFactor
    {
       if (domain == null)
          throw new IllegalArgumentException("Null domain");
-      if (item == null)
-         throw new IllegalArgumentException("Null item");
-      Requirement requirement = item.getRequirement();
-      if (requirement == null || requirement instanceof PackageRequirement == false)
-         throw new IllegalArgumentException("Illegal requirement: " + requirement);
-      PackageRequirement pr = (PackageRequirement) requirement;
-      if (pr.isWildcard() == false)
-         throw new IllegalArgumentException("Requirement is not wildcard: " + pr);
-      if (item.getModule() == null)
-         throw new IllegalArgumentException("Null module");
+      if (item == null || item instanceof WildcardRequirementDependencyItem == false)
+         throw new IllegalArgumentException("Illegal item: " + item);
+
       this.domain = domain;
-      this.requirement = pr;
-      this.module = item.getModule();
+      this.item = (WildcardRequirementDependencyItem) item;
    }
 
    public ClassLoaderPolicy createClassLoaderPolicy()
    {
-      WildcardClassLoaderPolicy policy = new WildcardClassLoaderPolicy(domain, requirement, module);
+      WildcardClassLoaderPolicy policy = new WildcardClassLoaderPolicy(domain, item);
       ClassLoading classLoading = domain.getClassLoading();
       classLoading.addModuleRegistry(policy); // so we know when to reset on module change
       return policy;

@@ -116,12 +116,12 @@ public class RequirementDependencyItem extends AbstractDependencyItem
 
    public boolean resolve(Controller controller)
    {
-      Requirement requirement = getRequirement();
       Module module = getModule().resolveModule(this, true);
       
       // No module present
       if (module == null)
       {
+         Requirement requirement = getRequirement();
          setResolved(requirement.isOptional() || requirement.isDynamic());
          return isResolved();
       }
@@ -145,7 +145,7 @@ public class RequirementDependencyItem extends AbstractDependencyItem
          if (resolved)
          {
             setIDependOn(context.getName());
-            module.addDepends(this);
+            addDepends(module);
             if (module.getClassLoadingSpace() == null)
                log.warn(getModule() + " resolved " + getRequirement() + " to " + module + " which has import-all=true. Cannot check its consistency.");
          }
@@ -154,6 +154,26 @@ public class RequirementDependencyItem extends AbstractDependencyItem
 
       setResolved(false);
       return isResolved();
+   }
+
+   /**
+    * Add this dependency on module.
+    *
+    * @param current the current module
+    */
+   protected void addDepends(Module current)
+   {
+      current.addDepends(this);      
+   }
+
+   /**
+    * Remove this dependency from module.
+    *
+    * @param current the current module
+    */
+   protected void removeDepends(Module current)
+   {
+      current.removeDepends(this);
    }
 
    @Override
@@ -179,7 +199,7 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       Module resolvedModule = getResolvedModule();
       if (resolved == ResolvedState.UNRESOLVED && resolvedModule != null)
       {
-         resolvedModule.removeDepends(this);
+         removeDepends(resolvedModule);
          resolvedModule.removeDependsOnMe(this);
          this.resolvedModule = null;
       }

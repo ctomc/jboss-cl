@@ -36,6 +36,7 @@ import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageCapability;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
+import org.jboss.classloading.spi.dependency.wildcard.WildcardRequirementDependencyItem;
 import org.jboss.classloading.spi.helpers.NameAndVersionSupport;
 import org.jboss.classloading.spi.metadata.*;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
@@ -112,11 +113,11 @@ public abstract class Module extends NameAndVersionSupport
       modulesByClassLoader.put(classLoader, module);
 
       // This is a hack - we might not know until the classloader gets constructed whether
-      // it is in a domain that specifies lazy shutdown of the classloader
+      // it is in a domain that specifies lazy shutdown of the classloader.
       module.cascadeShutdown = module.isCascadeShutdown();
       if (module.cascadeShutdown == false)
          module.enableLazyShutdown();
-      
+
       LifeCycle lifeCycle = module.getLifeCycle();
       if (lifeCycle != null)
          lifeCycle.fireResolved();
@@ -1173,8 +1174,11 @@ public abstract class Module extends NameAndVersionSupport
          requirementDependencies = new ArrayList<RequirementDependencyItem>();
          for (Requirement requirement : requirements)
          {
-            // [JBCL-113] RequirementDependencyItems can only resolve againt INSTALLED contexts
-            RequirementDependencyItem item = new RequirementDependencyItem(this, requirement, classLoaderState, classLoaderState);
+            RequirementDependencyItem item;
+            if (requirement instanceof PackageRequirement && ((PackageRequirement)requirement).isWildcard())
+               item = new WildcardRequirementDependencyItem(this, requirement, classLoaderState, classLoaderState);
+            else
+               item = new RequirementDependencyItem(this, requirement, classLoaderState, classLoaderState);
             addIDependOn(item);
             requirementDependencies.add(item);
          }
@@ -1364,8 +1368,10 @@ public abstract class Module extends NameAndVersionSupport
       return super.equals(obj);
    }
 
-   // It is lazy shutdown so remove anything that depends upon us for a requirement
-   // We can still handle it after the classloader gets unregistered
+   /**
+    * It is lazy shutdown so remove anything that depends upon us for a requirement
+    * We can still handle it after the classloader gets unregistered
+    */
    private void enableLazyShutdown()
    {
       ControllerContext ctx = getControllerContext();
