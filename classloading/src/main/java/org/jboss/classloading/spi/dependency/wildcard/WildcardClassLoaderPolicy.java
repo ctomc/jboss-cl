@@ -40,6 +40,8 @@ import org.jboss.util.collection.ConcurrentSet;
 /**
  * WildcardClassLoaderPolicy.
  *
+ * TODO -- lookup order might be wrong when some Module's are resolved lazily.
+ *
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  */
 public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements ModuleRegistry
@@ -240,8 +242,6 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
             boolean isParentFirst = domain.isParentFirst();
             addModule(current, isAncestor, isParentFirst);
          }
-
-         reset();
       }
    }
 
@@ -304,18 +304,16 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       if (resolvedModule && used.remove(current))
       {
          LifeCycle lifeCycle = module.getLifeCycle();
-         if (lifeCycle != null)
+         // Non-cascade is updated / bounced via refresh
+         if (lifeCycle != null && current.isCascadeShutdown())
          {
-            if (current.isCascadeShutdown())
+            try
             {
-               try
-               {
-                  lifeCycle.bounce(); // let's refresh the wired resources
-               }
-               catch (Exception e)
-               {
-                  throw new RuntimeException("Error bouncing module: " + this.module, e);
-               }
+               lifeCycle.bounce(); // let's refresh the wired resources
+            }
+            catch (Exception e)
+            {
+               throw new RuntimeException("Error bouncing module: " + this.module, e);
             }
          }
       }
