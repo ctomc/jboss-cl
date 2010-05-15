@@ -204,6 +204,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
 
    /**
     * Add module, following order rules.
+    * This method needs to be part of synch block or done in ctor.
     *
     * @param current the current module
     * @param isAncestor is ancestor
