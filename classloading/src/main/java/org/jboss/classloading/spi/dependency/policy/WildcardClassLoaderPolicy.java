@@ -83,6 +83,18 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
    }
 
    /**
+    * Is the module resolved.
+    *
+    * @param m the module
+    * @return true if resolved, false otherwise
+    */
+   protected boolean isResolved(Module m)
+   {
+      ClassLoader cl = ClassLoading.getClassLoaderForModule(m);
+      return cl != null;
+   }
+
+   /**
     * Find module which has a resource parameter.
     *
     * @param resource the resource
@@ -99,12 +111,15 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       {
          for (Module m : modules)
          {
-            URL url = m.getResource(resource);
-            if (url != null)
+            if (isResolved(m))
             {
-               resourceCache.put(resource, m);
-               used.add(m);
-               return m;
+               URL url = m.getResource(resource);
+               if (url != null)
+               {
+                  resourceCache.put(resource, m);
+                  used.add(m);
+                  return m;
+               }
             }
          }
       }
@@ -122,12 +137,15 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       {
          for (Module m : modules)
          {
-            URL url = m.getResource(path);
-            if (url != null)
+            if (isResolved(m))
             {
-               resourceCache.put(path, m);
-               used.add(m);
-               return url;
+               URL url = m.getResource(path);
+               if (url != null)
+               {
+                  resourceCache.put(path, m);
+                  used.add(m);
+                  return url;
+               }
             }
          }
       }
@@ -141,16 +159,19 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       {
          for (Module m : modules)
          {
-            boolean visited = false;
-            Enumeration<URL> eu = m.getResources(name);
-            while (eu.hasMoreElements())
+            if (isResolved(m))
             {
-               if (visited == false)
+               boolean visited = false;
+               Enumeration<URL> eu = m.getResources(name);
+               while (eu.hasMoreElements())
                {
-                  used.add(m);
-                  visited = true;
+                  if (visited == false)
+                  {
+                     used.add(m);
+                     visited = true;
+                  }
+                  urls.add(eu.nextElement());
                }
-               urls.add(eu.nextElement());
             }
          }
       }
