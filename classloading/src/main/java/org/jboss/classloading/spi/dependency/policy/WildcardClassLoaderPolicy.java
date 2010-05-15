@@ -23,10 +23,7 @@ package org.jboss.classloading.spi.dependency.policy;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -41,6 +38,8 @@ import org.jboss.util.collection.ConcurrentSet;
 
 /**
  * WildcardClassLoaderPolicy.
+ *
+ * TODO -- module order rules actually need more work; parent of a parent, ...
  *
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  */
@@ -76,21 +75,11 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       if (module == null)
          throw new IllegalArgumentException("Null module");
 
-      // Add the modules that can resolve the requirement
-      for (Module aux : domain.getModules(null, null))
-      {
-         // The wildcard policy should not load from this module
-         if (aux == module)
-            continue;
-         
-         // Add the module if it can resolve the requirement
-         if (aux.canResolve(requirement))
-            modules.add(aux);
-      }
-
       this.domain = domain;
       this.requirement = requirement;
       this.module = module;
+
+      fillModules(domain);
    }
 
    /**
@@ -205,22 +194,35 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
          boolean isAncestor = (domain != md); // not the same domain, so it must be ancestor
          synchronized (this)
          {
-            if (isAncestor)
-            {
-               if (domain.isParentFirst())
-               {
-                  modules.add(0, current);
-                  parentsBefore++;
-               }
-               else
-                  modules.add(current);
-            }
-            else
-               modules.add(parentsBefore, current);
+            boolean isParentFirst = domain.isParentFirst();
+            addModule(current, isAncestor, isParentFirst);
          }
 
          reset();
       }
+   }
+
+   /**
+    * Add module, following order rules.
+    *
+    * @param current the current module
+    * @param isAncestor is ancestor
+    * @param isParentFirst is parent first
+    */
+   private void addModule(Module current, boolean isAncestor, boolean isParentFirst)
+   {
+      if (isAncestor)
+      {
+         if (isParentFirst)
+         {
+            modules.add(0, current);
+            parentsBefore++;
+         }
+         else
+            modules.add(current);
+      }
+      else
+         modules.add(parentsBefore, current);
    }
 
    public void removeModule(Module current)
@@ -276,6 +278,35 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
             }
          }
       }
+   }
+
+   /**
+    * Fill modules according to domain rules.
+    *
+    * @param current the current domain
+    */
+   protected void fillModules(Domain current)
+   {
+      Domain parent = current.getParentDomain();
+      boolean parentFirst = current.isParentFirst();
+
+      if (parent != null && parentFirst)
+         fillModules(parent);
+
+      Collection<ExportPackage> eps = current.getExportedPackages(requirement.getName(), requirement.getVersionRange());
+      if (eps != null && eps.isEmpty() == false)
+      {
+         boolean isAncestor = (current != domain);
+         boolean isParentFirst = domain.isParentFirst();
+         for (ExportPackage ep : eps)
+         {
+            Module m = ep.getModule();
+            addModule(m, isAncestor, isParentFirst);
+         }
+      }
+
+      if (parent != null && parentFirst == false)
+         fillModules(parent);
    }
 
    /**

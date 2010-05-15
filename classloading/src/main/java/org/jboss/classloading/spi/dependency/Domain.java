@@ -38,7 +38,7 @@ import org.jboss.logging.Logger;
 
 /**
  * Domain.
- * 
+ *
  * @author <a href="adrian@jboss.org">Adrian Brock</a>
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @author Thomas.Diesler@jboss.com
@@ -48,7 +48,7 @@ public class Domain implements ClassLoadingAdmin
 {
    /** The log */
    private static final Logger log = Logger.getLogger(Domain.class);
-   
+
    /** The domain name */
    private String name;
 
@@ -57,20 +57,20 @@ public class Domain implements ClassLoadingAdmin
 
    /** The parent domain name */
    private String parentDomainName;
-   
+
    /** Whether we are parent first */
    private boolean parentFirst;
-   
+
    /** The registered modules in registration order */
    private List<Module> modules = new CopyOnWriteArrayList<Module>();
-   
+
    /** The registered modules by name */
    private Map<String, Module> modulesByName = new ConcurrentHashMap<String, Module>();
-   
+
    /**
     * Create a new Domain.
-    * 
-    * @param classLoading the classloading 
+    *
+    * @param classLoading the classloading
     * @param name the name
     * @param parentDomainName  the parent domain name
     * @param parentFirst whether to check the parent first
@@ -90,7 +90,7 @@ public class Domain implements ClassLoadingAdmin
 
    /**
     * Get the name.
-    * 
+    *
     * @return the name.
     */
    public String getName()
@@ -110,7 +110,7 @@ public class Domain implements ClassLoadingAdmin
 
    /**
     * Get the parentDomainName.
-    * 
+    *
     * @return the parentDomainName.
     */
    public String getParentDomainName()
@@ -124,10 +124,10 @@ public class Domain implements ClassLoadingAdmin
          return classLoading.getDomain(parentDomainName);
       return null;
    }
-   
+
    /**
     * Get the parentFirst.
-    * 
+    *
     * @return the parentFirst.
     */
    public boolean isParentFirst()
@@ -137,7 +137,7 @@ public class Domain implements ClassLoadingAdmin
 
    /**
     * Add a module
-    * 
+    *
     * @param module the module
     * @throws IllegalStateException if the module is already registered
     * @throws IllegalArgumentException for a null parameter
@@ -154,7 +154,7 @@ public class Domain implements ClassLoadingAdmin
          throw new IllegalArgumentException("The context " + contextName + " is already registered in domain " + getName());
 
       log.debug(this + " add module " + module);
-      
+
       module.setDomain(this);
       modulesByName.put(contextName, module);
       modules.add(module);
@@ -180,10 +180,10 @@ public class Domain implements ClassLoadingAdmin
             throw new RuntimeException("Error adding module " + module, t);
       }
    }
-   
+
    /**
     * Remove a deployment
-    * 
+    *
     * @param module the module
     * @throws IllegalArgumentException for a null parameter
     */
@@ -206,7 +206,7 @@ public class Domain implements ClassLoadingAdmin
 
    /**
     * Get a module for a context name
-    * 
+    *
     * @param name the context name
     * @return the module
     */
@@ -223,7 +223,7 @@ public class Domain implements ClassLoadingAdmin
          return parent.getModule(name);
       return null;
    }
-   
+
    /**
     * Merges the capabilities provided by our global capabilities provider with the passed in capabilities.
     *
@@ -237,7 +237,7 @@ public class Domain implements ClassLoadingAdmin
 
    /**
     * Resolve a requirement to a module
-    * 
+    *
     * @param module the module
     * @param requirement the requirement
     * @return the resolved name or null if not resolved
@@ -252,7 +252,7 @@ public class Domain implements ClassLoadingAdmin
          if (classLoading.resolve(new ResolutionContext(this, module, requirement)))
             result = doResolveModule(module, requirement);
       }
-      
+
       // If there is a result, check to see whether we need to resolve it
       if (result != null)
       {
@@ -269,13 +269,13 @@ public class Domain implements ClassLoadingAdmin
             }
          }
       }
-      
+
       return result;
-   }   
-   
+   }
+
    /**
     * Resolve a requirement to a module
-    * 
+    *
     * @param module the module
     * @param requirement the requirement
     * @return the resolved name or null if not resolved
@@ -298,7 +298,7 @@ public class Domain implements ClassLoadingAdmin
          if (result != null)
             return result;
       }
-      
+
       Module firstMatch = null;
       for (Module other : modules)
       {
@@ -311,8 +311,8 @@ public class Domain implements ClassLoadingAdmin
                {
                   if (firstMatch != null)
                   {
-                     String otherName = other.getName() + ":" + other.getVersion(); 
-                     String firstName = firstMatch.getName() + ":" + firstMatch.getVersion(); 
+                     String otherName = other.getName() + ":" + other.getVersion();
+                     String firstName = firstMatch.getName() + ":" + firstMatch.getVersion();
                      log.debug("Requirement " + requirement + " resolves agaist " + firstName + " and " + otherName + " - using first.");
                   }
                   if (firstMatch == null)
@@ -321,48 +321,48 @@ public class Domain implements ClassLoadingAdmin
             }
          }
       }
-      
+
       if (firstMatch != null)
          return firstMatch;
 
       // Check the parent afterwards when required
       if (parentDomain != null && parentFirst == false)
          return parentDomain.resolveModule(module, requirement);
-      
+
       return null;
    }
-   
+
    public Module getModuleForClass(Class<?> clazz)
    {
       return Module.getModuleForClass(clazz);
    }
-   
+
    public Collection<Module> getModules(String name, VersionRange range)
    {
+      if (name == null)
+         throw new IllegalArgumentException("Null name");
+
       Collection<Module> result = new HashSet<Module>();
       getModulesInternal(name, range, result);
       return result;
    }
-   
+
    /**
     * Get the modules matching the name and range
-    * 
-    * If the given name is null, it matches all names. 
-    * If the given range is null, it matches all versions. 
-    * 
-    * @param name the name or null
-    * @param range the range or null
+    *
+    * @param name the name
+    * @param range the range
     * @param result the matching modules
     */
    void getModulesInternal(String name, VersionRange range, Collection<Module> result)
    {
       if (range == null)
          range = VersionRange.ALL_VERSIONS;
-      
+
       for (Module module : modules)
       {
          List<Capability> capabilities = module.getCapabilitiesRaw();
-         if (name != null && capabilities != null && capabilities.isEmpty() == false)
+         if (capabilities != null && capabilities.isEmpty() == false)
          {
             ModuleRequirement requirement = new ModuleRequirement(name, range);
             for (Capability capability : capabilities)
@@ -376,26 +376,25 @@ public class Domain implements ClassLoadingAdmin
          }
          else
          {
-            boolean nameMatch = (name == null || name.equals(module.getName()));
-            boolean versionMatch = range.isInRange(module.getVersion());
-            if (nameMatch && versionMatch)
+            if (name.equals(module.getName()) && range.isInRange(module.getVersion()))
             {
                result.add(module);
+               return;
             }
          }
       }
    }
-   
+
    public Collection<ImportModule> getImportedModules(String name, VersionRange range)
    {
       Collection<ImportModule> result = new HashSet<ImportModule>();
       getImportingModulesInternal(name, range, result);
       return result;
    }
-   
+
    /**
     * Get the importing modules matching the name and range
-    * 
+    *
     * @param name the name
     * @param range the range
     * @param result the matching modules
@@ -404,7 +403,7 @@ public class Domain implements ClassLoadingAdmin
    {
       if (range == null)
          range = VersionRange.ALL_VERSIONS;
-      
+
       for (Module module : modules)
       {
          List<RequirementDependencyItem> requirementDependencyItems = module.getDependencies();
@@ -430,27 +429,27 @@ public class Domain implements ClassLoadingAdmin
          }
       }
    }
-   
+
    public Collection<ExportPackage> getExportedPackages(Module module)
    {
       if (module == null)
          throw new IllegalArgumentException("Null module");
       return module.getExportedPackages();
    }
-   
+
    public Collection<ExportPackage> getExportedPackages(String name, VersionRange range)
    {
       if (name == null)
          throw new IllegalArgumentException("Null name");
-      
+
       Collection<ExportPackage> result = new HashSet<ExportPackage>();
       getExportedPackagesInternal(name, range, result);
       return result;
    }
-   
+
    /**
     * Get the exported packages matching the name and range
-    * 
+    *
     * @param name the name
     * @param range the range
     * @param result the matching modules
@@ -459,7 +458,7 @@ public class Domain implements ClassLoadingAdmin
    {
       if (range == null)
          range = VersionRange.ALL_VERSIONS;
-      
+
       for (Module module : modules)
       {
          List<Capability> capabilities = module.getCapabilitiesRaw();
