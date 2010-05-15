@@ -76,9 +76,17 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       if (module == null)
          throw new IllegalArgumentException("Null module");
 
-      // does our module resolve our requirement
-      if (module.canResolve(requirement))
-         modules.add(module);
+      // Add the modules that can resolve the requirement
+      for (Module aux : domain.getModules(null, null))
+      {
+         // The wildcard policy should not load from this module
+         if (aux == module)
+            continue;
+         
+         // Add the module if it can resolve the requirement
+         if (aux.canResolve(requirement))
+            modules.add(aux);
+      }
 
       this.domain = domain;
       this.requirement = requirement;

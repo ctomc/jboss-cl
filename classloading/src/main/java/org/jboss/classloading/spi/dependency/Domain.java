@@ -339,9 +339,6 @@ public class Domain implements ClassLoadingAdmin
    
    public Collection<Module> getModules(String name, VersionRange range)
    {
-      if (name == null)
-         throw new IllegalArgumentException("Null name");
-      
       Collection<Module> result = new HashSet<Module>();
       getModulesInternal(name, range, result);
       return result;
@@ -350,8 +347,11 @@ public class Domain implements ClassLoadingAdmin
    /**
     * Get the modules matching the name and range
     * 
-    * @param name the name
-    * @param range the range
+    * If the given name is null, it matches all names. 
+    * If the given range is null, it matches all versions. 
+    * 
+    * @param name the name or null
+    * @param range the range or null
     * @param result the matching modules
     */
    void getModulesInternal(String name, VersionRange range, Collection<Module> result)
@@ -362,7 +362,7 @@ public class Domain implements ClassLoadingAdmin
       for (Module module : modules)
       {
          List<Capability> capabilities = module.getCapabilitiesRaw();
-         if (capabilities != null && capabilities.isEmpty() == false)
+         if (name != null && capabilities != null && capabilities.isEmpty() == false)
          {
             ModuleRequirement requirement = new ModuleRequirement(name, range);
             for (Capability capability : capabilities)
@@ -376,10 +376,11 @@ public class Domain implements ClassLoadingAdmin
          }
          else
          {
-            if (name.equals(module.getName()) && range.isInRange(module.getVersion()))
+            boolean nameMatch = (name == null || name.equals(module.getName()));
+            boolean versionMatch = range.isInRange(module.getVersion());
+            if (nameMatch && versionMatch)
             {
                result.add(module);
-               return;
             }
          }
       }
