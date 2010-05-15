@@ -237,7 +237,8 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       {
          if (isParentFirst)
          {
-            modules.add(0, current);
+            // leave previous parents infront of current module
+            modules.add(parentsBefore, current);
             parentsBefore++;
          }
          else
