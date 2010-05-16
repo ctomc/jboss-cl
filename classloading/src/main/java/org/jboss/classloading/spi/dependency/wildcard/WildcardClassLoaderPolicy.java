@@ -34,7 +34,6 @@ import org.jboss.classloader.spi.base.ClassLoadingTask;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.dependency.*;
-import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.util.collection.ConcurrentSet;
 
 /**
@@ -77,18 +76,10 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       if (item == null)
          throw new IllegalArgumentException("Null item");
 
-      Requirement requirement = item.getRequirement();
-      if (requirement == null || requirement instanceof PackageRequirement == false)
-         throw new IllegalArgumentException("Illegal requirement: " + requirement);
-      PackageRequirement pr = (PackageRequirement) requirement;
-      if (pr.isWildcard() == false)
-         throw new IllegalArgumentException("Requirement is not wildcard: " + pr);
-      if (item.getModule() == null)
-         throw new IllegalArgumentException("Null module");
-
       this.domain = domain;
       this.item = item;
-      this.requirement = pr;
+      
+      this.requirement = item.getRequirement();
       this.module = item.getModule();
 
       ClassLoading classLoading = domain.getClassLoading();      

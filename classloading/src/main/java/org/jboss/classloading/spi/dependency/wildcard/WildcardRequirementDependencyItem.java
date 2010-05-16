@@ -21,6 +21,7 @@
 */
 package org.jboss.classloading.spi.dependency.wildcard;
 
+import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.dependency.RequirementDependencyItem;
 import org.jboss.classloading.spi.metadata.Requirement;
@@ -41,11 +42,34 @@ public class WildcardRequirementDependencyItem extends RequirementDependencyItem
    public WildcardRequirementDependencyItem(Module module, Requirement requirement, ControllerState state)
    {
       super(module, requirement, state);
+      check();
    }
 
    public WildcardRequirementDependencyItem(Module module, Requirement requirement, ControllerState whenRequired, ControllerState dependentState)
    {
       super(module, requirement, whenRequired, dependentState);
+      check();
+   }
+
+   /**
+    * Check if inputs are valid.
+    */
+   private void check()
+   {
+      Requirement requirement = super.getRequirement();
+      if (requirement == null || requirement instanceof PackageRequirement == false)
+         throw new IllegalArgumentException("Illegal requirement: " + requirement);
+      PackageRequirement pr = (PackageRequirement) requirement;
+      if (pr.isWildcard() == false)
+         throw new IllegalArgumentException("Requirement is not wildcard: " + pr);
+      if (getModule() == null)
+         throw new IllegalArgumentException("Null module");
+   }
+
+   @Override
+   public PackageRequirement getRequirement()
+   {
+      return (PackageRequirement) super.getRequirement();
    }
 
    @Override
