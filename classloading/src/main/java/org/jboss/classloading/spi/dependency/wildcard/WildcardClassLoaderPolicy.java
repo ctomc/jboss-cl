@@ -91,7 +91,15 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       this.requirement = pr;
       this.module = item.getModule();
 
-      fillModules(domain);
+      ClassLoading classLoading = domain.getClassLoading();      
+      synchronized (this)
+      {
+         // Make sure we don't miss some Module
+         // hence installing listener before doing the initial scan
+         classLoading.addModuleRegistry(this);
+         // Find existing matching modules
+         fillModules(domain);
+      }
    }
 
    /**

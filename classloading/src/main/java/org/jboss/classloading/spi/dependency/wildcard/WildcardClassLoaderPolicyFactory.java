@@ -23,7 +23,6 @@ package org.jboss.classloading.spi.dependency.wildcard;
 
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
-import org.jboss.classloading.spi.dependency.ClassLoading;
 import org.jboss.classloading.spi.dependency.Domain;
 import org.jboss.classloading.spi.dependency.RequirementDependencyItem;
 
@@ -59,9 +58,6 @@ public class WildcardClassLoaderPolicyFactory implements ClassLoaderPolicyFactor
 
    public ClassLoaderPolicy createClassLoaderPolicy()
    {
-      WildcardClassLoaderPolicy policy = new WildcardClassLoaderPolicy(domain, item);
-      ClassLoading classLoading = domain.getClassLoading();
-      classLoading.addModuleRegistry(policy); // so we know when to reset on module change
-      return policy;
+      return new WildcardClassLoaderPolicy(domain, item);
    }
 }
