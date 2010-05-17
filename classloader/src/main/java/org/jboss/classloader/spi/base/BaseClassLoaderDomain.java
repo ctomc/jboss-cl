@@ -1575,6 +1575,7 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
          {
             if (log.isTraceEnabled())
                log.trace("Found " + name + " in global cache: " + this);
+
             return item.clazz;
          }
       }

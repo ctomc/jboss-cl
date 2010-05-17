@@ -232,7 +232,12 @@ public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements
       final ClassLoader classLoader = getClassLoader();
       try
       {
-         return (Class<?>) findLoadedClass.invoke(classLoader, name);
+         Class<?> clazz = (Class<?>) findLoadedClass.invoke(classLoader, name);
+
+         if (clazz != null && log.isTraceEnabled())
+            log.trace("Found " + name + " in cache: " + this);
+
+         return clazz;
       }
       catch (Exception e)
       {
