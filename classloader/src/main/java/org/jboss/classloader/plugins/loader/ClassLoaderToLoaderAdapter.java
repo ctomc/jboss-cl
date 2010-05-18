@@ -89,7 +89,7 @@ public class ClassLoaderToLoaderAdapter extends BaseClassLoaderSource implements
             }
             catch (Exception e)
             {
-               log.warn("Unable to set accessible on ClassLoader.getPackages()", e);
+               log.warn("Unable to set accessible on ClassLoader.findLoadedClass()", e);
             }
             return null;
          }
