@@ -24,9 +24,6 @@ package org.jboss.test.classloading.vfs.policy.test;
 import java.net.URL;
 import java.util.Collections;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.plugins.system.DefaultClassLoaderSystem;
 import org.jboss.classloader.spi.ClassLoaderSystem;
@@ -39,6 +36,9 @@ import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.util.automount.Automounter;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
 /**
  * ShutdownUnitTestCase.
  * 
@@ -46,8 +46,7 @@ import org.jboss.vfs.util.automount.Automounter;
  * @version $Revision: 1.1 $
  */
 public class ShutdownUnitTestCase extends BaseTestCase
-{
-   
+{   
    private VirtualFile signedJar;
    
    @Override
@@ -69,28 +68,27 @@ public class ShutdownUnitTestCase extends BaseTestCase
 
    public void testShutdownUnregisterDefault() throws Exception
    {
-      VFSClassLoaderPolicy policy = getClassLoaderPolicy();;
+      VFSClassLoaderPolicy policy = getClassLoaderPolicy();
       testShutdown(policy, true);
    }
 
    public void testShutdownUnregister() throws Exception
    {
-      VFSClassLoaderPolicy policy = getClassLoaderPolicy();;
+      VFSClassLoaderPolicy policy = getClassLoaderPolicy();
       policy.setShutdownPolicy(ShutdownPolicy.UNREGISTER);
       testShutdown(policy, true);
    }
 
    public void testShutdownGC() throws Exception
    {
-      VFSClassLoaderPolicy policy = getClassLoaderPolicy();;
+      VFSClassLoaderPolicy policy = getClassLoaderPolicy();
       policy.setShutdownPolicy(ShutdownPolicy.GARBAGE_COLLECTION);
       testShutdown(policy, false);
    }
 
    protected VFSClassLoaderPolicy getClassLoaderPolicy() throws Exception
    {
-      VFSClassLoaderPolicy policy = VFSClassLoaderPolicy.createVFSClassLoaderPolicy(signedJar);
-      return policy;
+      return VFSClassLoaderPolicy.createVFSClassLoaderPolicy(signedJar);
    }
    
    protected void testShutdown(VFSClassLoaderPolicy policy, boolean shutdownAtUnregister) throws Exception
