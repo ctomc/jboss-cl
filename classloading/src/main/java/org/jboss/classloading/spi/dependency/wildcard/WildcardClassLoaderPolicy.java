@@ -271,48 +271,52 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
 
    public void removeModule(Module current)
    {
-      boolean sameModule = module == current;
-      boolean resolvedModule = false;
-
-      synchronized (this)
+      boolean cascade = current.isCascadeShutdown();
+      // Non-cascade is updated / bounced via refresh
+      if (cascade)
       {
-         if (modules.remove(current))
-         {
-            if (sameModule == false)
-            {
-               resolvedModule = true; // we were part of matching modules, but not our module
-               Domain md = getDomain(current);
-               boolean isAncestor = (domain != md);
-               if (isAncestor && domain.isParentFirst())
-                  parentsBefore--;
+         boolean sameModule = module == current;
+         boolean resolvedModule = false;
 
+         synchronized (this)
+         {
+            if (modules.remove(current))
+            {
+               if (sameModule == false)
+               {
+                  resolvedModule = true; // we were part of matching modules, but not our module
+                  Domain md = getDomain(current);
+                  boolean isAncestor = (domain != md);
+                  if (isAncestor && domain.isParentFirst())
+                     parentsBefore--;
+
+               }
+               reset();
             }
-            reset();
          }
-      }
 
-      // Unregister this policy as module listener
-      if (sameModule)
-      {
-         ClassLoading classLoading = domain.getClassLoading();
-         classLoading.removeModuleRegistry(this);
-         this.module = null;
-      }
-
-      // It's not us (we're already uninstalling) and we used this, let's bounce.
-      if (resolvedModule && used.remove(current))
-      {
-         LifeCycle lifeCycle = module.getLifeCycle();
-         // Non-cascade is updated / bounced via refresh
-         if (lifeCycle != null && current.isCascadeShutdown())
+         // Unregister this policy as module listener
+         if (sameModule)
          {
-            try
+            ClassLoading classLoading = domain.getClassLoading();
+            classLoading.removeModuleRegistry(this);
+            this.module = null;
+         }
+
+         // It's not us (we're already uninstalling) and we used this, let's bounce.
+         if (resolvedModule && used.remove(current))
+         {
+            LifeCycle lifeCycle = module.getLifeCycle();
+            if (lifeCycle != null)
             {
-               lifeCycle.bounce(); // let's refresh the wired resources
-            }
-            catch (Exception e)
-            {
-               throw new RuntimeException("Error bouncing module: " + this.module, e);
+               try
+               {
+                  lifeCycle.bounce(); // let's refresh the wired resources
+               }
+               catch (Exception e)
+               {
+                  throw new RuntimeException("Error bouncing module: " + this.module, e);
+               }
             }
          }
       }
