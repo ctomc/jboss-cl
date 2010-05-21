@@ -24,7 +24,6 @@ package org.jboss.classloading.spi.dependency.wildcard;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
@@ -34,6 +33,7 @@ import org.jboss.classloader.spi.base.ClassLoadingTask;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.dependency.*;
+import org.jboss.util.collection.ConcurrentReferenceHashMap;
 import org.jboss.util.collection.ConcurrentSet;
 
 /**
@@ -64,10 +64,13 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
    private int parentsBefore;
 
    /** The resources cache */
-   private Map<String, Module> resourceCache = new ConcurrentHashMap<String, Module>();
+   private Map<String, ClassLoader> resourceCache = new ConcurrentReferenceHashMap<String, ClassLoader>(ConcurrentReferenceHashMap.ReferenceType.STRONG, ConcurrentReferenceHashMap.ReferenceType.WEAK);
 
    /** The used modules - track what we're using, so we know when to bounce */
    private Set<Module> used = new ConcurrentSet<Module>();
+
+   /** Track the classloaders */
+   private Map<Module, ClassLoader> classLoaders = new ConcurrentReferenceHashMap<Module, ClassLoader>(ConcurrentReferenceHashMap.ReferenceType.STRONG, ConcurrentReferenceHashMap.ReferenceType.WEAK);
 
    public WildcardClassLoaderPolicy(Domain domain, WildcardRequirementDependencyItem item)
    {
@@ -94,15 +97,23 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
    }
 
    /**
-    * Is the module resolved.
+    * Get module's classloader.
     *
     * @param m the module
-    * @return true if resolved, false otherwise
+    * @return module's classloader
     */
-   protected boolean isResolved(Module m)
+   protected ClassLoader getClassLoader(Module m)
    {
-      ClassLoader cl = ClassLoading.getClassLoaderForModule(m);
-      return cl != null;
+      ClassLoader cl = classLoaders.get(m);
+      if (cl != null)
+         return cl;
+
+      cl = ClassLoading.getClassLoaderForModule(m);
+      if (cl != null)
+      {
+         classLoaders.put(m, cl);
+      }
+      return cl;
    }
 
    /**
@@ -123,9 +134,9 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
     * @param resource the resource
     * @return found module or null
     */
-   protected Module findModule(String resource)
+   protected ClassLoader findClassLoader(String resource)
    {
-      Module cached = resourceCache.get(resource);
+      ClassLoader cached = resourceCache.get(resource);
       if (cached != null)
          return cached;
 
@@ -134,14 +145,15 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       {
          for (Module m : modules)
          {
-            if (isResolved(m))
+            ClassLoader cl = getClassLoader(m);
+            if (cl != null)
             {
-               URL url = m.getResource(resource);
+               URL url = cl.getResource(resource);
                if (url != null)
                {
-                  resourceCache.put(resource, m);
+                  resourceCache.put(resource, cl);
                   addUsed(m);
-                  return m;
+                  return cl;
                }
             }
          }
@@ -151,7 +163,7 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
 
    public URL getResource(String path)
    {
-      Module cached = resourceCache.get(path);
+      ClassLoader cached = resourceCache.get(path);
       if (cached != null)
          return cached.getResource(path);
 
@@ -160,12 +172,13 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       {
          for (Module m : modules)
          {
-            if (isResolved(m))
+            ClassLoader cl = getClassLoader(m);
+            if (cl != null)
             {
-               URL url = m.getResource(path);
+               URL url = cl.getResource(path);
                if (url != null)
                {
-                  resourceCache.put(path, m);
+                  resourceCache.put(path, cl);
                   addUsed(m);
                   return url;
                }
@@ -182,10 +195,11 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
       {
          for (Module m : modules)
          {
-            if (isResolved(m))
+            ClassLoader cl = getClassLoader(m);
+            if (cl != null)
             {
                boolean visited = false;
-               Enumeration<URL> eu = m.getResources(name);
+               Enumeration<URL> eu = cl.getResources(name);
                while (eu.hasMoreElements())
                {
                   if (visited == false)
@@ -282,6 +296,8 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
          {
             if (modules.remove(current))
             {
+               classLoaders.remove(current);
+
                if (sameModule == false)
                {
                   resolvedModule = true; // we were part of matching modules, but not our module
@@ -359,13 +375,10 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
     */
    BaseClassLoader getBaseClassLoader(String context)
    {
-      Module m = findModule(context);
-      if (m != null)
-      {
-         ClassLoader cl = ClassLoading.getClassLoaderForModule(m);
-         if (cl instanceof BaseClassLoader)
+      ClassLoader cl = findClassLoader(context);
+      if (cl != null && cl instanceof BaseClassLoader)
             return BaseClassLoader.class.cast(cl);
-      }
+      
       return null;
    }
 

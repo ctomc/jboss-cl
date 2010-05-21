@@ -21,13 +21,17 @@
 */
 package org.jboss.classloading.spi.dependency.wildcard;
 
+import java.util.Set;
+
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.dependency.RequirementDependencyItem;
 import org.jboss.classloading.spi.metadata.Requirement;
+import org.jboss.dependency.plugins.ResolvedState;
 import org.jboss.dependency.spi.Controller;
 import org.jboss.dependency.spi.ControllerContext;
 import org.jboss.dependency.spi.ControllerState;
+import org.jboss.util.collection.ConcurrentSet;
 
 /**
  * WildcardRequirementDependencyItem.
@@ -39,6 +43,9 @@ import org.jboss.dependency.spi.ControllerState;
  */
 public class WildcardRequirementDependencyItem extends RequirementDependencyItem
 {
+   /** Our resolved modules */
+   private Set<Module> resolvedModules = new ConcurrentSet<Module>();
+
    public WildcardRequirementDependencyItem(Module module, Requirement requirement, ControllerState state)
    {
       super(module, requirement, state);
@@ -86,6 +93,17 @@ public class WildcardRequirementDependencyItem extends RequirementDependencyItem
       // ignore
    }
 
+   @Override
+   public void setResolved(ResolvedState resolved)
+   {
+      if (resolved == ResolvedState.UNRESOLVED)
+      {
+         for (Module module : resolvedModules)
+            removeDepends(module);
+      }
+      super.setResolved(resolved);
+   }
+
    /**
     * We depend on this module.
     * e.g. add dependency for refresh callback.
@@ -95,5 +113,6 @@ public class WildcardRequirementDependencyItem extends RequirementDependencyItem
    void addIDependOn(Module module)
    {
       addDepends(module);
+      resolvedModules.add(module);
    }
 }
