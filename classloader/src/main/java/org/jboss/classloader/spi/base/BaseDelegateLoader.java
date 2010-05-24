@@ -157,7 +157,8 @@ public class BaseDelegateLoader implements CacheLoader
 
    public Package getPackage(String name)
    {
-      BaseClassLoader classLoader = getBaseClassLoader("getting package ", name);
+      String path = ClassLoaderUtils.packageToPath(name);
+      BaseClassLoader classLoader = getBaseClassLoader("getting package ", path);
       if (classLoader != null)
          return classLoader.getPackageLocally(name);
       return null;

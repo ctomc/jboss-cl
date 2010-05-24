@@ -93,6 +93,8 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
          classLoading.addModuleRegistry(this);
          // Find existing matching modules
          fillModules(domain);
+         // Remove our module -- potential cyclic match; we already handle our match.
+         modules.remove(module);
       }
    }
 
@@ -292,22 +294,22 @@ public class WildcardClassLoaderPolicy extends ClassLoaderPolicy implements Modu
          boolean sameModule = module == current;
          boolean resolvedModule = false;
 
-         synchronized (this)
+         if (sameModule == false) // our module is not part of matching modules
          {
-            if (modules.remove(current))
+            synchronized (this)
             {
-               classLoaders.remove(current);
-
-               if (sameModule == false)
+               if (modules.remove(current))
                {
+                  classLoaders.remove(current);
+
                   resolvedModule = true; // we were part of matching modules, but not our module
                   Domain md = getDomain(current);
                   boolean isAncestor = (domain != md);
                   if (isAncestor && domain.isParentFirst())
                      parentsBefore--;
 
+                  reset();
                }
-               reset();
             }
          }
 

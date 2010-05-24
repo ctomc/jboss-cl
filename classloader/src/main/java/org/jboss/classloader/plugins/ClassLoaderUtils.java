@@ -110,6 +110,17 @@ public class ClassLoaderUtils
    }
 
    /**
+    * Convert a package name into a path
+    *
+    * @param packageName the class name
+    * @return the path
+    */
+   public static final String packageToPath(final String packageName)
+   {
+      return packageName.replace('.', '/');
+   }
+
+   /**
     * Get the package name for a class
     * 
     * @param className the class name
