@@ -33,11 +33,55 @@
     <dependency>
       <groupId>org.jboss.kernel</groupId>
       <artifactId>jboss-dependency</artifactId>
+      <exclusions>
+          <exclusion>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-reflect</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-mdr</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-man</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-common-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>jboss</groupId>
+            <artifactId>jboss-common-logging-spi</artifactId>
+          </exclusion>
+      </exclusions>
     </dependency>
     
     <dependency>
       <groupId>org.jboss.kernel</groupId>
       <artifactId>jboss-kernel</artifactId>
+      <exclusions>
+            <exclusion>
+              <groupId>org.jboss</groupId>
+              <artifactId>jboss-reflect</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.jboss</groupId>
+              <artifactId>jboss-mdr</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.jboss</groupId>
+              <artifactId>jboss-man</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.jboss</groupId>
+              <artifactId>jboss-common-core</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>jboss</groupId>
+              <artifactId>jboss-common-logging-spi</artifactId>
+            </exclusion>
+      </exclusions>
       <optional>true</optional>
     </dependency>
     
@@ -81,6 +125,40 @@
       </exclusions>
     </dependency>
     
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-mdr</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss</groupId>
+          <artifactId>jboss-reflect</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss</groupId>
+          <artifactId>jboss-common-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-logging-spi</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-reflect</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss</groupId>
+          <artifactId>jboss-common-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-logging-spi</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.jboss.test</groupId>
