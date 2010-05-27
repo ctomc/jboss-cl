@@ -25,6 +25,7 @@ package org.jboss.classloading.spi.dependency.wildcard;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
 import org.jboss.classloader.spi.base.BaseClassLoader;
+import org.jboss.classloader.spi.base.ResourcePathAdapter;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 
@@ -38,6 +39,12 @@ public class WildcardDelegateLoader extends FilteredDelegateLoader
    public WildcardDelegateLoader(ClassLoaderPolicyFactory factory, ClassFilter filter)
    {
       super(factory, filter);
+   }
+
+   @Override
+   protected String toResourcePath(String context, ResourcePathAdapter adapter)
+   {
+      return adapter.toResourcePath(context);
    }
 
    @Override

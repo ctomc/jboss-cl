@@ -42,7 +42,13 @@ public class BaseDelegateLoader implements CacheLoader
 {
    /** The log */
    private static final Logger log = Logger.getLogger(BaseDelegateLoader.class);
-   
+
+   /** The class to path */
+   private static final ResourcePathAdapter CLASS_TO_PATH = new ClassToPathResourceAdapter();
+
+   /** The package to path */
+   private static final ResourcePathAdapter PACKAGE_TO_PATH = new PackageToPathResourceAdapter();
+
    /** The delegate loader policy */
    private volatile BaseClassLoaderPolicy delegate;
 
@@ -129,10 +135,22 @@ public class BaseDelegateLoader implements CacheLoader
          log.warn("Not " + message + context + " from policy that has no classLoader: " + toLongString());
       return result;
    }
-   
+
+   /**
+    * Transform, if needed, to resource path.
+    *
+    * @param context the context
+    * @param adapter the adapter
+    * @return potential transformation result
+    */
+   protected String toResourcePath(String context, ResourcePathAdapter adapter)
+   {
+      return context; // do nothing
+   }
+
    public Class<?> loadClass(String className)
    {
-      String path = ClassLoaderUtils.classNameToPath(className);
+      String path = toResourcePath(className, CLASS_TO_PATH);
       BaseClassLoader classLoader = getBaseClassLoader("loading class ", path);
       if (classLoader != null)
          return classLoader.loadClassLocally(className);
@@ -157,7 +175,7 @@ public class BaseDelegateLoader implements CacheLoader
 
    public Package getPackage(String name)
    {
-      String path = ClassLoaderUtils.packageToPath(name);
+      String path = toResourcePath(name, PACKAGE_TO_PATH);
       BaseClassLoader classLoader = getBaseClassLoader("getting package ", path);
       if (classLoader != null)
          return classLoader.getPackageLocally(name);
@@ -226,5 +244,21 @@ public class BaseDelegateLoader implements CacheLoader
          builder.append("{factory=").append(factory);
       builder.append('}');
       return builder.toString();
+   }
+
+   protected static class ClassToPathResourceAdapter implements ResourcePathAdapter
+   {
+      public String toResourcePath(String context)
+      {
+         return ClassLoaderUtils.classNameToPath(context);
+      }
+   }
+
+   protected static class PackageToPathResourceAdapter implements ResourcePathAdapter
+   {
+      public String toResourcePath(String context)
+      {
+         return ClassLoaderUtils.packageToPath(context);
+      }
    }
 }
