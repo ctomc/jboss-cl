@@ -22,10 +22,7 @@
 package org.jboss.classloader.spi.base;
 
 import java.net.URL;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -52,11 +49,11 @@ public class ClassLoaderInformation
    /** The order */
    private int order;
    
-   /** The delegates */
-   private Map<ImportType, List<DelegateLoader>> delegates;
-   
    /** The exports of the classloader */
    private BaseDelegateLoader exported;
+
+   /** The delegates */
+   private volatile Map<ImportType, List<DelegateLoader>> delegates;
    
    /** The class cache */
    private Map<String, Loader> classCache;
@@ -95,10 +92,10 @@ public class ClassLoaderInformation
       List<? extends DelegateLoader> delegates = policy.getDelegates();
       if (delegates != null && delegates.isEmpty() == false)
       {
-         this.delegates = new ConcurrentHashMap<ImportType, List<DelegateLoader>>();
+         Map<ImportType, List<DelegateLoader>> temp = new HashMap<ImportType, List<DelegateLoader>>();
          // prepare ALL
          List<DelegateLoader> all = new CopyOnWriteArrayList<DelegateLoader>();
-         this.delegates.put(ImportType.ALL, all);
+         temp.put(ImportType.ALL, all);
 
          for (DelegateLoader delegate : delegates)
          {
@@ -106,11 +103,11 @@ public class ClassLoaderInformation
                throw new IllegalStateException(policy + " null delegate in " + delegates);
 
             ImportType importType = delegate.getImportType();
-            List<DelegateLoader> loaders = this.delegates.get(importType);
+            List<DelegateLoader> loaders = temp.get(importType);
             if (loaders == null)
             {
                loaders = new CopyOnWriteArrayList<DelegateLoader>();
-               this.delegates.put(importType, loaders);
+               temp.put(importType, loaders);
             }
             loaders.add(delegate); // add to specific type
             all.add(delegate); // add to all
@@ -122,6 +119,8 @@ public class ClassLoaderInformation
             if (delegatePolicy == null || delegatePolicy.isBlackListable() == false)
                canBlackList = false;
          }
+
+         this.delegates = Collections.synchronizedMap(temp);
       }
 
       if (canCache)
@@ -223,24 +222,33 @@ public class ClassLoaderInformation
     *
     * @param loader the delegate loader
     */
-   public void addDelegate(DelegateLoader loader)
+   void addDelegate(DelegateLoader loader)
    {
+      if (delegates == null)
+         delegates = Collections.synchronizedMap(new HashMap<ImportType, List<DelegateLoader>>());
+
       ImportType type = loader.getImportType();
-      List<DelegateLoader> list = delegates.get(type);
-      if (list == null)
+      //noinspection SynchronizeOnNonFinalField
+      synchronized (delegates)
       {
-         list = new CopyOnWriteArrayList<DelegateLoader>();
-         delegates.put(type, list);
+         List<DelegateLoader> list = delegates.get(type);
+         if (list == null)
+         {
+            list = new CopyOnWriteArrayList<DelegateLoader>();
+            delegates.put(type, list);
+         }
+         list.add(0, loader); // add at the begining
+         // all
+         List<DelegateLoader> all = delegates.get(ImportType.ALL);
+         if (all == null)
+         {
+            all = new CopyOnWriteArrayList<DelegateLoader>();
+            delegates.put(ImportType.ALL, all);
+         }
+         all.add(loader);
       }
-      list.add(0, loader); // add at the begining
-      // all
-      List<DelegateLoader> all = delegates.get(ImportType.ALL);
-      if (all == null)
-      {
-         all = new CopyOnWriteArrayList<DelegateLoader>();
-         delegates.put(ImportType.ALL, all);
-      }
-      all.add(loader);
+
+      // TODO -- fix caching, blacklisting
    }
 
    /**
@@ -248,22 +256,31 @@ public class ClassLoaderInformation
     *
     * @param loader the delegate loader
     */
-   public void removeDelegate(DelegateLoader loader)
+   void removeDelegate(DelegateLoader loader)
    {
+      if (delegates == null)
+         return;
+
       ImportType type = loader.getImportType();
-      List<DelegateLoader> list = delegates.get(type);
-      if (list != null)
+      //noinspection SynchronizeOnNonFinalField
+      synchronized (delegates)
       {
-         if (list.remove(loader) && list.isEmpty())
-            delegates.remove(type);
+         List<DelegateLoader> list = delegates.get(type);
+         if (list != null)
+         {
+            if (list.remove(loader) && list.isEmpty())
+               delegates.remove(type);
+         }
+         // all
+         List<DelegateLoader> all = delegates.get(ImportType.ALL);
+         if (all != null)
+         {
+            if (all.remove(loader) && all.isEmpty())
+               delegates.remove(ImportType.ALL);
+         }
       }
-      // all
-      List<DelegateLoader> all = delegates.get(ImportType.ALL);
-      if (all != null)
-      {
-         if (all.remove(loader) && all.isEmpty())
-            delegates.remove(ImportType.ALL);
-      }
+
+      // TODO -- reset caching, blacklisting
    }
 
    /**
