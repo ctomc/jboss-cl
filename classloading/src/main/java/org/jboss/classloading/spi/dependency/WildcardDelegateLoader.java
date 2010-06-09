@@ -172,4 +172,17 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
          this.loader = loader;
       }
    }
+
+
+   @Override
+   public ImportType getImportType()
+   {
+      return ImportType.AFTER; // since we add new one's after, we should be after as well by default
+   }
+
+   @Override
+   public void setImportType(ImportType importType)
+   {
+      // ignore
+   }
 }
