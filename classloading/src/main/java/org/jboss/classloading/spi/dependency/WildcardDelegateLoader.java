@@ -24,7 +24,6 @@ package org.jboss.classloading.spi.dependency;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
 import java.util.Set;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
@@ -82,8 +81,6 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
       WildcardRequirementDependencyItem item = new WildcardRequirementDependencyItem(module, requirement, module.getClassLoaderState());
       if (item.resolve(controller))
       {
-         List<RequirementDependencyItem> items = module.getDependencies(); // should not be null, as this delegate was created from a requirement
-         items.add(item);
          module.addIDependOn(item);
          
          Module resolvedModule = item.getResolvedModule();
@@ -163,7 +160,7 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
             }
          }
 
-         module.removeIDependOn(this); // remove wildcards
+         module.removeIDependOn(this);
 
          super.unresolved(controller);
 
