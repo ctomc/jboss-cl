@@ -69,10 +69,28 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
    /** Maps native library to its provider */
    private volatile List<NativeLibraryProvider> nativeLibraries;
 
-   @Override // TODO -- public?
-   public ClassLoaderInformation getInformation()
+   /**
+    * Add extra delegate loader.
+    *
+    * @param loader the new delegate
+    */
+   public void addExtraDelegate(DelegateLoader loader)
    {
-      return super.getInformation();
+      ClassLoaderInformation info = getInformation();
+      if (info != null)
+         info.addDelegate(loader);
+   }
+
+   /**
+    * Remove extra delegate loader.
+    *
+    * @param loader the old delegate
+    */
+   public void removeExtraDelegate(DelegateLoader loader)
+   {
+      ClassLoaderInformation info = getInformation();
+      if (info != null)
+         info.removeDelegate(loader);
    }
 
    /**

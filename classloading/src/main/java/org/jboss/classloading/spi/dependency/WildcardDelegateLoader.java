@@ -32,7 +32,6 @@ import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.ImportType;
-import org.jboss.classloader.spi.base.ClassLoaderInformation;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
@@ -90,9 +89,7 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
             item.setLoader(loader);
 
             ClassLoaderPolicy policy = getPolicy();
-            ClassLoaderInformation info = policy.getInformation(); // public hack
-            if (info != null)
-               info.addDelegate(loader); // new method
+            policy.addExtraDelegate(loader);
 
             return loader;
          }
@@ -146,9 +143,7 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
          if (loader != null)
          {
             ClassLoaderPolicy policy = getPolicy();
-            ClassLoaderInformation info = policy.getInformation();
-            if (info != null)
-               info.removeDelegate(loader);
+            policy.removeExtraDelegate(loader);
          }
 
          Object iDependOn = getIDependOn();
