@@ -218,6 +218,11 @@ public class ClassLoaderInformation
       return delegates.get(type);
    }
 
+   /**
+    * Add a delegate loader.
+    *
+    * @param loader the delegate loader
+    */
    public void addDelegate(DelegateLoader loader)
    {
       ImportType type = loader.getImportType();
@@ -227,7 +232,7 @@ public class ClassLoaderInformation
          list = new CopyOnWriteArrayList<DelegateLoader>();
          delegates.put(type, list);
       }
-      list.add(0, loader);
+      list.add(0, loader); // add at the begining
       // all
       List<DelegateLoader> all = delegates.get(ImportType.ALL);
       if (all == null)
@@ -238,6 +243,11 @@ public class ClassLoaderInformation
       all.add(loader);
    }
 
+   /**
+    * Remove a delegate loader.
+    *
+    * @param loader the delegate loader
+    */
    public void removeDelegate(DelegateLoader loader)
    {
       ImportType type = loader.getImportType();
