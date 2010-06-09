@@ -31,6 +31,7 @@ import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
 import org.jboss.classloader.spi.DelegateLoader;
+import org.jboss.classloader.spi.ImportType;
 import org.jboss.classloader.spi.base.ClassLoaderInformation;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
@@ -85,6 +86,7 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
          {
             ClassLoaderPolicyModule clpm = (ClassLoaderPolicyModule) resolvedModule;
             DelegateLoader loader = clpm.getDelegateLoader(module, requirement);
+            loader.setImportType(ImportType.AFTER); // allow normal imports to run before
             item.setLoader(loader);
 
             ClassLoaderPolicy policy = getPolicy();
