@@ -70,6 +70,12 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
       this.range = ((PackageRequirement)requirement).getVersionRange();
    }
 
+   /**
+    * Try finding matching delegate loader for the pckg parameter.
+    *
+    * @param pckg the current package we're trying to lookup.
+    * @return the matching delegate loader or null if no such match
+    */
    protected DelegateLoader resolve(String pckg)
    {
       Requirement requirement = new PackageRequirement(pckg, range);
