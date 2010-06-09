@@ -34,7 +34,6 @@ import org.jboss.classloader.spi.ImportType;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
-import org.jboss.classloading.spi.dependency.policy.ClassLoaderPolicyModule;
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.classloading.spi.version.VersionRange;
 import org.jboss.dependency.spi.Controller;
@@ -81,21 +80,18 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
       WildcardRequirementDependencyItem item = new WildcardRequirementDependencyItem(module, requirement, module.getClassLoaderState());
       if (item.resolve(controller))
       {
-         module.addIDependOn(item);
-         
          Module resolvedModule = item.getResolvedModule();
-         if (resolvedModule instanceof ClassLoaderPolicyModule)
-         {
-            ClassLoaderPolicyModule clpm = (ClassLoaderPolicyModule) resolvedModule;
-            DelegateLoader loader = clpm.getDelegateLoader(module, requirement);
-            loader.setImportType(ImportType.AFTER); // allow normal imports to run before
-            item.setLoader(loader);
 
-            ClassLoaderPolicy policy = getPolicy();
-            policy.addExtraDelegate(loader);
+         DelegateLoader loader = resolvedModule.getDelegateLoader(module, requirement);
+         loader.setImportType(ImportType.AFTER); // allow normal imports to run before
+         item.setLoader(loader); // remember the loader wrt item
 
-            return loader;
-         }
+         ClassLoaderPolicy policy = getPolicy();
+         policy.addExtraDelegate(loader);
+
+         module.addIDependOn(item);
+
+         return loader;
       }
       return null;
    }
