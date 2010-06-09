@@ -173,7 +173,6 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
       }
    }
 
-
    @Override
    public ImportType getImportType()
    {
