@@ -145,7 +145,7 @@ public class RequirementDependencyItem extends AbstractDependencyItem
          if (resolved)
          {
             setIDependOn(context.getName());
-            addDepends(module);
+            module.addDepends(this);
             if (module.getClassLoadingSpace() == null)
                log.warn(getModule() + " resolved " + getRequirement() + " to " + module + " which has import-all=true. Cannot check its consistency.");
          }
@@ -154,26 +154,6 @@ public class RequirementDependencyItem extends AbstractDependencyItem
 
       setResolved(false);
       return isResolved();
-   }
-
-   /**
-    * Add this dependency on module.
-    *
-    * @param current the current module
-    */
-   protected void addDepends(Module current)
-   {
-      current.addDepends(this);      
-   }
-
-   /**
-    * Remove this dependency from module.
-    *
-    * @param current the current module
-    */
-   protected void removeDepends(Module current)
-   {
-      current.removeDepends(this);
    }
 
    @Override
@@ -199,7 +179,7 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       Module resolvedModule = getResolvedModule();
       if (resolved == ResolvedState.UNRESOLVED && resolvedModule != null)
       {
-         removeDepends(resolvedModule);
+         resolvedModule.removeDepends(this);
          resolvedModule.removeDependsOnMe(this);
          this.resolvedModule = null;
       }

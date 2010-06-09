@@ -62,6 +62,7 @@ public class WildcardPackageUnitTestCase extends AbstractMockClassLoaderUnitTest
          assertLoadClassFail(A.class, clA1);
 
          MockClassLoadingMetaData a2 = new MockClassLoadingMetaData("a2");
+         a2.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
          a2.setPathsAndPackageNames(A.class);
          KernelControllerContext contextA2 = install(a2);
          try

@@ -125,7 +125,7 @@ public class BaseDelegateLoader implements CacheLoader
     * @param context the context; make sure this is always resource path
     * @return policy's BaseClassLoader
     */
-   protected BaseClassLoader getBaseClassLoader(String message, String context)
+   BaseClassLoader getBaseClassLoader(String message, String context)
    {
       BaseClassLoader result = null;
       BaseClassLoaderPolicy policy = getPolicy();

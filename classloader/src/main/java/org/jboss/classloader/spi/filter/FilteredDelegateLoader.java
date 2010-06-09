@@ -128,11 +128,16 @@ public class FilteredDelegateLoader extends DelegateLoader
       {
          if (trace)
             log.trace(this + " " + className + " matches class filter=" + filter);
-         return super.loadClass(className);
+         return doLoadClass(className);
       }
       if (trace)
          log.trace(this + " " + className + " does NOT match class filter=" + filter);
       return null;
+   }
+
+   protected Class<?> doLoadClass(String className)
+   {
+      return super.loadClass(className);
    }
 
    public URL getResource(String name)
@@ -142,11 +147,16 @@ public class FilteredDelegateLoader extends DelegateLoader
       {
          if (trace)
             log.trace(this + " " + name + " matches resource filter=" + filter);
-         return super.getResource(name);
+         return doGetResource(name);
       }
       if (trace)
          log.trace(this + " " + name + " does NOT match resource filter=" + filter);
       return null;
+   }
+
+   protected URL doGetResource(String name)
+   {
+      return super.getResource(name);
    }
 
    // FindBugs: The Set doesn't use equals/hashCode
@@ -157,10 +167,15 @@ public class FilteredDelegateLoader extends DelegateLoader
       {
          if (trace)
             log.trace(this + " " + name + " matches filter=" + filter);
-         super.getResources(name, urls);
+         doGetResources(name, urls);
       }
       if (trace)
          log.trace(this + " " + name + " does NOT match filter=" + filter);
+   }
+
+   protected void doGetResources(String name, Set<URL> urls) throws IOException
+   {
+      super.getResources(name, urls);
    }
 
    public Package getPackage(String name)
@@ -170,11 +185,16 @@ public class FilteredDelegateLoader extends DelegateLoader
       {
          if (trace)
             log.trace(this + " " + name + " matches package filter=" + filter);
-         return super.getPackage(name);
+         return doGetPackage(name);
       }
       if (trace)
          log.trace(this + " " + name + " does NOT match package filter=" + filter);
       return null;
+   }
+
+   protected Package doGetPackage(String name)
+   {
+      return super.getPackage(name);
    }
 
    public void getPackages(Set<Package> packages)
@@ -182,7 +202,7 @@ public class FilteredDelegateLoader extends DelegateLoader
       boolean trace = log.isTraceEnabled();
       
       Set<Package> allPackages = new HashSet<Package>();
-      super.getPackages(allPackages);
+      doGetPackages(allPackages);
       for (Package pkge : allPackages)
       {
          if (filter.matchesPackageName(pkge.getName()))
@@ -194,6 +214,11 @@ public class FilteredDelegateLoader extends DelegateLoader
          else if (trace)
             log.trace(this + " pkge=" + pkge + " does NOT match package filter=" + filter);
       }
+   }
+
+   protected void doGetPackages(Set<Package> packages)
+   {
+      super.getPackages(packages);
    }
 
    @Override

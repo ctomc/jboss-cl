@@ -38,8 +38,6 @@ import org.jboss.classloading.spi.dependency.Domain;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.dependency.RequirementDependencyItem;
 import org.jboss.classloading.spi.dependency.helpers.ClassLoadingMetaDataModule;
-import org.jboss.classloading.spi.dependency.wildcard.WildcardClassLoaderPolicyFactory;
-import org.jboss.classloading.spi.dependency.wildcard.WildcardDelegateLoader;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.dependency.spi.Controller;
@@ -269,8 +267,14 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
          ClassFilter filter = pr.toClassFilter();
          if (pr.isWildcard())
          {
-            ClassLoaderPolicyFactory factory = new WildcardClassLoaderPolicyFactory(domain, item);
-            return new WildcardDelegateLoader(factory, filter);
+            ClassLoaderPolicyFactory factory = new ClassLoaderPolicyFactory()
+            {
+               public ClassLoaderPolicy createClassLoaderPolicy()
+               {
+                  return getPolicy();
+               }
+            };
+            return resolveWildcard(controller, factory, filter, item);
          }
          else
          {

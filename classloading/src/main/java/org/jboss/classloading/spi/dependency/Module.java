@@ -36,7 +36,6 @@ import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageCapability;
 import org.jboss.classloading.plugins.metadata.PackageRequirement;
-import org.jboss.classloading.spi.dependency.wildcard.WildcardRequirementDependencyItem;
 import org.jboss.classloading.spi.helpers.NameAndVersionSupport;
 import org.jboss.classloading.spi.metadata.*;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
@@ -833,6 +832,20 @@ public abstract class Module extends NameAndVersionSupport
    public abstract DelegateLoader getDelegateLoader(Module requiringModule, List<String> packages);
 
    /**
+    * Create wildcard delegate.
+    *
+    * @param controller the controller
+    * @param factory the classloader policy factory
+    * @param filter the class filter
+    * @param item the requirement dependency item
+    * @return wildcard delegate loader
+    */
+   protected DelegateLoader resolveWildcard(Controller controller, ClassLoaderPolicyFactory factory, ClassFilter filter, RequirementDependencyItem item)
+   {
+      return new WildcardDelegateLoader(controller, factory, filter, item);
+   }
+
+   /**
     * Get the exported packages
     * 
     * @return the exported packages
@@ -1174,11 +1187,7 @@ public abstract class Module extends NameAndVersionSupport
          requirementDependencies = new ArrayList<RequirementDependencyItem>();
          for (Requirement requirement : requirements)
          {
-            RequirementDependencyItem item;
-            if (requirement instanceof PackageRequirement && ((PackageRequirement)requirement).isWildcard())
-               item = new WildcardRequirementDependencyItem(this, requirement, classLoaderState, classLoaderState);
-            else
-               item = new RequirementDependencyItem(this, requirement, classLoaderState, classLoaderState);
+            RequirementDependencyItem item = new RequirementDependencyItem(this, requirement, classLoaderState, classLoaderState);
             addIDependOn(item);
             requirementDependencies.add(item);
          }

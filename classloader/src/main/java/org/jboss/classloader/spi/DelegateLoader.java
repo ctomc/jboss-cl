@@ -58,7 +58,8 @@ public class DelegateLoader extends BaseDelegateLoader
    }
    
    /**
-    * Get the ClassLoaderPolicy associated with this DelegateLoader
+    * Get the ClassLoaderPolicy associated with this DelegateLoader.
+    *
     * @return the class loader policy
     */
    public ClassLoaderPolicy getPolicy()

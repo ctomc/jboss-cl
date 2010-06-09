@@ -22,8 +22,12 @@
 package org.jboss.classloader.spi.base;
 
 import java.net.URL;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.ImportType;
@@ -91,9 +95,9 @@ public class ClassLoaderInformation
       List<? extends DelegateLoader> delegates = policy.getDelegates();
       if (delegates != null && delegates.isEmpty() == false)
       {
-         this.delegates = new HashMap<ImportType, List<DelegateLoader>>();
+         this.delegates = new ConcurrentHashMap<ImportType, List<DelegateLoader>>();
          // prepare ALL
-         List<DelegateLoader> all = new ArrayList<DelegateLoader>();
+         List<DelegateLoader> all = new CopyOnWriteArrayList<DelegateLoader>();
          this.delegates.put(ImportType.ALL, all);
 
          for (DelegateLoader delegate : delegates)
@@ -105,7 +109,7 @@ public class ClassLoaderInformation
             List<DelegateLoader> loaders = this.delegates.get(importType);
             if (loaders == null)
             {
-               loaders = new ArrayList<DelegateLoader>();
+               loaders = new CopyOnWriteArrayList<DelegateLoader>();
                this.delegates.put(importType, loaders);
             }
             loaders.add(delegate); // add to specific type
@@ -212,6 +216,44 @@ public class ClassLoaderInformation
          return Collections.emptyList();
 
       return delegates.get(type);
+   }
+
+   public void addDelegate(DelegateLoader loader)
+   {
+      ImportType type = loader.getImportType();
+      List<DelegateLoader> list = delegates.get(type);
+      if (list == null)
+      {
+         list = new CopyOnWriteArrayList<DelegateLoader>();
+         delegates.put(type, list);
+      }
+      list.add(0, loader);
+      // all
+      List<DelegateLoader> all = delegates.get(ImportType.ALL);
+      if (all == null)
+      {
+         all = new CopyOnWriteArrayList<DelegateLoader>();
+         delegates.put(ImportType.ALL, all);
+      }
+      all.add(loader);
+   }
+
+   public void removeDelegate(DelegateLoader loader)
+   {
+      ImportType type = loader.getImportType();
+      List<DelegateLoader> list = delegates.get(type);
+      if (list != null)
+      {
+         if (list.remove(loader) && list.isEmpty())
+            delegates.remove(type);
+      }
+      // all
+      List<DelegateLoader> all = delegates.get(ImportType.ALL);
+      if (all != null)
+      {
+         if (all.remove(loader) && all.isEmpty())
+            delegates.remove(ImportType.ALL);
+      }
    }
 
    /**

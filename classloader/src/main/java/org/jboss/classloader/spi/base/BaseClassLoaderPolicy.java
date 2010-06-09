@@ -84,7 +84,7 @@ public abstract class BaseClassLoaderPolicy implements Formattable
     * 
     * @return the information.
     */
-   ClassLoaderInformation getInformation()
+   protected ClassLoaderInformation getInformation() // TODO -- protected, was pckg private!
    {
       return information;
    }
@@ -361,7 +361,7 @@ public abstract class BaseClassLoaderPolicy implements Formattable
     * @param task the classloading task info
     * @return the classloader
     */
-   protected synchronized BaseClassLoader getClassLoader(ClassLoadingTask task)
+   synchronized BaseClassLoader getClassLoader(ClassLoadingTask task)
    {
       return getClassLoader();
    }

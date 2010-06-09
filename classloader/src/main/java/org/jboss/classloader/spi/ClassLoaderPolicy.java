@@ -21,6 +21,9 @@
  */
 package org.jboss.classloader.spi;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,10 +37,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
 import org.jboss.classloader.spi.base.BaseClassLoaderPolicy;
+import org.jboss.classloader.spi.base.ClassLoaderInformation;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.spi.filter.PackageClassFilter;
 import org.jboss.classloader.spi.jdk.JDKChecker;
@@ -67,7 +68,13 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
 
    /** Maps native library to its provider */
    private volatile List<NativeLibraryProvider> nativeLibraries;
-   
+
+   @Override // TODO -- public?
+   public ClassLoaderInformation getInformation()
+   {
+      return super.getInformation();
+   }
+
    /**
     * Add a native library provider.
     * @param provider The library file provider
