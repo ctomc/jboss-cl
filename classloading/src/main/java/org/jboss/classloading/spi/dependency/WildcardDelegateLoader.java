@@ -163,6 +163,8 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
             }
          }
 
+         module.removeIDependOn(this); // remove wildcards
+
          super.unresolved(controller);
 
          return false; // return false, so we don't get unwinded
