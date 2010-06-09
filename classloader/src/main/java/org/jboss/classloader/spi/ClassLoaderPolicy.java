@@ -38,7 +38,6 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.spi.base.BaseClassLoaderPolicy;
-import org.jboss.classloader.spi.base.ClassLoaderInformation;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.spi.filter.PackageClassFilter;
 import org.jboss.classloader.spi.jdk.JDKChecker;
@@ -49,6 +48,7 @@ import org.jboss.logging.Logger;
  * ClassLoader policy.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @author thomas.diesler@jboss.com
  * @version $Revision: 1.1 $
  */
@@ -76,9 +76,7 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
     */
    public void addExtraDelegate(DelegateLoader loader)
    {
-      ClassLoaderInformation info = getInformation();
-      if (info != null)
-         info.addDelegate(loader);
+      super.addExtraDelegate(loader);
    }
 
    /**
@@ -88,9 +86,7 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
     */
    public void removeExtraDelegate(DelegateLoader loader)
    {
-      ClassLoaderInformation info = getInformation();
-      if (info != null)
-         info.removeDelegate(loader);
+      super.removeExtraDelegate(loader);
    }
 
    /**

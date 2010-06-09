@@ -80,11 +80,35 @@ public abstract class BaseClassLoaderPolicy implements Formattable
    }
 
    /**
+    * Add extra delegate loader.
+    *
+    * @param loader the new delegate
+    */
+   protected void addExtraDelegate(DelegateLoader loader)
+   {
+      ClassLoaderInformation info = getInformation();
+      if (info != null)
+         info.addDelegate(loader);
+   }
+
+   /**
+    * Remove extra delegate loader.
+    *
+    * @param loader the old delegate
+    */
+   protected void removeExtraDelegate(DelegateLoader loader)
+   {
+      ClassLoaderInformation info = getInformation();
+      if (info != null)
+         info.removeDelegate(loader);
+   }
+
+   /**
     * Get the information.
     * 
     * @return the information.
     */
-   protected ClassLoaderInformation getInformation() // TODO -- protected, was pckg private!
+   ClassLoaderInformation getInformation()
    {
       return information;
    }
