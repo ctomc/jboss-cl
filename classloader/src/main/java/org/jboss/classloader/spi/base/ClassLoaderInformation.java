@@ -56,16 +56,22 @@ public class ClassLoaderInformation
    private volatile Map<ImportType, List<DelegateLoader>> delegates;
    
    /** The class cache */
-   private Map<String, Loader> classCache;
+   private volatile Map<String, Loader> classCache;
    
    /** The class black list */
-   private Set<String> classBlackList;
+   private volatile Set<String> classBlackList;
    
    /** The resource cache */
-   private Map<String, URL> resourceCache;
+   private volatile Map<String, URL> resourceCache;
    
    /** The resource black list */
-   private Set<String> resourceBlackList;
+   private volatile Set<String> resourceBlackList;
+
+   /** The # of delegates who cant cache */
+   private int cantCache;
+
+   /** The # of delegates who cant blacklist */
+   private int cantBlacklist;
 
    /**
     * Create a new ClassLoaderInformation.
@@ -115,9 +121,15 @@ public class ClassLoaderInformation
             BaseDelegateLoader baseDelegate = delegate;
             BaseClassLoaderPolicy delegatePolicy = baseDelegate.getPolicy();
             if (delegatePolicy == null || delegatePolicy.isCacheable() == false)
+            {
                canCache = false;
+               cantCache++;
+            }
             if (delegatePolicy == null || delegatePolicy.isBlackListable() == false)
+            {
                canBlackList = false;
+               cantBlacklist++;
+            }
          }
 
          this.delegates = Collections.synchronizedMap(temp);
@@ -125,15 +137,37 @@ public class ClassLoaderInformation
 
       if (canCache)
       {
-         classCache = new ConcurrentHashMap<String, Loader>();
-         resourceCache = new ConcurrentHashMap<String, URL>();
+         restoreCache();
       }
       
       if (canBlackList)
       {
-         classBlackList = new ConcurrentSet<String>();
-         resourceBlackList = new ConcurrentSet<String>();
+         restoreBlackList();
       }
+   }
+
+   private void restoreCache()
+   {
+      classCache = new ConcurrentHashMap<String, Loader>();
+      resourceCache = new ConcurrentHashMap<String, URL>();
+   }
+
+   private void destroyCache()
+   {
+      classCache = null;
+      resourceCache = null;
+   }
+
+   private void restoreBlackList()
+   {
+      classBlackList = new ConcurrentSet<String>();
+      resourceBlackList = new ConcurrentSet<String>();
+   }
+
+   private void destroyBlackList()
+   {
+      classBlackList = null;
+      resourceBlackList = null;
    }
 
    /**
@@ -224,8 +258,16 @@ public class ClassLoaderInformation
     */
    void addDelegate(DelegateLoader loader)
    {
+      if (loader == null)
+         throw new IllegalArgumentException("Null delegate");
+
       if (delegates == null)
          delegates = Collections.synchronizedMap(new HashMap<ImportType, List<DelegateLoader>>());
+
+      BaseDelegateLoader baseDelegate = loader;
+      BaseClassLoaderPolicy policy = baseDelegate.getPolicy();
+      boolean canCache = (policy != null && policy.isCacheable());
+      boolean canBlackList = (policy != null && policy.isBlackListable());
 
       ImportType type = loader.getImportType();
       //noinspection SynchronizeOnNonFinalField
@@ -246,9 +288,25 @@ public class ClassLoaderInformation
             delegates.put(ImportType.ALL, all);
          }
          all.add(loader);
-      }
 
-      // TODO -- fix caching, blacklisting
+         if (canCache == false)
+         {
+            // we can cache atm, but the new one can't
+            if (cantCache == 0)
+               destroyCache();
+
+            cantCache++;
+         }
+
+         if (canBlackList == false)
+         {
+            // we can blacklist atm, but the new one can't
+            if (cantBlacklist == 0)
+               destroyCache();
+
+            cantBlacklist++;
+         }
+      }
    }
 
    /**
@@ -258,8 +316,16 @@ public class ClassLoaderInformation
     */
    void removeDelegate(DelegateLoader loader)
    {
+      if (loader == null)
+         throw new IllegalArgumentException("Null delegate");
+
       if (delegates == null)
          return;
+
+      BaseDelegateLoader baseDelegate = loader;
+      BaseClassLoaderPolicy policy = baseDelegate.getPolicy();
+      boolean canCache = (policy != null && policy.isCacheable());
+      boolean canBlackList = (policy != null && policy.isBlackListable());
 
       ImportType type = loader.getImportType();
       //noinspection SynchronizeOnNonFinalField
@@ -271,16 +337,39 @@ public class ClassLoaderInformation
             if (list.remove(loader) && list.isEmpty())
                delegates.remove(type);
          }
+
+         boolean member = false;
          // all
          List<DelegateLoader> all = delegates.get(ImportType.ALL);
          if (all != null)
          {
-            if (all.remove(loader) && all.isEmpty())
+            member = all.remove(loader);
+            if (member && all.isEmpty())
                delegates.remove(ImportType.ALL);
          }
-      }
 
-      // TODO -- reset caching, blacklisting
+         // make sure we only handle our members
+         if (member)
+         {
+            if (canCache == false)
+            {
+               cantCache--;
+
+               // we can again cache
+               if (cantCache == 0)
+                  restoreCache();
+            }
+
+            if (canBlackList == false)
+            {
+               cantBlacklist--;
+
+               // we can again blacklist
+               if (cantBlacklist == 0)
+                  restoreBlackList();
+            }
+         }
+      }
    }
 
    /**
