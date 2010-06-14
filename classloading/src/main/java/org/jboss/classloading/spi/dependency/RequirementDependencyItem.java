@@ -131,6 +131,7 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       {
          ControllerContext context = module.getControllerContext();
          setIDependOn(context.getName());
+         resolvedModule = module;
          setResolved(true);
          return true;
       }
