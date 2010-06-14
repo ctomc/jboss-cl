@@ -302,7 +302,7 @@ public class ClassLoaderInformation
          {
             // we can blacklist atm, but the new one can't
             if (cantBlacklist == 0)
-               destroyBlackList();
+               destroyCache();
 
             cantBlacklist++;
          }
