@@ -173,9 +173,9 @@ public class Domain implements ClassLoadingAdmin
       {
          removeModule(module);
          if (t instanceof RuntimeException)
-            throw (RuntimeException) t;
+            throw (RuntimeException)t;
          else if (t instanceof Error)
-            throw (Error) t;
+            throw (Error)t;
          else
             throw new RuntimeException("Error adding module " + module, t);
       }
@@ -299,7 +299,6 @@ public class Domain implements ClassLoadingAdmin
             return result;
       }
 
-      Module firstMatch = null;
       for (Module other : modules)
       {
          List<Capability> capabilities = other.getCapabilities();
@@ -309,21 +308,14 @@ public class Domain implements ClassLoadingAdmin
             {
                if (capability.resolves(module, requirement))
                {
-                  if (firstMatch != null)
-                  {
-                     String otherName = other.getName() + ":" + other.getVersion();
-                     String firstName = firstMatch.getName() + ":" + firstMatch.getVersion();
-                     log.debug("Requirement " + requirement + " resolves agaist " + firstName + " and " + otherName + " - using first.");
-                  }
-                  if (firstMatch == null)
-                     firstMatch = other;
+                  if (log.isTraceEnabled())
+                     log.trace("Requirement " + requirement + " resolves against " + capability);
+
+                  return other;
                }
             }
          }
       }
-
-      if (firstMatch != null)
-         return firstMatch;
 
       // Check the parent afterwards when required
       if (parentDomain != null && parentFirst == false)
@@ -414,7 +406,7 @@ public class Domain implements ClassLoadingAdmin
                Requirement requirement = dependencyItem.getRequirement();
                if (requirement instanceof ModuleRequirement && dependencyItem.isResolved())
                {
-                  ModuleRequirement moduleRequirement = (ModuleRequirement) requirement;
+                  ModuleRequirement moduleRequirement = (ModuleRequirement)requirement;
                   if (name == null || name.equals(moduleRequirement.getName()))
                   {
                      if (range.isConsistent(moduleRequirement.getVersionRange()))
@@ -469,7 +461,7 @@ public class Domain implements ClassLoadingAdmin
             {
                if (capability instanceof PackageCapability && capability.resolves(module, requirement))
                {
-                  ExportPackage exportPackage = new ExportPackage(module, (PackageCapability) capability);
+                  ExportPackage exportPackage = new ExportPackage(module, (PackageCapability)capability);
                   result.add(exportPackage);
                   break;
                }
