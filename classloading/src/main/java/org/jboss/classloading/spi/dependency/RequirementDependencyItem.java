@@ -126,17 +126,17 @@ public class RequirementDependencyItem extends AbstractDependencyItem
          return isResolved();
       }
 
+      // TODO - any reason why requesting module wasn't considered as resolving module?
+      resolvedModule = module;
+
       // Self dependency
       if (module == this.module)
       {
          ControllerContext context = module.getControllerContext();
          setIDependOn(context.getName());
-         resolvedModule = module;
          setResolved(true);
-         return true;
+         return isResolved();
       }
-
-      resolvedModule = module;
 
       // Use semi-resolve to avoid circular references  
       ControllerContext context = module.getControllerContext();
