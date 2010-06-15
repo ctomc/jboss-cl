@@ -78,7 +78,8 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
    {
       Requirement requirement = new PackageRequirement(pckg, range);
       ControllerState state = module.getClassLoaderState();
-      WildcardRequirementDependencyItem item = new WildcardRequirementDependencyItem(module, requirement, state);
+      // resolve both sides of the wire at the same state
+      WildcardRequirementDependencyItem item = new WildcardRequirementDependencyItem(module, requirement, state, state);
       if (item.resolve(controller))
       {
          Module resolvedModule = item.getResolvedModule();
@@ -132,10 +133,9 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
    {
       private DelegateLoader loader;
 
-      private WildcardRequirementDependencyItem(Module module, Requirement requirement, ControllerState whenRequired)
+      private WildcardRequirementDependencyItem(Module module, Requirement requirement, ControllerState whenRequired, ControllerState dependentState)
       {
-         // Resolves against an exporter at the same stage
-         super(module, requirement, whenRequired, whenRequired);
+         super(module, requirement, whenRequired, dependentState);
       }
 
       @Override
