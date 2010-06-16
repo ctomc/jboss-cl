@@ -129,7 +129,7 @@ public class RequirementDependencyItem extends AbstractDependencyItem
       resolvedModule = module;
 
       // Self dependency
-      if (module == this.module)
+      if (module == getModule())
       {
          ControllerContext context = module.getControllerContext();
          setIDependOn(context.getName());

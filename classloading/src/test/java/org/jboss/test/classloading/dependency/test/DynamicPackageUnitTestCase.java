@@ -199,4 +199,39 @@ public class DynamicPackageUnitTestCase extends AbstractMockClassLoaderUnitTest
       }
       assertNoClassLoader(contextB);
    }
+
+   public void testDynamicAfterEmbedded() throws Exception
+   {
+      ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
+
+      MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+      b.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
+      b.getCapabilities().addCapability(factory.createPackage(B.class.getPackage().getName()));
+      b.setPathsAndPackageNames(A.class, B.class);
+      KernelControllerContext contextB = install(b);
+      try
+      {
+         assertClassLoader(contextB); // force CL install
+
+         MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+         a.getRequirements().addRequirement(factory.createWildcardPackage(A.class.getPackage().getName()));
+         a.setPaths(A.class); // embedded
+         KernelControllerContext contextA = install(a);
+         try
+         {
+            ClassLoader clA = assertClassLoader(contextA);
+            assertLoadClass(A.class, clA, clA); // should resolve to itself, as we have an embedded A class
+         }
+         finally
+         {
+            uninstall(contextA);
+         }
+         assertNoClassLoader(contextA);
+      }
+      finally
+      {
+         uninstall(contextB);
+      }
+      assertNoClassLoader(contextB);
+   }
 }
