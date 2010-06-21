@@ -64,7 +64,7 @@ public class VersionRange implements Serializable
    /**
     * Parse a range spec
     * 
-    * @param rangeSpec
+    * @param rangeSpec string version
     * @return the version range
     */
    public static VersionRange parseRangeSpec(String rangeSpec)
