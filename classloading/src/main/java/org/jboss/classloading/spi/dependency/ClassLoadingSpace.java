@@ -21,11 +21,7 @@
 */
 package org.jboss.classloading.spi.dependency;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,6 +29,7 @@ import org.jboss.classloading.plugins.metadata.PackageCapability;
 import org.jboss.classloading.plugins.metadata.PackageCapability.SplitPackagePolicy;
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.logging.Logger;
+import org.jboss.util.collection.ConcurrentSet;
 
 /**
  * ClassLoadingSpace. This class does two stage join/resolve<p>
@@ -44,6 +41,7 @@ import org.jboss.logging.Logger;
  * 
  * TODO JBCL-25 handle split packages
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class ClassLoadingSpace
@@ -55,7 +53,7 @@ public class ClassLoadingSpace
    private static boolean trace = log.isTraceEnabled();
    
    /** The modules */
-   private Map<Module, Module> modules = new ConcurrentHashMap<Module, Module>();
+   private Set<Module> modules = new ConcurrentSet<Module>();
 
    /** The modules by package */
    private Map<String, Module> modulesByPackage = new ConcurrentHashMap<String, Module>();
@@ -70,7 +68,7 @@ public class ClassLoadingSpace
     */
    public Set<Module> getModules()
    {
-      return Collections.unmodifiableSet(modules.keySet());
+      return Collections.unmodifiableSet(modules);
    }
    
    /**
@@ -98,7 +96,7 @@ public class ClassLoadingSpace
             throw (RuntimeException) t;
          if (t instanceof Error)
             throw (Error) t;
-         throw new RuntimeException(modules + " could not join " + this, t);
+         throw new RuntimeException(module + " could not join " + this, t);
       }
    }
    
@@ -278,7 +276,7 @@ public class ClassLoadingSpace
          other.split(module);
       
       // This module is now part of our space
-      modules.put(module, module);
+      modules.add(module);
       module.setClassLoadingSpace(this);
    }
    
@@ -355,5 +353,15 @@ public class ClassLoadingSpace
          log.trace(module + " unresolving " + this);
       
       // Nothing yet. Could try to split classloading spaces if they now have disjoint subsets?
+   }
+
+   @Override
+   public String toString()
+   {
+      StringBuilder builder = new StringBuilder("ClassLoadingSpace: ");
+      builder.append("modules: ").append(modules).append(", ");
+      builder.append("modulesByPackages: ").append(modulesByPackage).append(", ");
+      builder.append("requirements: ").append(requirements);
+      return builder.toString();
    }
 }
