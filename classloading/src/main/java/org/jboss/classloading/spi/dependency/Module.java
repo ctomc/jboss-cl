@@ -31,7 +31,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.jboss.classloader.spi.*;
+import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
+import org.jboss.classloader.spi.ClassLoaderSystem;
+import org.jboss.classloader.spi.DelegateLoader;
+import org.jboss.classloader.spi.ImportType;
+import org.jboss.classloader.spi.ParentPolicy;
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageCapability;
@@ -41,7 +46,11 @@ import org.jboss.classloading.spi.metadata.*;
 import org.jboss.classloading.spi.visitor.ResourceFilter;
 import org.jboss.classloading.spi.visitor.ResourceVisitor;
 import org.jboss.dependency.plugins.ResolvedState;
-import org.jboss.dependency.spi.*;
+import org.jboss.dependency.spi.Controller;
+import org.jboss.dependency.spi.ControllerContext;
+import org.jboss.dependency.spi.ControllerState;
+import org.jboss.dependency.spi.DependencyInfo;
+import org.jboss.dependency.spi.DependencyItem;
 import org.jboss.logging.Logger;
 
 /**
@@ -85,6 +94,9 @@ public abstract class Module extends NameAndVersionSupport
    
    /** The requirements */
    private List<RequirementDependencyItem> requirementDependencies;
+   
+   /** Already resolved dependency items */
+   private Map<RequirementDependencyItem, Module> resolved;
 
    /** Any lifecycle associated with the classloader */
    private LifeCycle lifeCycle;
@@ -94,7 +106,7 @@ public abstract class Module extends NameAndVersionSupport
    
    /** Requirements resolved to us */
    private Set<RequirementDependencyItem> depends = new CopyOnWriteArraySet<RequirementDependencyItem>();
-   
+
    /**
     * Register a classloader for a module
     * 
@@ -1191,6 +1203,7 @@ public abstract class Module extends NameAndVersionSupport
             addIDependOn(item);
             requirementDependencies.add(item);
          }
+         resolved = new ConcurrentHashMap<RequirementDependencyItem, Module>();
       }
    }
 
@@ -1205,6 +1218,7 @@ public abstract class Module extends NameAndVersionSupport
             removeIDependOn(item);
       }
       requirementDependencies = null;
+      resolved = null;
    }
 
    /**
@@ -1216,7 +1230,10 @@ public abstract class Module extends NameAndVersionSupport
       if (requirementDependencies != null && requirementDependencies.isEmpty() == false)
       {
          for (RequirementDependencyItem item : requirementDependencies)
+         {
             item.unresolved(controller);
+            resolved.remove(item);
+         }
       }
    }
 
@@ -1336,14 +1353,34 @@ public abstract class Module extends NameAndVersionSupport
     */
    protected Module resolveModule(RequirementDependencyItem dependency, boolean resolveSpace)
    {
+      if (resolved != null)
+      {
+         Module resolvedModule = resolved.get(dependency);
+         if (resolvedModule != null)
+            return resolvedModule;
+      }
+
       ClassLoadingSpace space = getClassLoadingSpace();
       if (resolveSpace && space != null)
          space.resolve(this);
 
+      if (resolved != null)
+      {
+         // did we resolve it as part of CLS::resolve
+         Module resolvedModule = resolved.get(dependency);
+         if (resolvedModule != null)
+            return resolvedModule;
+      }
+
       Requirement requirement = dependency.getRequirement();
-      return checkDomain().resolveModule(this, requirement);
+      Module result = checkDomain().resolveModule(this, requirement);
+
+      if (resolved != null && result != null)
+         resolved.put(dependency, result);
+
+      return result;
    }
-   
+
    /**
     * Release the module
     */

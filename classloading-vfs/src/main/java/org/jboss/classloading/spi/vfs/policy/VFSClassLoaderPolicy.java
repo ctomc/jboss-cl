@@ -24,11 +24,11 @@ package org.jboss.classloading.spi.vfs.policy;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.Policy;
 import java.security.ProtectionDomain;
-import java.security.CodeSigner;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.Manifest;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
+import org.jboss.classloader.spi.ClassFoundEvent;
+import org.jboss.classloader.spi.ClassFoundHandler;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.PackageInformation;
@@ -54,9 +56,7 @@ import org.jboss.vfs.VirtualFile;
 /**
  * VFSClassLoaderPolicy.
  * 
- * [TODO] add meaningful javadoc
- * 
- * @author <a href="adrian@jboss.org">Adrian Brock</a> 
+ * @author <a href="adrian@jboss.org">Adrian Brock</a>
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @author <a href="anil.saldhana@jboss.org">Anil Saldhana</a>
  * @author Thomas.Diesler@jboss.com
@@ -254,6 +254,7 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
       this.name = name;
       this.roots = roots;
       this.excludedRoots = excludedRoots;
+      addClassFoundHandler(new VFSCacheRemove());
    }
 
    @Override
@@ -670,5 +671,15 @@ public class VFSClassLoaderPolicy extends ClassLoaderPolicy
          return true;
       }
       return false;
+   }
+
+   private class VFSCacheRemove implements ClassFoundHandler
+   {
+      public void classFound(ClassFoundEvent event)
+      {
+         String className = event.getClassName();
+         String path = ClassLoaderUtils.classNameToPath(className);
+         vfsCache.remove(path); // remove the entry once we loaded the class
+      }
    }
 }
