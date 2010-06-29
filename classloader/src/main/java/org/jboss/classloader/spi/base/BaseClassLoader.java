@@ -656,8 +656,11 @@ public class BaseClassLoader extends SecureClassLoader implements BaseClassLoade
          }
       }, policy.getAccessControlContext());
 
-      loadedClasses.add(name);
-      policy.classFound(new ClassFoundEvent(this, result));
+      if (result != null)
+      {
+         loadedClasses.add(name);
+         policy.classFound(new ClassFoundEvent(this, result));
+      }
 
       return result;
    }
