@@ -23,8 +23,9 @@ package org.jboss.classloading.spi.vfs.dependency;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -44,12 +45,14 @@ import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.kernel.spi.dependency.KernelControllerContextAware;
 import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
+import org.jboss.vfs.VirtualFileFilter;
 import org.jboss.vfs.util.automount.Automounter;
 
 /**
  * VFSClassLoaderPolicyModule.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implements KernelControllerContextAware
@@ -165,23 +168,55 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
       }
       else
       {
-         VirtualFile[] vfsRoots = new VirtualFile[roots.size()];
-         for (int i = 0; i < roots.size(); ++i)
+         List<VirtualFile> vfsRoots = new ArrayList<VirtualFile>();
+         for (String root : roots)
          {
-            String root = roots.get(i);
-            try
+            int wc = root.lastIndexOf("*"); // is it wildcard?
+            if (wc >= 0)
             {
-               URI uri = new URI(root);
-               vfsRoots[i] = VFS.getChild(uri);
+               final String wcString = root.substring(wc + 1);
+               VirtualFile start;
+               if (wc > 0) // some more path before
+               {
+                  start = VFS.getChild(root.substring(0, wc));
+               }
+               else
+               {
+                  start = VFS.getRootVirtualFile();
+               }
+               try
+               {
+                  List<VirtualFile> children = start.getChildren(new VirtualFileFilter()
+                  {
+                     public boolean accepts(VirtualFile file)
+                     {
+                        String name = file.getName();
+                        return name.endsWith(wcString);
+                     }
+                  });
+                  vfsRoots.addAll(children);
+               }
+               catch (IOException e)
+               {
+                  throw new RuntimeException("Error creating VFS files for " + root, e);
+               }
             }
-            catch (URISyntaxException e)
+            else
             {
-               throw new RuntimeException("Error creating VFS file for " + root, e);
+               try
+               {
+                  URI uri = new URI(root);
+                  vfsRoots.add(VFS.getChild(uri));
+               }
+               catch (URISyntaxException e)
+               {
+                  throw new RuntimeException("Error creating VFS file for " + root, e);
+               }
             }
          }
-         this.vfsRoots = vfsRoots;
+         this.vfsRoots = vfsRoots.toArray(new VirtualFile[vfsRoots.size()]);
       }
-      return vfsRoots;
+      return this.vfsRoots;
    }
 
    @Override

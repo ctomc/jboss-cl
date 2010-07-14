@@ -83,6 +83,13 @@ public class VFSResourceVisitorUnitTestCase extends VFSClassLoadingMicrocontaine
       System.setProperty("test.dir", urlString);
    }
 
+   protected void tearDown() throws Exception
+   {
+      System.clearProperty("test.dir");
+      
+      super.tearDown();
+   }
+
    public void testFromXml() throws Exception
    {
       KernelDeployment deployment = deploy("VFSResourceVisitorTest.xml");

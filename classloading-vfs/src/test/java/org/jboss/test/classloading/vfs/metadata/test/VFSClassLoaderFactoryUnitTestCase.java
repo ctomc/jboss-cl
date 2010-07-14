@@ -21,10 +21,18 @@
  */
 package org.jboss.test.classloading.vfs.metadata.test;
 
-import junit.framework.Test;
+import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jboss.kernel.spi.deployment.KernelDeployment;
 import org.jboss.test.classloading.vfs.metadata.VFSClassLoadingMicrocontainerTest;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VFSUtils;
+import org.jboss.vfs.VirtualFile;
+import org.jboss.vfs.VirtualFileAssembly;
+
+import junit.framework.Test;
 
 /**
  * VFSClassLoaderFactoryUnitTestCase.
@@ -207,5 +215,45 @@ public class VFSClassLoaderFactoryUnitTestCase extends VFSClassLoadingMicroconta
       }
       validate();
       assertNoClassLoader("a", "1.0.0");
+   }
+
+   public void testWildcard() throws Exception
+   {
+      String testDir = "test";
+      List<Closeable> closeables = new ArrayList<Closeable>();
+      try
+      {
+         VirtualFile root = VFS.getRootVirtualFile();
+         VirtualFile test = root.getChild(testDir);
+         closeables.add(VFS.mountAssembly(new VirtualFileAssembly(), test));
+         VirtualFile jar1 = test.getChild("j1.jar");
+         closeables.add(VFS.mountAssembly(new VirtualFileAssembly(), jar1));
+         VirtualFile jar2 = test.getChild("j2.jar");
+         closeables.add(VFS.mountAssembly(new VirtualFileAssembly(), jar2));
+
+         System.setProperty("test.dir", testDir);
+         try
+         {
+            KernelDeployment wc = deploy("Wildcard.xml");
+            try
+            {
+               validate();
+               ClassLoader cl = assertClassLoader("wc", "0.0.0");
+               assertLoadClassFail("org.acme.FooBar", cl);
+            }
+            finally
+            {
+               undeploy(wc);
+            }
+         }
+         finally
+         {
+            System.clearProperty("test.dir");
+         }
+      }
+      finally
+      {
+         VFSUtils.safeClose(closeables);
+      }
    }
 }

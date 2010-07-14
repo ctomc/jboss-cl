@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deployment xmlns="urn:jboss:bean-deployer:2.0" xmlns:cl="urn:jboss:classloader:1.0">
+
+  <classloader xmlns="urn:jboss:classloader:1.0" name="wc">
+     <root>${test.dir}/*.jar</root>
+  </classloader>
+
+</deployment>
