@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.vfs.PackageVisitor;
@@ -66,7 +67,11 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
    /** Our cached vfs roots */
    private VirtualFile[] vfsRoots;
 
+   /** The empty roots */
    private static final VirtualFile[] NO_VIRTUAL_FILES = new VirtualFile[0];
+
+   /** The root reg-exp pattern key */
+   private static final String RE_KEY = "?root-re-pattern=";
 
    /**
     * Create a new VFSClassLoaderPolicyModule.
@@ -171,14 +176,15 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
          List<VirtualFile> vfsRoots = new ArrayList<VirtualFile>();
          for (String root : roots)
          {
-            int wc = root.lastIndexOf("*"); // is it wildcard?
-            if (wc >= 0)
+            int re = root.lastIndexOf(RE_KEY); // is it reg-exp?
+            if (re >= 0)
             {
-               final String wcString = root.substring(wc + 1);
+               String reString = root.substring(re + RE_KEY.length());
+               final Pattern pattern = Pattern.compile(reString);
                VirtualFile start;
-               if (wc > 0) // some more path before
+               if (re > 0) // some more path before
                {
-                  start = VFS.getChild(root.substring(0, wc));
+                  start = VFS.getChild(root.substring(0, re));
                }
                else
                {
@@ -191,7 +197,7 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
                      public boolean accepts(VirtualFile file)
                      {
                         String name = file.getName();
-                        return name.endsWith(wcString);
+                        return pattern.matcher(name).matches();
                      }
                   });
                   vfsRoots.addAll(children);

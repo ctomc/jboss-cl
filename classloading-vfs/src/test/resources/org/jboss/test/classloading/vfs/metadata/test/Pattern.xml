@@ -3,7 +3,7 @@
 <deployment xmlns="urn:jboss:bean-deployer:2.0" xmlns:cl="urn:jboss:classloader:1.0">
 
   <classloader xmlns="urn:jboss:classloader:1.0" name="wc">
-     <root>${test.dir}/*.jar</root>
+     <root>${test.dir}/?root-re-pattern=[a-z0-9]+\.jar</root>
   </classloader>
 
 </deployment>

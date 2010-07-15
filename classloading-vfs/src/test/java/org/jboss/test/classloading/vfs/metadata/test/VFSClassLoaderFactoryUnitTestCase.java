@@ -22,6 +22,8 @@
 package org.jboss.test.classloading.vfs.metadata.test;
 
 import java.io.Closeable;
+import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -217,7 +219,7 @@ public class VFSClassLoaderFactoryUnitTestCase extends VFSClassLoadingMicroconta
       assertNoClassLoader("a", "1.0.0");
    }
 
-   public void testWildcard() throws Exception
+   public void testRePattern() throws Exception
    {
       String testDir = "test";
       List<Closeable> closeables = new ArrayList<Closeable>();
@@ -230,16 +232,22 @@ public class VFSClassLoaderFactoryUnitTestCase extends VFSClassLoadingMicroconta
          closeables.add(VFS.mountAssembly(new VirtualFileAssembly(), jar1));
          VirtualFile jar2 = test.getChild("j2.jar");
          closeables.add(VFS.mountAssembly(new VirtualFileAssembly(), jar2));
+         VirtualFile clazz = jar2.getChild("Dummy.txt");
+         URL xml = getResource("Pattern.xml");
+         File file = new File(xml.toURI());
+         closeables.add(VFS.mountReal(file, clazz));
 
          System.setProperty("test.dir", testDir);
          try
          {
-            KernelDeployment wc = deploy("Wildcard.xml");
+            KernelDeployment wc = deploy("Pattern.xml");
             try
             {
                validate();
                ClassLoader cl = assertClassLoader("wc", "0.0.0");
-               assertLoadClassFail("org.acme.FooBar", cl);
+               URL url = cl.getResource("Dummy.txt");
+               assertNotNull(url);
+               assertNotNull(url.openStream());
             }
             finally
             {
