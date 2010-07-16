@@ -179,8 +179,6 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
             int re = root.lastIndexOf(RE_KEY); // is it reg-exp?
             if (re >= 0)
             {
-               String reString = root.substring(re + RE_KEY.length());
-               final Pattern pattern = Pattern.compile(reString);
                VirtualFile start;
                if (re > 0) // some more path before
                {
@@ -192,6 +190,8 @@ public class VFSClassLoaderPolicyModule extends ClassLoaderPolicyModule implemen
                }
                try
                {
+                  String reString = root.substring(re + RE_KEY.length());
+                  final Pattern pattern = Pattern.compile(reString);
                   List<VirtualFile> children = start.getChildren(new VirtualFileFilter()
                   {
                      public boolean accepts(VirtualFile file)
