@@ -26,8 +26,13 @@ import javax.management.ObjectName;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Formattable;
+import java.util.Formatter;
+import java.util.List;
 
+import org.jboss.classloader.spi.ClassLoaderCache;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.ShutdownPolicy;
@@ -58,7 +63,10 @@ public abstract class BaseClassLoaderPolicy implements Formattable
 
    /** The classloader information */
    private volatile ClassLoaderInformation information;
-   
+
+   /** The cache */
+   private volatile ClassLoaderCache cache;
+
    /** The access control context for this policy */
    private AccessControlContext access;
 
@@ -121,6 +129,32 @@ public abstract class BaseClassLoaderPolicy implements Formattable
    void setInformation(ClassLoaderInformation information)
    {
       this.information = information;
+   }
+
+   /**
+    * Get the cache.
+    *
+    * By default we return information if there is no cache set explicitly.
+    *
+    * @return the cache
+    */
+   protected ClassLoaderCache getCache()
+   {
+      ClassLoaderCache clc = cache;
+      if (clc == null)
+         return information;
+      
+      return new ClassLoaderCacheWrapper(clc, information);
+   }
+
+   /**
+    * Set the cache.
+    *
+    * @param cache the cache
+    */
+   protected void setCache(ClassLoaderCache cache)
+   {
+      this.cache = cache;
    }
 
    /**

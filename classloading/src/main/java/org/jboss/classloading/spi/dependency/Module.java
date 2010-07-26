@@ -31,12 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.jboss.classloader.spi.ClassLoaderPolicyFactory;
-import org.jboss.classloader.spi.ClassLoaderSystem;
-import org.jboss.classloader.spi.DelegateLoader;
-import org.jboss.classloader.spi.ImportType;
-import org.jboss.classloader.spi.ParentPolicy;
-import org.jboss.classloader.spi.ShutdownPolicy;
+import org.jboss.classloader.spi.*;
 import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.plugins.metadata.PackageCapability;
@@ -309,6 +304,16 @@ public abstract class Module extends NameAndVersionSupport
    void setClassLoadingSpace(ClassLoadingSpace space)
    {
       this.space = space;
+   }
+
+   /**
+    * Get space cache, if exists.
+    *
+    * @return the space cache
+    */
+   protected ClassLoaderCache getCache()
+   {
+      return space != null ? space.getCache() : null;
    }
 
    /**

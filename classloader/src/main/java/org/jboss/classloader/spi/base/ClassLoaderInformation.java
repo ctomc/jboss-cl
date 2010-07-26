@@ -22,14 +22,16 @@
 package org.jboss.classloader.spi.base;
 
 import java.net.URL;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.ImportType;
 import org.jboss.classloader.spi.Loader;
-import org.jboss.util.collection.ConcurrentSet;
+import org.jboss.classloader.spi.helpers.AbstractClassLoaderCache;
 
 /**
  * ClassLoaderInformation.
@@ -38,7 +40,7 @@ import org.jboss.util.collection.ConcurrentSet;
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public class ClassLoaderInformation
+public class ClassLoaderInformation extends AbstractClassLoaderCache
 {
    /** The classloader */
    private BaseClassLoader classLoader;
@@ -54,18 +56,6 @@ public class ClassLoaderInformation
 
    /** The delegates */
    private volatile Map<ImportType, List<DelegateLoader>> delegates;
-   
-   /** The class cache */
-   private volatile Map<String, Loader> classCache;
-   
-   /** The class black list */
-   private volatile Set<String> classBlackList;
-   
-   /** The resource cache */
-   private volatile Map<String, URL> resourceCache;
-   
-   /** The resource black list */
-   private volatile Set<String> resourceBlackList;
 
    /** The # of delegates who cant cache */
    private int cantCache;
@@ -146,45 +136,6 @@ public class ClassLoaderInformation
       }
    }
 
-   private void restoreCache()
-   {
-      classCache = new ConcurrentHashMap<String, Loader>();
-      resourceCache = new ConcurrentHashMap<String, URL>();
-   }
-
-   private void destroyCache()
-   {
-      classCache = null;
-      resourceCache = null;
-   }
-
-   private void restoreBlackList()
-   {
-      classBlackList = new ConcurrentSet<String>();
-      resourceBlackList = new ConcurrentSet<String>();
-   }
-
-   private void destroyBlackList()
-   {
-      classBlackList = null;
-      resourceBlackList = null;
-   }
-
-   /**
-    * Flush the caches
-    */
-   public void flushCaches()
-   {
-      if (classCache != null)
-         classCache.clear();
-      if (classBlackList != null)
-         classBlackList.clear();
-      if (resourceCache != null)
-         resourceCache.clear();
-      if (resourceBlackList != null)
-         resourceBlackList.clear();
-   }
-   
    /**
     * Get the classLoader.
     * 
@@ -372,121 +323,57 @@ public class ClassLoaderInformation
       }
    }
 
-   /**
-    * Get the cached loader for a class 
-    * 
-    * @param name the class name
-    * @return any cached loader
-    */
-   public Loader getCachedLoader(String name)
+   public boolean isRelevant(ImportType type)
    {
-      Map<String, Loader> classCache = this.classCache;
-      if (classCache != null)
-         return classCache.get(name);
+      List<? extends DelegateLoader> loaders = getDelegates(type);
+      return loaders != null && loaders.isEmpty() == false;
+   }
+
+   public Loader findLoader(ImportType type, String name)
+   {
+      List<? extends DelegateLoader> delegates = getDelegates(type);
+      if (delegates == null || delegates.isEmpty())
+         return null;
+
+      for (DelegateLoader delegate : delegates)
+      {
+         if (delegate.getResource(name) != null)
+         {
+            cacheLoader(name, delegate);
+            return delegate;
+         }
+      }
       return null;
    }
-   
-   /**
-    * Cache a loader for a class
-    * 
-    * @param name the class name
-    * @param loader the cached loader
-    */
-   public void cacheLoader(String name, Loader loader)
+
+   public URL findResource(ImportType type, String name)
    {
-      Map<String, Loader> classCache = this.classCache;
-      if (classCache != null)
-         classCache.put(name, loader);
-   }
-   
-   /**
-    * Check whether this is a black listed class
-    * 
-    * @param name the class name
-    * @return true when black listed
-    */
-   public boolean isBlackListedClass(String name)
-   {
-      Set<String> classBlackList = this.classBlackList;
-      return classBlackList != null && classBlackList.contains(name);
-   }
-   
-   /**
-    * Blacklist a class
-    * 
-    * @param name the class name to black list
-    */
-   public void blackListClass(String name)
-   {
-      Set<String> classBlackList = this.classBlackList;
-      if (classBlackList != null)
-         classBlackList.add(name);
-   }
-   
-   /**
-    * Get the cached url for a resource 
-    * 
-    * @param name the resource name
-    * @return any cached url
-    */
-   public URL getCachedResource(String name)
-   {
-      Map<String, URL> resourceCache = this.resourceCache;
-      if (resourceCache != null)
-         return resourceCache.get(name);
+      List<? extends DelegateLoader> delegates = getDelegates(type);
+      if (delegates == null || delegates.isEmpty())
+         return null;
+
+      for (DelegateLoader delegate : delegates)
+      {
+         URL result = delegate.getResource(name);
+         if (result != null)
+         {
+            cacheResource(name, result);
+            return result;
+         }
+      }
       return null;
    }
-   
-   /**
-    * Cache a url for a resource
-    * 
-    * @param name the resource name
-    * @param url the cached url
-    */
-   public void cacheResource(String name, URL url)
+
+   public String getInfo(ImportType type)
    {
-      Map<String, URL> resourceCache = this.resourceCache;
-      if (resourceCache != null)
-         resourceCache.put(name, url);
+      StringBuilder builder = new StringBuilder();
+      List<? extends DelegateLoader> delegates = getDelegates(type);
+      if (delegates != null && delegates.isEmpty() == false)
+         builder.append("delegates: ").append(delegates);
+      builder.append(getClassLoader());
+      return builder.toString();
    }
-   
-   /**
-    * Check whether this is a black listed resource
-    * 
-    * @param name the resource name
-    * @return true when black listed
-    */
-   public boolean isBlackListedResource(String name)
-   {
-      Set<String> resourceBlackList = this.resourceBlackList;
-      return resourceBlackList != null && resourceBlackList.contains(name);
-   }
-   
-   /**
-    * Blacklist a resource
-    * 
-    * @param name the resource name to black list
-    */
-   public void blackListResource(String name)
-   {
-      Set<String> resourceBlackList = this.resourceBlackList;
-      if (resourceBlackList != null)
-         resourceBlackList.add(name);
-   }
-   
-   /**
-    * Cleans the entry with the given name from the blackList
-    *
-    * @param name the name of the resource to clear from the blackList
-    */
-   public void clearBlackList(String name)
-   {
-      if (classBlackList != null)
-         classBlackList.remove(name);
-      if (resourceBlackList != null)
-         resourceBlackList.remove(name);
-   }
-   
+
    @Override
    public String toString()
    {

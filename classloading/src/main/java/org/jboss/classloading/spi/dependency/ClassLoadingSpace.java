@@ -21,8 +21,12 @@
 */
 package org.jboss.classloading.spi.dependency;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.classloading.plugins.metadata.PackageCapability;
@@ -60,7 +64,25 @@ public class ClassLoadingSpace
    
    /** The requirements for all modules */
    private Map<Module, List<RequirementDependencyItem>> requirements = new ConcurrentHashMap<Module, List<RequirementDependencyItem>>();
-   
+
+   /** The space cache */
+   private ClassLoadingSpaceCache cache;
+
+   public ClassLoadingSpace()
+   {
+      cache = new ClassLoadingSpaceCache(this);
+   }
+
+   /**
+    * The cache.
+    *
+    * @return the cache
+    */
+   ClassLoadingSpaceCache getCache()
+   {
+      return cache;
+   }
+
    /**
     * Get an unmodifiable set of the collections
     * 
@@ -70,7 +92,7 @@ public class ClassLoadingSpace
    {
       return Collections.unmodifiableSet(modules);
    }
-   
+
    /**
     * Join and resolve a module
     * 
@@ -166,9 +188,15 @@ public class ClassLoadingSpace
       int otherSize = space.getModules().size();
       
       if (ourSize >= otherSize)
+      {
          joinAndResolve(space.getModules());
+         cache.merge(space.getCache());
+      }
       else
+      {
          space.joinAndResolve(getModules());
+         space.getCache().merge(cache);
+      }
    }
    
    /**
@@ -186,6 +214,9 @@ public class ClassLoadingSpace
       ClassLoadingSpace other = module.getClassLoadingSpace();
       if (other != this)
          throw new IllegalStateException(module + " has the wrong classloading space: expected=" + this + " was " + other);
+
+      ClassLoadingSpaceCache clsc = other.getCache();
+      clsc.flushCaches(); // flush after split
 
       unjoin(module);
       unresolve(module);

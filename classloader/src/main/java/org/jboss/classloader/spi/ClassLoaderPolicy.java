@@ -69,6 +69,11 @@ public abstract class ClassLoaderPolicy extends BaseClassLoaderPolicy implements
    /** Maps native library to its provider */
    private volatile List<NativeLibraryProvider> nativeLibraries;
 
+   public void setCache(ClassLoaderCache cache)
+   {
+      super.setCache(cache);
+   }
+
    /**
     * Add extra delegate loader.
     *

@@ -145,6 +145,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       ClassLoader result = system.registerClassLoaderPolicy(domainName, parentPolicy, parentName, getPolicy());
       this.system = system;
       this.classLoader = result;
+      registerCache();
       registerModuleClassLoader(this, result);
       return result;
    }
@@ -169,6 +170,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       Loader loader = new ClassLoaderToLoaderAdapter(parent);
       ClassLoader result = registerClassLoaderPolicy(system, loader);
       this.classLoader = result;
+      registerCache();
       registerModuleClassLoader(this, result);
       return result;
    }
@@ -193,8 +195,22 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       ClassLoader result = system.registerClassLoaderPolicy(domainName, parentPolicy, loader, getPolicy());
       this.system = system;
       this.classLoader = result;
+      registerCache();
       registerModuleClassLoader(this, result);
       return result;
+   }
+
+   /**
+    * Register space cache.
+    */
+   private void registerCache()
+   {
+      ClassLoaderCache cache = getCache();
+      if (cache != null)
+      {
+         ClassLoaderPolicy policy = getPolicy();
+         policy.setCache(cache);
+      }
    }
 
    /**
@@ -226,6 +242,11 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
          system.unregisterClassLoaderPolicy(policy);
       if (classLoader != null)
          unregisterModuleClassLoader(this, classLoader);
+
+      ClassLoaderCache cache = getCache();
+      if (cache != null)
+         cache.flushCaches(); // flush just in case
+
       classLoader = null;
       system = null;
       policy = null;

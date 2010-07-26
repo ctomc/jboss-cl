@@ -64,8 +64,6 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
    /** The global class black list */
    private Set<String> globalClassBlackList = new ConcurrentSet<String>();
 
-   // TODO -- why the inconsistency / difference between classes and resources?
-
    /** The global resource cache */
    private Map<String, URL> globalResourceCache = new ConcurrentHashMap<String, URL>();
    
@@ -335,12 +333,12 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
          return loader;
 
       // Work out the rules
-      ClassLoaderInformation info = null;
+      ClassLoaderCache cache = null;
       BaseClassLoaderPolicy policy;
       if (classLoader != null)
       {
          policy = classLoader.getPolicy();
-         info = policy.getInformation();
+         cache = policy.getCache();
          if (policy.isImportAll())
             allExports = true;
       }
@@ -356,9 +354,9 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
          log.trace(this + " not loading " + path + " from all exports");
       
       // Next we try the before imports
-      if (info != null)
+      if (cache != null)
       {
-         loader = findLoaderInImports(info, path, ImportType.BEFORE, trace);
+         loader = findLoaderInImports(cache, path, ImportType.BEFORE, trace);
          if (loader != null)
             return loader;
       }
@@ -379,9 +377,9 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
       }
 
       // Next we try the after imports
-      if (info != null)
+      if (cache != null)
       {
-         loader = findLoaderInImports(info, path, ImportType.AFTER, trace);
+         loader = findLoaderInImports(cache, path, ImportType.AFTER, trace);
          if (loader != null)
             return loader;
       }
@@ -404,9 +402,6 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
    URL getResource(BaseClassLoader classLoader, String name, boolean allExports)
    {
       boolean trace = log.isTraceEnabled();
-
-      // TODO -- check why is this different?
-      // TODO -- why only checking for cache and blacklisting in exports?
 
       // Try the classloader first
       if (classLoader != null)
@@ -431,12 +426,12 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
          return result;
 
       // Work out the rules
-      ClassLoaderInformation info = null;
+      ClassLoaderCache cache = null;
       BaseClassLoaderPolicy policy;
       if (classLoader != null)
       {
          policy = classLoader.getPolicy();
-         info = policy.getInformation();
+         cache = policy.getCache();
          if (policy.isImportAll())
             allExports = true;
       }
@@ -452,9 +447,9 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
          log.trace(this + " not getting resource " + name + " from all exports");
       
       // Next we try the imports
-      if (info != null)
+      if (cache != null)
       {
-         result = getResourceFromImports(info, name, ImportType.ALL, trace);
+         result = getResourceFromImports(cache, name, ImportType.ALL, trace);
          if (result != null)
             return result;
       }
@@ -710,7 +705,7 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
       }
       // Here is not found in the exports so can we blacklist it?
       if (canBlackList)
-         globalClassBlackList.add(name); // TODO -- why already blacklisting here?
+         globalClassBlackList.add(name);
       
       return null;
    }
@@ -864,23 +859,23 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
    /**
     * Find a loader for a class in imports
     *
-    * @param info the classloader information
+    * @param cache the classloader cache
     * @param name the class resource name
     * @param type the import type
     * @param trace whether trace is enabled
     * @return the loader
     */
-   Loader findLoaderInImports(ClassLoaderInformation info, String name, ImportType type, boolean trace)
+   Loader findLoaderInImports(ClassLoaderCache cache, String name, ImportType type, boolean trace)
    {
-      List<? extends DelegateLoader> delegates = info.getDelegates(type);
-      if (delegates == null || delegates.isEmpty())
+      boolean relevant = cache.isRelevant(type);
+      if (relevant == false)
       {
          if (trace)
-            log.trace(this + " not loading " + name + " from imports it has no delegates");
+            log.trace(this + " not loading " + name + " from imports, it's not relevant: " + cache.getInfo(type));
          return null;
       }
 
-      Loader loader = info.getCachedLoader(name);
+      Loader loader = cache.getCachedLoader(name);
       if (loader != null)
       {
          if (trace)
@@ -888,48 +883,45 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
          return loader;
       }
       
-      if (info.isBlackListedClass(name))
+      if (cache.isBlackListedClass(name))
       {
          if (trace)
             log.trace(this + " class is black listed in imports " + name);
          return null;
       }
-      
-      for (DelegateLoader delegate : delegates)
-      {
-         if (trace)
-            log.trace(this + " trying to load " + name + " from import " + delegate + " for " + info.getClassLoader());
-         if (delegate.getResource(name) != null)
-         {
-            info.cacheLoader(name, delegate);
-            return delegate;
-         }
-      }
+
+      if (trace)
+         log.trace(this + " trying to load " + name + " from imports: " + cache.getInfo(type));
+
+      loader = cache.findLoader(type, name);
+      if (loader != null)
+         return loader;
+
       if (type == ImportType.AFTER) // TODO -- is this really OK?
-         info.blackListClass(name);
+         cache.blackListClass(name);
       return null;
    }
    
    /**
     * Load a resource from the imports
     * 
-    * @param info the classloader information
+    * @param cache the classloader cache
     * @param name the resource name
     * @param type the import type
     * @param trace whether trace is enabled
     * @return the url
     */
-   private URL getResourceFromImports(ClassLoaderInformation info, String name, ImportType type, boolean trace)
+   private URL getResourceFromImports(ClassLoaderCache cache, String name, ImportType type, boolean trace)
    {
-      List<? extends DelegateLoader> delegates = info.getDelegates(type);
-      if (delegates == null || delegates.isEmpty())
+      boolean relevant = cache.isRelevant(type);
+      if (relevant == false)
       {
          if (trace)
-            log.trace(this + " not getting resource " + name + " from imports it has no delegates");
+            log.trace(this + " not getting resource " + name + " from imports, it's not relevant: " + cache.getInfo(type));
          return null;
       }
 
-      URL url = info.getCachedResource(name);
+      URL url = cache.getCachedResource(name);
       if (url != null)
       {
          if (trace)
@@ -937,7 +929,7 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
          return url;
       }
       
-      if (info.isBlackListedResource(name))
+      if (cache.isBlackListedResource(name))
       {
          if (trace)
             log.trace(this + " resource is black listed in imports " + name);
@@ -945,19 +937,15 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
       }
 
       if (trace)
-         log.trace(this + " trying to get resource " + name + " from imports " + delegates + " for " + info.getClassLoader());
+         log.trace(this + " trying to get resource " + name + " from imports: " + cache.getInfo(type));
 
-      for (DelegateLoader delegate : delegates)
-      {
-         URL result = delegate.getResource(name);
-         if (result != null)
-         {
-            info.cacheResource(name, result);
-            return result;
-         }
-      }
+
+      url = cache.findResource(type, name);
+      if (url != null)
+         return url;
+
       if (type == ImportType.AFTER) // TODO -- check
-         info.blackListResource(name);
+         cache.blackListResource(name);
       return null;
    }
    
