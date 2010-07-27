@@ -65,8 +65,8 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
    /** The # of delegates who cant blacklist */
    private int cantBlacklist;
 
-   /** The package to delegate mapping */
-   private Map<ImportType, Map<String, List<Loader>>> mapping;
+   /** The package to delegate index */
+   private Map<ImportType, Map<String, List<Loader>>> index;
 
    /**
     * Create a new ClassLoaderInformation.
@@ -89,6 +89,9 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
       
       boolean canCache = policy.isCacheable();
       boolean canBlackList = policy.isBlackListable();
+
+      // package to delegate index
+      index = new ConcurrentHashMap<ImportType, Map<String, List<Loader>>>();
 
       List<? extends DelegateLoader> delegates = policy.getDelegates();
       if (delegates != null && delegates.isEmpty() == false)
@@ -125,6 +128,9 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
                canBlackList = false;
                cantBlacklist++;
             }
+
+            addLoaderToIndex(baseDelegate, delegatePolicy, importType);
+            addLoaderToIndex(baseDelegate, delegatePolicy, ImportType.ALL);
          }
 
          this.delegates = Collections.synchronizedMap(temp);
@@ -139,9 +145,6 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
       {
          restoreBlackList();
       }
-
-      // package to delegate index
-      mapping = new ConcurrentHashMap<ImportType, Map<String, List<Loader>>>();
    }
 
    /**
@@ -265,6 +268,9 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
 
             cantBlacklist++;
          }
+
+         addLoaderToIndex(loader, policy, type);
+         addLoaderToIndex(loader, policy, ImportType.ALL);
       }
    }
 
@@ -328,20 +334,70 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
                   restoreBlackList();
             }
 
-            // remove loader from mapping / index
-            Map<String, List<Loader>> map = mapping.get(type);
-            if (map != null)
+            removeLoaderFromIndex(loader, policy, type);
+            removeLoaderFromIndex(loader, policy, ImportType.ALL);
+         }
+      }
+   }
+
+   /**
+    * Add loader to index.
+    *
+    * @param loader the loader
+    * @param policy the policy
+    * @param type the type
+    */
+   private void addLoaderToIndex(Loader loader, BaseClassLoaderPolicy policy, ImportType type)
+   {
+      if (policy == null)
+         return;
+
+      String[] packageNames = policy.getPackageNames();
+      if (packageNames != null && packageNames.length > 0)
+      {
+         Map<String, List<Loader>> map = index.get(type);
+         if (map == null)
+         {
+            map = new ConcurrentHashMap<String, List<Loader>>();
+            index.put(type, map);
+         }
+         for (String pn : packageNames)
+         {
+            List<Loader> loaders = map.get(pn);
+            if (loaders == null)
             {
-               String[] packageNames = policy.getPackageNames();
-               if (packageNames != null)
-               {
-                  for (String pn : packageNames)
-                  {
-                     List<Loader> loaders = map.get(pn);
-                     if (loaders != null)
-                        loaders.remove(loader);
-                  }
-               }
+               loaders = new CopyOnWriteArrayList<Loader>();
+               map.put(pn, loaders);
+            }
+            loaders.add(loader);
+         }
+      }
+   }
+
+   /**
+    * Remove loader from index.
+    *
+    * @param loader the loader
+    * @param policy the policy
+    * @param type the type
+    */
+   private void removeLoaderFromIndex(Loader loader, BaseClassLoaderPolicy policy, ImportType type)
+   {
+      if (policy == null)
+         return;
+      
+      // remove loader from mapping / index
+      Map<String, List<Loader>> map = index.get(type);
+      if (map != null)
+      {
+         String[] packageNames = policy.getPackageNames();
+         if (packageNames != null)
+         {
+            for (String pn : packageNames)
+            {
+               List<Loader> loaders = map.get(pn);
+               if (loaders != null)
+                  loaders.remove(loader);
             }
          }
       }
@@ -369,37 +425,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
 
    public Loader findLoader(ImportType type, String name)
    {
-      String pckg = getResourcePackageName(name);
-      Map<String, List<Loader>> map = mapping.get(type);
-      List<Loader> loaders = null;
-      if (map != null && map.isEmpty() == false)
-      {
-         loaders = map.get(pckg);
-         if (loaders != null && loaders.isEmpty() == false)
-         {
-            for (Loader loader : loaders)
-            {
-               if (loader.getResource(name) != null)
-                  return loader;
-            }
-         }
-      }
-      Loader loader = findLoaderInternal(type, name, new URL[1]);
-      if (loader != null)
-      {
-         if (map == null)
-         {
-            map = new ConcurrentHashMap<String, List<Loader>>();
-            mapping.put(type, map);
-         }
-         if (loaders == null)
-         {
-            loaders = new CopyOnWriteArrayList<Loader>();
-            map.put(pckg, loaders);
-         }
-         loaders.add(loader);
-      }
-      return loader;
+      return findLoaderInternal(type, name, new URL[1]);
    }
 
    public URL findResource(ImportType type, String name)
@@ -419,20 +445,45 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
     */
    private Loader findLoaderInternal(ImportType type, String name, URL[] result)
    {
-      List<? extends DelegateLoader> delegates = getDelegates(type);
-      if (delegates == null || delegates.isEmpty())
-         return null;
-
-      for (DelegateLoader delegate : delegates)
+      // try index first
+      Map<String, List<Loader>> map = index.get(type);
+      if (map != null && map.isEmpty() == false)
       {
-         URL url = delegate.getResource(name);
-         if (url != null)
+         String pckg = getResourcePackageName(name);
+         List<Loader> loaders = map.get(pckg);
+         if (loaders != null && loaders.isEmpty() == false)
          {
-            result[0] = url; // hacky way of returning a temp result?
-            cacheLoader(name, delegate);
-            return delegate;
+            for (Loader loader : loaders)
+            {
+               URL url = loader.getResource(name);
+               if (url != null)
+               {
+                  result[0] = url;
+                  cacheLoader(name, loader);
+                  cacheResource(name, url);
+                  return loader;
+               }
+            }
          }
       }
+
+      // fall back to old all delegates list, some policies don't expose packages
+      List<? extends DelegateLoader> delegates = getDelegates(type);
+      if (delegates != null && delegates.isEmpty() == false)
+      {
+         for (DelegateLoader loader : delegates)
+         {
+            URL url = loader.getResource(name);
+            if (url != null)
+            {
+               result[0] = url;
+               cacheLoader(name, loader);
+               cacheResource(name, url);
+               return loader;
+            }
+         }
+      }
+
       return null;
    }
 

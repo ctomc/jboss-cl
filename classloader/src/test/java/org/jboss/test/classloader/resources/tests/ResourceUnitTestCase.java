@@ -28,8 +28,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 
-import junit.framework.Test;
-
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.spi.ParentPolicy;
@@ -37,10 +35,13 @@ import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.test.classloader.AbstractClassLoaderTestWithSecurity;
 
+import junit.framework.Test;
+
 /**
  * ClassLoaderSystemUnitTestCase.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
@@ -83,6 +84,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
+      policy.setPackageNames("com.acme.p1");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setDelegates(Collections.singletonList(new FilteredDelegateLoader(policy)));
@@ -99,6 +101,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("");
+      policy.setPackageNames("");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setDelegates(Collections.singletonList(new FilteredDelegateLoader(policy)));
@@ -115,7 +118,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setDelegates(Collections.singletonList(new FilteredDelegateLoader(policy)));
@@ -132,7 +135,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setDelegates(Collections.singletonList(new FilteredDelegateLoader(policy)));
@@ -149,7 +152,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setImportAll(true);
@@ -166,7 +169,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("");
-      policy.setPackageNames(new String[] { "" } );
+      policy.setPackageNames("");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setImportAll(true);
@@ -183,7 +186,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       
@@ -200,7 +203,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
       system.registerClassLoaderPolicy(parent, policy);
 
       ClassLoaderDomain child = system.createAndRegisterDomain("child", ParentPolicy.BEFORE, parent);
@@ -219,7 +222,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
       system.registerClassLoaderPolicy(parent, policy);
 
       ClassLoaderDomain child = system.createAndRegisterDomain("child", ParentPolicy.AFTER, parent);
@@ -236,7 +239,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
       system.registerClassLoaderPolicy(parent, policy);
 
       ClassLoaderDomain child = system.createAndRegisterDomain("child", ParentPolicy.AFTER, parent);
@@ -255,7 +258,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("");
-      policy.setPackageNames(new String[] { "" } );
+      policy.setPackageNames("");
       system.registerClassLoaderPolicy(parent, policy);
 
       ClassLoaderDomain child = system.createAndRegisterDomain("child", ParentPolicy.BEFORE, parent);
@@ -299,7 +302,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setPrefix("b/");
       policy2.setPath("com/acme/p1");
-      policy2.setPackageNames(new String[] { "com.acme.p1" });
+      policy2.setPackageNames("com.acme.p1");
       ClassLoader classLoader = system.registerClassLoaderPolicy(policy);
       system.registerClassLoaderPolicy(policy2);
       
@@ -316,7 +319,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setPrefix("b/");
       policy2.setPath("");
-      policy2.setPackageNames(new String[] { "" });
+      policy2.setPackageNames("");
       ClassLoader classLoader = system.registerClassLoaderPolicy(policy);
       system.registerClassLoaderPolicy(policy2);
       
@@ -329,6 +332,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
+      policy.setPackageNames("com.acme.p1");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setDelegates(Collections.singletonList(new FilteredDelegateLoader(policy)));
@@ -361,7 +365,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setDelegates(Collections.singletonList(new FilteredDelegateLoader(policy)));
@@ -378,7 +382,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setDelegates(Collections.singletonList(new FilteredDelegateLoader(policy)));
@@ -395,7 +399,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setImportAll(true);
@@ -412,7 +416,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("");
-      policy.setPackageNames(new String[] { "" } );
+      policy.setPackageNames("");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setImportAll(true);
@@ -429,7 +433,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
 
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       
@@ -446,7 +450,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
       system.registerClassLoaderPolicy(parent, policy);
 
       ClassLoaderDomain child = system.createAndRegisterDomain("child", ParentPolicy.BEFORE, parent);
@@ -465,7 +469,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("com/acme/p1");
-      policy.setPackageNames(new String[] { "com.acme.p1" } );
+      policy.setPackageNames("com.acme.p1");
       system.registerClassLoaderPolicy(parent, policy);
 
       ClassLoaderDomain child = system.createAndRegisterDomain("child", ParentPolicy.AFTER, parent);
@@ -484,7 +488,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPrefix("a/");
       policy.setPath("");
-      policy.setPackageNames(new String[] { "" } );
+      policy.setPackageNames("");
       system.registerClassLoaderPolicy(parent, policy);
 
       ClassLoaderDomain child = system.createAndRegisterDomain("child", ParentPolicy.BEFORE, parent);
@@ -590,7 +594,7 @@ public class ResourceUnitTestCase extends AbstractClassLoaderTestWithSecurity
          HashSet<URL> found = new HashSet<URL>();
          while (urls.hasMoreElements())
             found.add(urls.nextElement());
-         fail("Should NOT have got resources " + resourcePath + " from " + classLoader + " found " + urls);
+         fail("Should NOT have got resources " + resourcePath + " from " + classLoader + " found " + found);
       }
    }
 }

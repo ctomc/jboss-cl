@@ -28,8 +28,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import junit.framework.Test;
-
 import org.jboss.classloader.plugins.ClassLoaderUtils;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderSystem;
@@ -46,6 +44,8 @@ import org.jboss.test.classloader.delegate.support.a.TestSleep;
 import org.jboss.test.classloader.delegate.support.b.TestB1;
 import org.jboss.test.classloader.delegate.support.b.TestFactoryImplementation;
 import org.jboss.test.thread.TestThread;
+
+import junit.framework.Test;
 
 /**
  * DelegateUnitTestCase
@@ -86,7 +86,7 @@ public class DelegateUnitTestCase extends AbstractClassLoaderTestWithSecurity
       ClassLoaderSystem system = createClassLoaderSystemWithModifiedBootstrap();
 
       MockClassLoaderPolicy pb = createMockClassLoaderPolicy("B");
-      pb.setPaths(TestB1.class);
+      pb.setPathsAndPackageNames(TestB1.class);
       ClassLoader b = system.registerClassLoaderPolicy(pb);
 
       MockClassLoaderPolicy pa = createMockClassLoaderPolicy("A");
@@ -140,12 +140,12 @@ public class DelegateUnitTestCase extends AbstractClassLoaderTestWithSecurity
       ClassLoader a = system.registerClassLoaderPolicy(pa);
       
       Class<?> fromB = assertLoadClass(ClassLoaderDomain.class, b, false);
-      Class<?> fromA = assertLoadClass(ClassLoaderDomain.class, a, b, false);
+      assertLoadClass(ClassLoaderDomain.class, a, b, false);
       
       Class<?> delegate = assertLoadClass(TestADelegateClassLoaderDomain.class, a, false);
       
       Method method = delegate.getMethod("getSomething", (Class[]) null);
-      fromA = method.getReturnType();
+      Class<? >fromA = method.getReturnType();
       assertNotNull(fromA);
       assertClassLoader(fromA, b);
       
@@ -183,7 +183,7 @@ public class DelegateUnitTestCase extends AbstractClassLoaderTestWithSecurity
       ClassLoaderSystem system = createClassLoaderSystemWithModifiedBootstrap();
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPath("");
-      policy.setPackageNames(new String[] { "" });
+      policy.setPackageNames("");
       ClassLoader classLoader = system.registerClassLoaderPolicy(policy);
       
       assertLoadClass("TestDefaultPackage", classLoader);
@@ -194,7 +194,7 @@ public class DelegateUnitTestCase extends AbstractClassLoaderTestWithSecurity
       ClassLoaderSystem system = createClassLoaderSystemWithModifiedBootstrap();
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPath("");
-      policy.setPackageNames(new String[] { "" });
+      policy.setPackageNames("");
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setDelegates(Collections.singletonList(new FilteredDelegateLoader(policy)));
       ClassLoader classLoader = system.registerClassLoaderPolicy(policy);
@@ -208,7 +208,7 @@ public class DelegateUnitTestCase extends AbstractClassLoaderTestWithSecurity
       ClassLoaderSystem system = createClassLoaderSystemWithModifiedBootstrap();
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPath("");
-      policy.setPackageNames(new String[] { "" });
+      policy.setPackageNames("");
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       policy2.setImportAll(true);
       ClassLoader classLoader = system.registerClassLoaderPolicy(policy);
@@ -223,7 +223,7 @@ public class DelegateUnitTestCase extends AbstractClassLoaderTestWithSecurity
       ClassLoaderDomain parent = system.createAndRegisterDomain("parent", ParentPolicy.BEFORE_BUT_JAVA_ONLY);
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPath("");
-      policy.setPackageNames(new String[] { "" });
+      policy.setPackageNames("");
       ClassLoaderDomain child = system.createAndRegisterDomain("child", ParentPolicy.BEFORE, parent);
       MockClassLoaderPolicy policy2 = createMockClassLoaderPolicy();
       ClassLoader classLoader = system.registerClassLoaderPolicy(parent, policy);
@@ -256,7 +256,7 @@ public class DelegateUnitTestCase extends AbstractClassLoaderTestWithSecurity
          
          Class<?> testSleep = assertLoadClass(TestSleep.class, a);
          Field field = testSleep.getField("sleep");
-         field.set(null, new Long(1));
+         field.set(null, 1l);
          
          final CountDownLatch startALatch = new CountDownLatch(1);
          final CountDownLatch startBLatch = new CountDownLatch(1);
