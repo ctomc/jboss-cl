@@ -22,6 +22,7 @@
 package org.jboss.classloader.spi.base;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -129,8 +130,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
                cantBlacklist++;
             }
 
-            addLoaderToIndex(baseDelegate, delegatePolicy, importType);
-            addLoaderToIndex(baseDelegate, delegatePolicy, ImportType.ALL);
+            addLoaderToIndex(baseDelegate, delegatePolicy, importType, ImportType.ALL);
          }
 
          this.delegates = Collections.synchronizedMap(temp);
@@ -269,8 +269,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
             cantBlacklist++;
          }
 
-         addLoaderToIndex(loader, policy, type);
-         addLoaderToIndex(loader, policy, ImportType.ALL);
+         addLoaderToIndex(loader, policy, type, ImportType.ALL);
       }
    }
 
@@ -334,8 +333,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
                   restoreBlackList();
             }
 
-            removeLoaderFromIndex(loader, policy, type);
-            removeLoaderFromIndex(loader, policy, ImportType.ALL);
+            removeLoaderFromIndex(loader, policy, type, ImportType.ALL);
          }
       }
    }
@@ -345,9 +343,9 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
     *
     * @param loader the loader
     * @param policy the policy
-    * @param type the type
+    * @param types the types
     */
-   private void addLoaderToIndex(Loader loader, BaseClassLoaderPolicy policy, ImportType type)
+   private void addLoaderToIndex(Loader loader, BaseClassLoaderPolicy policy, ImportType... types)
    {
       if (policy == null)
          return;
@@ -355,21 +353,31 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
       String[] packageNames = policy.getPackageNames();
       if (packageNames != null && packageNames.length > 0)
       {
-         Map<String, List<Loader>> map = index.get(type);
-         if (map == null)
+         // lets first build a list of possible maps
+         List<Map<String, List<Loader>>> maps = new ArrayList<Map<String, List<Loader>>>();
+         for (ImportType type : types)
          {
-            map = new ConcurrentHashMap<String, List<Loader>>();
-            index.put(type, map);
+            Map<String, List<Loader>> map = index.get(type);
+            if (map == null)
+            {
+               map = new ConcurrentHashMap<String, List<Loader>>();
+               index.put(type, map);
+            }
+            maps.add(map);
          }
+         // single package iteration
          for (String pn : packageNames)
          {
-            List<Loader> loaders = map.get(pn);
-            if (loaders == null)
+            for (Map<String, List<Loader>> map : maps)
             {
-               loaders = new CopyOnWriteArrayList<Loader>();
-               map.put(pn, loaders);
+               List<Loader> loaders = map.get(pn);
+               if (loaders == null)
+               {
+                  loaders = new CopyOnWriteArrayList<Loader>();
+                  map.put(pn, loaders);
+               }
+               loaders.add(loader);
             }
-            loaders.add(loader);
          }
       }
    }
@@ -379,25 +387,39 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
     *
     * @param loader the loader
     * @param policy the policy
-    * @param type the type
+    * @param types the types
     */
-   private void removeLoaderFromIndex(Loader loader, BaseClassLoaderPolicy policy, ImportType type)
+   private void removeLoaderFromIndex(Loader loader, BaseClassLoaderPolicy policy, ImportType... types)
    {
       if (policy == null)
          return;
       
-      // remove loader from mapping / index
-      Map<String, List<Loader>> map = index.get(type);
-      if (map != null)
+      String[] packageNames = policy.getPackageNames();
+      if (packageNames != null && packageNames.length > 0)
       {
-         String[] packageNames = policy.getPackageNames();
-         if (packageNames != null)
+         // lets first build a list of possible maps
+         Map<ImportType, Map<String, List<Loader>>> maps = new HashMap<ImportType, Map<String, List<Loader>>>();
+         for (ImportType type : types)
          {
-            for (String pn : packageNames)
+            Map<String, List<Loader>> map = index.get(type);
+            if (map != null)
+               maps.put(type, map);
+         }
+         // single package iteration
+         for (String pn : packageNames)
+         {
+            for (Map.Entry<ImportType, Map<String, List<Loader>>> entry : maps.entrySet())
             {
+               Map<String, List<Loader>> map = entry.getValue();
                List<Loader> loaders = map.get(pn);
                if (loaders != null)
-                  loaders.remove(loader);
+               {
+                  if (loaders.remove(loader) && loaders.isEmpty())
+                  {
+                     if (map.remove(pn) != null && map.isEmpty())
+                        index.remove(entry.getKey());
+                  }
+               }
             }
          }
       }
