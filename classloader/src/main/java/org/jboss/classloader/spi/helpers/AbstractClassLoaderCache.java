@@ -106,31 +106,24 @@ public abstract class AbstractClassLoaderCache implements ClassLoaderCache
          else
             resourceCache = new ConcurrentHashMap<String, URL>(other.resourceCache);
       }
-      // TODO - join black lists OK?
-      if (other.classBlackList != null)
-      {
-         if (classBlackList != null)
-            classBlackList.addAll(other.classBlackList);
-         else
-            classBlackList = new ConcurrentSet<String>(other.classBlackList);
-      }
-      if (other.resourceBlackList != null)
-      {
-         if (resourceBlackList != null)
-            resourceBlackList.addAll(other.resourceBlackList);
-         else
-            resourceBlackList = new ConcurrentSet<String>(other.resourceBlackList);
-      }
+
+      // previously bl resources can now become available - flush it
+      flushBlackLists();
    }
 
    public void flushCaches()
    {
       if (classCache != null)
          classCache.clear();
-      if (classBlackList != null)
-         classBlackList.clear();
       if (resourceCache != null)
          resourceCache.clear();
+      flushBlackLists();
+   }
+
+   private void flushBlackLists()
+   {
+      if (classBlackList != null)
+         classBlackList.clear();
       if (resourceBlackList != null)
          resourceBlackList.clear();
    }

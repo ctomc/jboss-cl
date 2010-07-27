@@ -142,10 +142,10 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       String domainName = getDeterminedDomainName();
       ParentPolicy parentPolicy = getDeterminedParentPolicy();
       String parentName = getDeterminedParentDomainName();
+      registerCache(); // register cache before, to avoid potential race condition
       ClassLoader result = system.registerClassLoaderPolicy(domainName, parentPolicy, parentName, getPolicy());
       this.system = system;
       this.classLoader = result;
-      registerCache();
       registerModuleClassLoader(this, result);
       return result;
    }
@@ -168,11 +168,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
          throw new IllegalStateException("Module " + this + " is not registered, see previous error messages");
 
       Loader loader = new ClassLoaderToLoaderAdapter(parent);
-      ClassLoader result = registerClassLoaderPolicy(system, loader);
-      this.classLoader = result;
-      registerCache();
-      registerModuleClassLoader(this, result);
-      return result;
+      return registerClassLoaderPolicy(system, loader);
    }
 
    /**
@@ -192,10 +188,10 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
 
       String domainName = getDeterminedDomainName();
       ParentPolicy parentPolicy = getDeterminedParentPolicy();
+      registerCache(); // register cache before, to avoid potential race condition
       ClassLoader result = system.registerClassLoaderPolicy(domainName, parentPolicy, loader, getPolicy());
       this.system = system;
       this.classLoader = result;
-      registerCache();
       registerModuleClassLoader(this, result);
       return result;
    }
