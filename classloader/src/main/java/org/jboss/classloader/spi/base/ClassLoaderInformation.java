@@ -22,7 +22,6 @@
 package org.jboss.classloader.spi.base;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -353,8 +352,6 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
       String[] packageNames = policy.getPackageNames();
       if (packageNames != null && packageNames.length > 0)
       {
-         // lets first build a list of possible maps
-         List<Map<String, List<Loader>>> maps = new ArrayList<Map<String, List<Loader>>>();
          for (ImportType type : types)
          {
             Map<String, List<Loader>> map = index.get(type);
@@ -363,12 +360,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
                map = new ConcurrentHashMap<String, List<Loader>>();
                index.put(type, map);
             }
-            maps.add(map);
-         }
-         // single package iteration
-         for (String pn : packageNames)
-         {
-            for (Map<String, List<Loader>> map : maps)
+            for (String pn : packageNames)
             {
                List<Loader> loaders = map.get(pn);
                if (loaders == null)
@@ -393,31 +385,26 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
    {
       if (policy == null)
          return;
-      
+
       String[] packageNames = policy.getPackageNames();
       if (packageNames != null && packageNames.length > 0)
       {
-         // lets first build a list of possible maps
-         Map<ImportType, Map<String, List<Loader>>> maps = new HashMap<ImportType, Map<String, List<Loader>>>();
          for (ImportType type : types)
          {
             Map<String, List<Loader>> map = index.get(type);
             if (map != null)
-               maps.put(type, map);
-         }
-         // single package iteration
-         for (String pn : packageNames)
-         {
-            for (Map.Entry<ImportType, Map<String, List<Loader>>> entry : maps.entrySet())
             {
-               Map<String, List<Loader>> map = entry.getValue();
-               List<Loader> loaders = map.get(pn);
-               if (loaders != null)
+               for (String pn : packageNames)
                {
-                  if (loaders.remove(loader) && loaders.isEmpty())
+                  List<Loader> loaders = map.get(pn);
+                  if (loaders != null)
                   {
-                     if (map.remove(pn) != null && map.isEmpty())
-                        index.remove(entry.getKey());
+                     if (loaders.remove(loader) && loaders.isEmpty())
+                     {
+                        map.remove(pn); // remove returns loaders
+                        if (map.isEmpty())
+                           index.remove(type);
+                     }
                   }
                }
             }
