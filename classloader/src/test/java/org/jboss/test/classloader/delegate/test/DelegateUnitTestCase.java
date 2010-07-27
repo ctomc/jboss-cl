@@ -37,12 +37,14 @@ import org.jboss.classloader.spi.base.BaseClassLoader;
 import org.jboss.classloader.spi.filter.FilteredDelegateLoader;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
 import org.jboss.test.classloader.AbstractClassLoaderTestWithSecurity;
+import org.jboss.test.classloader.delegate.support.TestDelegateLoader;
 import org.jboss.test.classloader.delegate.support.a.TestA1;
 import org.jboss.test.classloader.delegate.support.a.TestADelegateClassLoaderDomain;
 import org.jboss.test.classloader.delegate.support.a.TestAbstractFactory;
 import org.jboss.test.classloader.delegate.support.a.TestSleep;
 import org.jboss.test.classloader.delegate.support.b.TestB1;
 import org.jboss.test.classloader.delegate.support.b.TestFactoryImplementation;
+import org.jboss.test.classloader.delegate.support.c.TestC1;
 import org.jboss.test.thread.TestThread;
 
 import junit.framework.Test;
@@ -335,5 +337,32 @@ public class DelegateUnitTestCase extends AbstractClassLoaderTestWithSecurity
       
       assertLoadClass(TestA1.class, a);
       assertLoadClass(TestA1.class, b, a);
+   }
+
+   public void testPackageIndex() throws Exception
+   {
+      ClassLoaderSystem system = createClassLoaderSystemWithModifiedBootstrap();
+
+      MockClassLoaderPolicy pa = createMockClassLoaderPolicy("A");
+      pa.setPathsAndPackageNames(TestA1.class);
+      ClassLoader a = system.registerClassLoaderPolicy(pa);
+
+      MockClassLoaderPolicy pb = createMockClassLoaderPolicy("B");
+      pb.setPathsAndPackageNames(TestB1.class);
+      ClassLoader b = system.registerClassLoaderPolicy(pb);
+
+      MockClassLoaderPolicy pc = createMockClassLoaderPolicy("C");
+      pc.setPathsAndPackageNames(TestC1.class);
+      List<DelegateLoader> delegates = new ArrayList<DelegateLoader>();
+      TestDelegateLoader tdl = new TestDelegateLoader(pa);
+      delegates.add(tdl);
+      delegates.add(new FilteredDelegateLoader(pb));
+      pc.setDelegates(delegates);
+      ClassLoader c = system.registerClassLoaderPolicy(pc);
+
+      assertLoadClass(TestB1.class, c, b);
+      assertFalse(tdl.isGetResourceInvoked()); // index should kick in before list
+      assertLoadClass(TestA1.class, c, a);
+      assertTrue(tdl.isGetResourceInvoked());
    }
 }
