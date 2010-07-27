@@ -327,6 +327,22 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
                if (cantBlacklist == 0)
                   restoreBlackList();
             }
+
+            // remove loader from mapping / index
+            Map<String, List<Loader>> map = mapping.get(type);
+            if (map != null)
+            {
+               String[] packageNames = policy.getPackageNames();
+               if (packageNames != null)
+               {
+                  for (String pn : packageNames)
+                  {
+                     List<Loader> loaders = map.get(pn);
+                     if (loaders != null)
+                        loaders.remove(loader);
+                  }
+               }
+            }
          }
       }
    }
