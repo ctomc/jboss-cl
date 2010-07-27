@@ -41,6 +41,7 @@ import org.jboss.classloader.spi.helpers.AbstractClassLoaderCache;
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
+@SuppressWarnings({"UnnecessaryLocalVariable"})
 public class ClassLoaderInformation extends AbstractClassLoaderCache
 {
    /** The classloader */
@@ -342,7 +343,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
     * @param resource the resource name
     * @return the package name or the empty string if there is no package
     */
-   private static final String getResourcePackageName(final String resource)
+   private static String getResourcePackageName(final String resource)
    {
       int i = resource.lastIndexOf('/');
       if (i == -1)
@@ -392,6 +393,14 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
       return result[0];
    }
 
+   /**
+    * Find loader with requesting resource.
+    *
+    * @param type the import type
+    * @param name the resource name
+    * @param result the temp result holder
+    * @return found loader or null if not found
+    */
    private Loader findLoaderInternal(ImportType type, String name, URL[] result)
    {
       List<? extends DelegateLoader> delegates = getDelegates(type);
@@ -403,7 +412,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
          URL url = delegate.getResource(name);
          if (url != null)
          {
-            result[0] = url; // hacky way of returning a temp result
+            result[0] = url; // hacky way of returning a temp result?
             cacheLoader(name, delegate);
             return delegate;
          }
