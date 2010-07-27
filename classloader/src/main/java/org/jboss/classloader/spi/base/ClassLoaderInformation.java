@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.spi.DelegateLoader;
@@ -62,6 +63,9 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
 
    /** The # of delegates who cant blacklist */
    private int cantBlacklist;
+
+   /** The package to delegate mapping */
+   private Map<ImportType, Map<String, List<Loader>>> mapping;
 
    /**
     * Create a new ClassLoaderInformation.
@@ -134,6 +138,9 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
       {
          restoreBlackList();
       }
+
+      // package to delegate index
+      mapping = new ConcurrentHashMap<ImportType, Map<String, List<Loader>>>();
    }
 
    /**
@@ -329,36 +336,76 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
       return loaders != null && loaders.isEmpty() == false;
    }
 
+   /**
+    * Get the package name for a resource
+    *
+    * @param resource the resource name
+    * @return the package name or the empty string if there is no package
+    */
+   private static final String getResourcePackageName(final String resource)
+   {
+      int i = resource.lastIndexOf('/');
+      if (i == -1)
+         return "";
+      return resource.substring(0, i).replace('/', '.');
+   }
+
    public Loader findLoader(ImportType type, String name)
    {
-      List<? extends DelegateLoader> delegates = getDelegates(type);
-      if (delegates == null || delegates.isEmpty())
-         return null;
-
-      for (DelegateLoader delegate : delegates)
+      String pckg = getResourcePackageName(name);
+      Map<String, List<Loader>> map = mapping.get(type);
+      List<Loader> loaders = null;
+      if (map != null && map.isEmpty() == false)
       {
-         if (delegate.getResource(name) != null)
+         loaders = map.get(pckg);
+         if (loaders != null && loaders.isEmpty() == false)
          {
-            cacheLoader(name, delegate);
-            return delegate;
+            for (Loader loader : loaders)
+            {
+               if (loader.getResource(name) != null)
+                  return loader;
+            }
          }
       }
-      return null;
+      Loader loader = findLoaderInternal(type, name, new URL[1]);
+      if (loader != null)
+      {
+         if (map == null)
+         {
+            map = new ConcurrentHashMap<String, List<Loader>>();
+            mapping.put(type, map);
+         }
+         if (loaders == null)
+         {
+            loaders = new CopyOnWriteArrayList<Loader>();
+            map.put(pckg, loaders);
+         }
+         loaders.add(loader);
+      }
+      return loader;
    }
 
    public URL findResource(ImportType type, String name)
    {
+      URL[] result = new URL[1];
+      findLoaderInternal(type, name, result);
+      return result[0];
+   }
+
+   private Loader findLoaderInternal(ImportType type, String name, URL[] result)
+   {
       List<? extends DelegateLoader> delegates = getDelegates(type);
       if (delegates == null || delegates.isEmpty())
          return null;
 
       for (DelegateLoader delegate : delegates)
       {
-         URL result = delegate.getResource(name);
-         if (result != null)
+         URL url = delegate.getResource(name);
+         if (url != null)
          {
-            cacheResource(name, result);
-            return result;
+            result[0] = url; // hacky way of returning a temp result
+            cacheLoader(name, delegate);
+            return delegate;
          }
       }
       return null;
