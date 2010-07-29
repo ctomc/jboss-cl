@@ -22,6 +22,8 @@
 package org.jboss.classloader.spi;
 
 import org.jboss.classloader.spi.base.BaseDelegateLoader;
+import org.jboss.classloader.spi.filter.ClassFilter;
+import org.jboss.classloader.spi.filter.ClassFilterUtils;
 
 /**
  * DelegateLoader.
@@ -56,7 +58,17 @@ public class DelegateLoader extends BaseDelegateLoader
    {
       super(factory);
    }
-   
+
+   /**
+    * Get the filter.
+    *
+    * @return the filter
+    */
+   public ClassFilter getFilter()
+   {
+      return ClassFilterUtils.EVERYTHING;
+   }
+
    /**
     * Get the ClassLoaderPolicy associated with this DelegateLoader.
     *

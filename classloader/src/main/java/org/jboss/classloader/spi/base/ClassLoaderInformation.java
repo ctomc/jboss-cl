@@ -32,6 +32,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.jboss.classloader.spi.DelegateLoader;
 import org.jboss.classloader.spi.ImportType;
 import org.jboss.classloader.spi.Loader;
+import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.helpers.AbstractClassLoaderCache;
 
 /**
@@ -129,7 +130,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
                cantBlacklist++;
             }
 
-            addLoaderToIndex(baseDelegate, delegatePolicy, importType, ImportType.ALL);
+            addLoaderToIndex(delegate, delegatePolicy, importType, ImportType.ALL);
          }
 
          this.delegates = Collections.synchronizedMap(temp);
@@ -344,7 +345,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
     * @param policy the policy
     * @param types the types
     */
-   private void addLoaderToIndex(Loader loader, BaseClassLoaderPolicy policy, ImportType... types)
+   private void addLoaderToIndex(DelegateLoader loader, BaseClassLoaderPolicy policy, ImportType... types)
    {
       if (policy == null)
          return;
@@ -352,6 +353,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
       String[] packageNames = policy.getPackageNames();
       if (packageNames != null && packageNames.length > 0)
       {
+         ClassFilter filter = loader.getFilter();
          for (ImportType type : types)
          {
             Map<String, List<Loader>> map = index.get(type);
@@ -362,13 +364,16 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
             }
             for (String pn : packageNames)
             {
-               List<Loader> loaders = map.get(pn);
-               if (loaders == null)
+               if (filter != null && filter.matchesPackageName(pn))
                {
-                  loaders = new CopyOnWriteArrayList<Loader>();
-                  map.put(pn, loaders);
+                  List<Loader> loaders = map.get(pn);
+                  if (loaders == null)
+                  {
+                     loaders = new CopyOnWriteArrayList<Loader>();
+                     map.put(pn, loaders);
+                  }
+                  loaders.add(loader);
                }
-               loaders.add(loader);
             }
          }
       }
@@ -381,7 +386,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
     * @param policy the policy
     * @param types the types
     */
-   private void removeLoaderFromIndex(Loader loader, BaseClassLoaderPolicy policy, ImportType... types)
+   private void removeLoaderFromIndex(DelegateLoader loader, BaseClassLoaderPolicy policy, ImportType... types)
    {
       if (policy == null)
          return;
@@ -389,6 +394,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
       String[] packageNames = policy.getPackageNames();
       if (packageNames != null && packageNames.length > 0)
       {
+         ClassFilter filter = loader.getFilter();
          for (ImportType type : types)
          {
             Map<String, List<Loader>> map = index.get(type);
@@ -396,14 +402,17 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
             {
                for (String pn : packageNames)
                {
-                  List<Loader> loaders = map.get(pn);
-                  if (loaders != null)
+                  if (filter != null && filter.matchesPackageName(pn))
                   {
-                     if (loaders.remove(loader) && loaders.isEmpty())
+                     List<Loader> loaders = map.get(pn);
+                     if (loaders != null)
                      {
-                        map.remove(pn); // remove returns loaders
-                        if (map.isEmpty())
-                           index.remove(type);
+                        if (loaders.remove(loader) && loaders.isEmpty())
+                        {
+                           map.remove(pn); // remove returns loaders
+                           if (map.isEmpty())
+                              index.remove(type);
+                        }
                      }
                   }
                }
