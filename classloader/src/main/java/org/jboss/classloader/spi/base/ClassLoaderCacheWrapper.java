@@ -48,15 +48,14 @@ class ClassLoaderCacheWrapper implements ClassLoaderCache
    /**
     * Is the resource imported by our classloader.
     *
-    * @param type the type
     * @param name the resource name
     * @return true if it's imported, false otherwise
     */
-   protected boolean isImported(ImportType type, String name)
+   protected boolean isImported(String name)
    {
       if (info != null)
       {
-         Set<String> imports = info.getImportedPackages(type);
+         Set<String> imports = info.getImportedPackages();
          if (imports.isEmpty() == false)
          {
             String pckg = ClassLoaderInformation.getResourcePackageName(name);
@@ -71,7 +70,7 @@ class ClassLoaderCacheWrapper implements ClassLoaderCache
       Loader loader = delegate.getCachedLoader(name);
       if (loader != null)
       {
-         if (isImported(ImportType.ALL, name) == false)
+         if (isImported(name) == false)
             loader = null; // should not be exposed
       }
       return loader;
@@ -102,13 +101,15 @@ class ClassLoaderCacheWrapper implements ClassLoaderCache
 
    public boolean isBlackListedClass(String name)
    {
-      return delegate.isBlackListedClass(name);
+      return delegate.isBlackListedClass(name) && isImported(name);
    }
 
    public void blackListClass(String name)
    {
-      if (isImported(ImportType.ALL, name))
+      if (isImported(name))
+      {
          delegate.blackListClass(name);
+      }
    }
 
    public URL getCachedResource(String name)
@@ -116,7 +117,7 @@ class ClassLoaderCacheWrapper implements ClassLoaderCache
       URL url = delegate.getCachedResource(name);
       if (url != null)
       {
-         if (isImported(ImportType.ALL, name) == false)
+         if (isImported(name) == false)
             url = null; // should not be exposed
       }
       return url;
@@ -147,13 +148,15 @@ class ClassLoaderCacheWrapper implements ClassLoaderCache
 
    public boolean isBlackListedResource(String name)
    {
-      return delegate.isBlackListedResource(name);
+      return delegate.isBlackListedResource(name) && isImported(name);
    }
 
    public void blackListResource(String name)
    {
-      if (isImported(ImportType.ALL, name))
+      if (isImported(name))
+      {
          delegate.blackListResource(name);
+      }
    }
 
    public void flushCaches()

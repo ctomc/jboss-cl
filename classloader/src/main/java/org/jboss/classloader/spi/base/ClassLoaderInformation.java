@@ -342,12 +342,11 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
    /**
     * Get imported packages.
     *
-    * @param type the type
     * @return the imported packages
     */
-   Set<String> getImportedPackages(ImportType type)
+   Set<String> getImportedPackages()
    {
-      Map<String, List<Loader>> map = index.get(type);
+      Map<String, List<Loader>> map = index.get(ImportType.ALL);
       return (map != null) ? map.keySet() : Collections.<String>emptySet();
    }
 
