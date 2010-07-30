@@ -39,6 +39,8 @@ class ClassLoadingSpaceCache extends AbstractClassLoaderCache
    ClassLoadingSpaceCache(ClassLoadingSpace space)
    {
       this.space = space;
+      restoreCache();
+      restoreBlackList();
    }
 
    public Loader findLoader(ImportType type, String name)
@@ -58,7 +60,7 @@ class ClassLoadingSpaceCache extends AbstractClassLoaderCache
 
    public String getInfo(ImportType type)
    {
-      return space.toString();
+      return String.valueOf(space);
    }
 
    void merge(ClassLoadingSpaceCache other)

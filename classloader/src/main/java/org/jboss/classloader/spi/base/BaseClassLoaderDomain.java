@@ -57,7 +57,7 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
    
    /** The classloaders by package name */
    private Map<String, List<ClassLoaderInformation>> classLoadersByPackageName = new ConcurrentHashMap<String, List<ClassLoaderInformation>>();
-   
+
    /** The global class cache */
    private Map<String, ClassCacheItem> globalClassCache = new ConcurrentHashMap<String, ClassCacheItem>();
    
@@ -1375,6 +1375,10 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
          flushCaches();
       }
 
+      ClassLoaderCache cache = policy.getCache();
+      if (cache != null)
+         cache.flushCaches();
+
       try
       {
          afterRegisterClassLoader(classLoader, classLoader.getPolicy());
@@ -1438,6 +1442,10 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
 
          flushCaches();
       }
+
+      ClassLoaderCache cache = policy.getCache();
+      if (cache != null)
+         cache.flushCaches();
 
       try
       {

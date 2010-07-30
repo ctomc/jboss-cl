@@ -23,6 +23,7 @@
 package org.jboss.classloader.spi.base;
 
 import java.net.URL;
+import java.util.Set;
 
 import org.jboss.classloader.spi.ClassLoaderCache;
 import org.jboss.classloader.spi.ImportType;
@@ -44,9 +45,33 @@ class ClassLoaderCacheWrapper implements ClassLoaderCache
       this.info = info;
    }
 
+   /**
+    * Is the resource imported by our classloader.
+    *
+    * @param type the type
+    * @param name the resource name
+    * @return true if it's imported, false otherwise
+    */
+   protected boolean isImported(ImportType type, String name)
+   {
+      if (info != null)
+      {
+         Set<String> imports = info.getImportedPackages(type);
+         if (imports.isEmpty() == false)
+         {
+            String pckg = ClassLoaderInformation.getResourcePackageName(name);
+            return imports.contains(pckg);
+         }
+      }
+      return false;
+   }
+
    public Loader getCachedLoader(String name)
    {
-      return delegate.getCachedLoader(name);
+      if (isImported(ImportType.ALL, name))
+         return delegate.getCachedLoader(name);
+      else
+         return null;
    }
 
    public Loader findLoader(ImportType type, String name)
@@ -79,12 +104,16 @@ class ClassLoaderCacheWrapper implements ClassLoaderCache
 
    public void blackListClass(String name)
    {
-      delegate.blackListClass(name);
+      if (isImported(ImportType.ALL, name))
+         delegate.blackListClass(name);
    }
 
    public URL getCachedResource(String name)
    {
-      return delegate.getCachedResource(name);
+      if (isImported(ImportType.ALL, name))
+         return delegate.getCachedResource(name);
+      else
+         return null;
    }
 
    public URL findResource(ImportType type, String name)
@@ -117,7 +146,8 @@ class ClassLoaderCacheWrapper implements ClassLoaderCache
 
    public void blackListResource(String name)
    {
-      delegate.blackListResource(name);
+      if (isImported(ImportType.ALL, name))
+         delegate.blackListResource(name);
    }
 
    public void flushCaches()

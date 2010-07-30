@@ -22,8 +22,8 @@
 package org.jboss.classloading.spi.dependency.policy.mock;
 
 import java.io.File;
-import java.net.URL;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,9 +45,10 @@ import org.jboss.kernel.spi.dependency.KernelControllerContext;
 import org.jboss.kernel.spi.dependency.KernelControllerContextAware;
 
 /**
- * VFSClassLoaderPolicyModule.
+ * MockClassLoaderPolicyModule.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class MockClassLoaderPolicyModule extends ClassLoaderPolicyModule implements KernelControllerContextAware

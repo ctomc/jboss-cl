@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -339,6 +340,18 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
    }
 
    /**
+    * Get imported packages.
+    *
+    * @param type the type
+    * @return the imported packages
+    */
+   Set<String> getImportedPackages(ImportType type)
+   {
+      Map<String, List<Loader>> map = index.get(type);
+      return (map != null) ? map.keySet() : Collections.<String>emptySet();
+   }
+
+   /**
     * Add loader to index.
     *
     * @param loader the loader
@@ -433,7 +446,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
     * @param resource the resource name
     * @return the package name or the empty string if there is no package
     */
-   private static String getResourcePackageName(final String resource)
+   static String getResourcePackageName(final String resource)
    {
       int i = resource.lastIndexOf('/');
       if (i == -1)

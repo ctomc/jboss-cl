@@ -239,10 +239,6 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
       if (classLoader != null)
          unregisterModuleClassLoader(this, classLoader);
 
-      ClassLoaderCache cache = getCache();
-      if (cache != null)
-         cache.flushCaches(); // flush just in case
-
       classLoader = null;
       system = null;
       policy = null;
@@ -291,6 +287,7 @@ public abstract class ClassLoaderPolicyModule extends ClassLoadingMetaDataModule
                   return getPolicy();
                }
             };
+            // in this case it's actually the right policy, since we need it to add additional delegates
             return resolveWildcard(controller, factory, filter, item);
          }
          else

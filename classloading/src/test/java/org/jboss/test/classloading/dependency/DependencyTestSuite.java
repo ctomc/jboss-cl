@@ -21,32 +21,17 @@
  */
 package org.jboss.test.classloading.dependency;
 
+import org.jboss.test.classloading.dependency.test.*;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
-
-import org.jboss.test.classloading.dependency.test.ClassLoadingAdminLazyShutdownUnitTestCase;
-import org.jboss.test.classloading.dependency.test.ClassLoadingAdminUnitTestCase;
-import org.jboss.test.classloading.dependency.test.ConflictingPackageUnitTestCase;
-import org.jboss.test.classloading.dependency.test.ConflictingRequirementUnitTestCase;
-import org.jboss.test.classloading.dependency.test.DependencyUnitTestCase;
-import org.jboss.test.classloading.dependency.test.DomainUnitTestCase;
-import org.jboss.test.classloading.dependency.test.HierarchicalDomainUnitTestCase;
-import org.jboss.test.classloading.dependency.test.ImportAllUnitTestCase;
-import org.jboss.test.classloading.dependency.test.MockClassLoadingMetaDataUnitTestCase;
-import org.jboss.test.classloading.dependency.test.ModuleDependencyUnitTestCase;
-import org.jboss.test.classloading.dependency.test.PackageDependencyUnitTestCase;
-import org.jboss.test.classloading.dependency.test.ReExportModuleUnitTestCase;
-import org.jboss.test.classloading.dependency.test.ReExportPackageUnitTestCase;
-import org.jboss.test.classloading.dependency.test.SelfImportPackageDependencyUnitTestCase;
-import org.jboss.test.classloading.dependency.test.SplitPackageDependencyUnitTestCase;
-import org.jboss.test.classloading.dependency.test.UsesPackageUnitTestCase;
-import org.jboss.test.classloading.dependency.test.MockResourceVisitorUnitTestCase;
 
 /**
  * Dependency Test Suite.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 37459 $
  */
 public class DependencyTestSuite extends TestSuite
@@ -87,6 +72,7 @@ public class DependencyTestSuite extends TestSuite
       suite.addTest(SelfImportPackageDependencyUnitTestCase.suite());
       suite.addTest(ClassLoadingAdminUnitTestCase.suite());
       suite.addTest(ClassLoadingAdminLazyShutdownUnitTestCase.suite());
+      suite.addTest(ClassLoadingSpaceUnitTestCase.suite());
 
       return suite;
    }

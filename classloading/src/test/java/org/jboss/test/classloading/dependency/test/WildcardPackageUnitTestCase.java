@@ -53,35 +53,35 @@ public class WildcardPackageUnitTestCase extends AbstractMockClassLoaderUnitTest
    {
       ClassLoadingMetaDataFactory factory = ClassLoadingMetaDataFactory.getInstance();
 
-      MockClassLoadingMetaData a1 = new MockClassLoadingMetaData("a1");
-      a1.getRequirements().addRequirement(factory.createWildcardPackage(A.class.getPackage().getName()));
-      KernelControllerContext contextA1 = install(a1);
+      MockClassLoadingMetaData b = new MockClassLoadingMetaData("b");
+      b.getRequirements().addRequirement(factory.createWildcardPackage(A.class.getPackage().getName()));
+      KernelControllerContext contextB = install(b);
       try
       {
-         ClassLoader clA1 = assertClassLoader(contextA1);
-         assertLoadClassFail(A.class, clA1);
+         ClassLoader clB = assertClassLoader(contextB);
+         assertLoadClassFail(A.class, clB);
 
-         MockClassLoadingMetaData a2 = new MockClassLoadingMetaData("a2");
-         a2.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
-         a2.setPathsAndPackageNames(A.class);
-         KernelControllerContext contextA2 = install(a2);
+         MockClassLoadingMetaData a = new MockClassLoadingMetaData("a");
+         a.getCapabilities().addCapability(factory.createPackage(A.class.getPackage().getName()));
+         a.setPathsAndPackageNames(A.class);
+         KernelControllerContext contextA = install(a);
          try
          {
-            ClassLoader clA2 = assertClassLoader(contextA2);
-            assertLoadClass(A.class, clA2);
-            assertLoadClass(A.class, clA1, clA2);
+            ClassLoader clA = assertClassLoader(contextA);
+            //assertLoadClass(A.class, clA);
+            assertLoadClass(A.class, clB, clA);
          }
          finally
          {
-            uninstall(contextA2);
+            uninstall(contextA);
          }
-         assertNoClassLoader(contextA2);
+         assertNoClassLoader(contextA);
       }
       finally
       {
-         uninstall(contextA1);
+         uninstall(contextB);
       }
-      assertNoClassLoader(contextA1);
+      assertNoClassLoader(contextB);
    }
 
    // deploy B first, then A
