@@ -99,6 +99,12 @@ class WildcardDelegateLoader extends FilteredDelegateLoader
    }
 
    @Override
+   public String[] getPackageNames()
+   {
+      return null; // too dynamic to expose any explicit package
+   }
+
+   @Override
    protected Class<?> doLoadClass(String className)
    {
       DelegateLoader loader = resolve(ClassLoaderUtils.getClassPackageName(className));

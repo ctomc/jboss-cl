@@ -131,7 +131,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
                cantBlacklist++;
             }
 
-            addLoaderToIndex(delegate, delegatePolicy, importType, ImportType.ALL);
+            addLoaderToIndex(delegate, importType, ImportType.ALL);
          }
 
          this.delegates = Collections.synchronizedMap(temp);
@@ -270,7 +270,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
             cantBlacklist++;
          }
 
-         addLoaderToIndex(loader, policy, type, ImportType.ALL);
+         addLoaderToIndex(loader, type, ImportType.ALL);
       }
    }
 
@@ -334,7 +334,7 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
                   restoreBlackList();
             }
 
-            removeLoaderFromIndex(loader, policy, type, ImportType.ALL);
+            removeLoaderFromIndex(loader, type, ImportType.ALL);
          }
       }
    }
@@ -355,15 +355,11 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
     * Add loader to index.
     *
     * @param loader the loader
-    * @param policy the policy
     * @param types the types
     */
-   private void addLoaderToIndex(DelegateLoader loader, BaseClassLoaderPolicy policy, ImportType... types)
+   private void addLoaderToIndex(DelegateLoader loader, ImportType... types)
    {
-      if (policy == null)
-         return;
-
-      String[] packageNames = policy.getPackageNames();
+      String[] packageNames = loader.getPackageNames();
       if (packageNames != null && packageNames.length > 0)
       {
          ClassFilter filter = loader.getFilter();
@@ -396,15 +392,11 @@ public class ClassLoaderInformation extends AbstractClassLoaderCache
     * Remove loader from index.
     *
     * @param loader the loader
-    * @param policy the policy
     * @param types the types
     */
-   private void removeLoaderFromIndex(DelegateLoader loader, BaseClassLoaderPolicy policy, ImportType... types)
+   private void removeLoaderFromIndex(DelegateLoader loader, ImportType... types)
    {
-      if (policy == null)
-         return;
-
-      String[] packageNames = policy.getPackageNames();
+      String[] packageNames = loader.getPackageNames();
       if (packageNames != null && packageNames.length > 0)
       {
          ClassFilter filter = loader.getFilter();

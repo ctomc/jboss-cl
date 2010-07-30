@@ -70,6 +70,17 @@ public class DelegateLoader extends BaseDelegateLoader
    }
 
    /**
+    * Get package names.
+    *
+    * @return the package names
+    */
+   public String[] getPackageNames()
+   {
+      ClassLoaderPolicy policy = getPolicy();
+      return (policy != null) ? policy.getPackageNames() : null;
+   }
+
+   /**
     * Get the ClassLoaderPolicy associated with this DelegateLoader.
     *
     * @return the class loader policy
