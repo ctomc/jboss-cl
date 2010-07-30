@@ -68,10 +68,13 @@ class ClassLoaderCacheWrapper implements ClassLoaderCache
 
    public Loader getCachedLoader(String name)
    {
-      if (isImported(ImportType.ALL, name))
-         return delegate.getCachedLoader(name);
-      else
-         return null;
+      Loader loader = delegate.getCachedLoader(name);
+      if (loader != null)
+      {
+         if (isImported(ImportType.ALL, name) == false)
+            loader = null; // should not be exposed
+      }
+      return loader;
    }
 
    public Loader findLoader(ImportType type, String name)
@@ -110,10 +113,13 @@ class ClassLoaderCacheWrapper implements ClassLoaderCache
 
    public URL getCachedResource(String name)
    {
-      if (isImported(ImportType.ALL, name))
-         return delegate.getCachedResource(name);
-      else
-         return null;
+      URL url = delegate.getCachedResource(name);
+      if (url != null)
+      {
+         if (isImported(ImportType.ALL, name) == false)
+            url = null; // should not be exposed
+      }
+      return url;
    }
 
    public URL findResource(ImportType type, String name)
