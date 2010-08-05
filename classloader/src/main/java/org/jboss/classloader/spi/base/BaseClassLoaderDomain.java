@@ -1542,11 +1542,11 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
       if (result != null)
          return result;
 
-      result = checkCacheAfter(classLoader, name, path, allExports);
+      result = checkClassCacheLocally(classLoader, name, path, allExports);
       if (result != null)
          return result;
 
-      result = checkClassCacheLocally(classLoader, name, path, allExports);
+      result = checkCacheAfter(classLoader, name, path, allExports);
       if (result != null)
          return result;
 
@@ -1573,6 +1573,16 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
                log.trace("Found " + name + " in global cache: " + this);
 
             return item.clazz;
+         }
+      }
+      else
+      {
+         BaseClassLoaderPolicy policy = classLoader.getPolicy();
+         ClassLoaderCache cache = policy.getCache();
+         if (cache != null)
+         {
+            Loader loader = cache.getCachedLoader(name);
+            return (loader != null) ? loader.loadClass(name) : null;
          }
       }
       return null;
