@@ -1578,11 +1578,14 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
       else
       {
          BaseClassLoaderPolicy policy = classLoader.getPolicy();
-         ClassLoaderCache cache = policy.getCache();
-         if (cache != null)
+         if (policy != null)
          {
-            Loader loader = cache.getCachedLoader(path);
-            return (loader != null) ? loader.loadClass(name) : null;
+            ClassLoaderCache cache = policy.getCache();
+            if (cache != null)
+            {
+               Loader loader = cache.getCachedLoader(path);
+               return (loader != null) ? loader.loadClass(name) : null;
+            }
          }
       }
       return null;
@@ -1602,13 +1605,30 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
     */
    void checkClassBlackList(BaseClassLoader classLoader, String name, String path, boolean allExports, boolean failIfBlackListed) throws ClassNotFoundException
    {
-      if (allExports)
+      if (failIfBlackListed)
       {
-         if (failIfBlackListed && isBlackListedClass(path))
+         if (allExports)
          {
-            if (log.isTraceEnabled())
-               log.trace("Found " + name + " in global blacklist");
-            throw new ClassNotFoundException(name + " not found - blacklisted");
+            if (isBlackListedClass(path))
+            {
+               if (log.isTraceEnabled())
+                  log.trace("Found " + name + " in global blacklist");
+               throw new ClassNotFoundException(name + " not found - blacklisted");
+            }
+         }
+         else
+         {
+            BaseClassLoaderPolicy policy = classLoader.getPolicy();
+            if (policy != null)
+            {
+               ClassLoaderCache cache = policy.getCache();
+               if (cache != null && cache.isBlackListedClass(path))
+               {
+                  if (log.isTraceEnabled())
+                     log.trace("Found " + name + " in policy cache blacklist: " + cache.getInfo(ImportType.ALL));
+                  throw new ClassNotFoundException(name + " not found - blacklisted");
+               }
+            }
          }
       }
    }
