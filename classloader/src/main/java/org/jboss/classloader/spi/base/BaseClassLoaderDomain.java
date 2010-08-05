@@ -1581,7 +1581,7 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
          ClassLoaderCache cache = policy.getCache();
          if (cache != null)
          {
-            Loader loader = cache.getCachedLoader(name);
+            Loader loader = cache.getCachedLoader(path);
             return (loader != null) ? loader.loadClass(name) : null;
          }
       }
