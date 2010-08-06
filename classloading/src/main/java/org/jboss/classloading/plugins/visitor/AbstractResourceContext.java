@@ -144,7 +144,7 @@ public abstract class AbstractResourceContext implements ResourceContext, RootAw
    {
       URL url = getUrl();
       if (url == null)
-         throw new IllegalArgumentException("Null url: " + resourceName);
+         throw new IllegalArgumentException("Null url: " + resourceName + " / " + classLoader);
 
       return url.openStream();
    }
