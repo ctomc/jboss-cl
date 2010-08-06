@@ -163,6 +163,6 @@ public abstract class AbstractResourceContext implements ResourceContext, RootAw
    @Override
    public String toString()
    {
-      return getClass().getSimpleName() + "@" + resourceName;
+      return getClass().getSimpleName() + " @ " + resourceName + " / " + classLoader;
    }
 }
