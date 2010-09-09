@@ -28,7 +28,8 @@ import org.jboss.classloading.spi.metadata.CapabilitiesMetaData;
 import org.jboss.classloading.spi.metadata.Capability;
 
 /**
- * 
+ * The default global capabilities provider.
+ *
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  * @version $Revision: 1.1 $
  */
