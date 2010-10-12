@@ -21,10 +21,10 @@
 */
 package org.jboss.classloading.spi.helpers;
 
-import java.io.Serializable;
-
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
+
+import java.io.Serializable;
 
 import org.jboss.classloading.spi.version.Version;
 import org.jboss.classloading.spi.version.VersionComparatorRegistry;
@@ -192,8 +192,7 @@ public class NameAndVersionSupport implements Serializable, Cloneable
    {
       try
       {
-         NameAndVersionSupport clone = (NameAndVersionSupport) super.clone();
-         return clone;
+         return (NameAndVersionSupport) super.clone();
       }
       catch (CloneNotSupportedException e)
       {

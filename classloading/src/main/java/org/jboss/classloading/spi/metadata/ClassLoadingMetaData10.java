@@ -31,11 +31,12 @@ import org.jboss.xb.annotations.JBossXmlSchema;
  * ClassLoadingMetaData version 1.0.
  * 
  * @author <a href="adrian@jboss.org">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 @JBossXmlSchema(namespace="urn:jboss:classloading:1.0", elementFormDefault=XmlNsForm.QUALIFIED)
 @XmlRootElement(name="classloading")
-@XmlType(propOrder = {"requirements", "capabilities"})
+@XmlType(propOrder = {"requirements", "capabilities", "parentPolicy"})
 public class ClassLoadingMetaData10 extends ClassLoadingMetaData
 {
    /** The serialVersionUID */

@@ -23,18 +23,21 @@ package org.jboss.classloading.spi.dependency.helpers;
 
 import java.util.List;
 
+import org.jboss.classloader.spi.ParentPolicy;
 import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.spi.dependency.Module;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ExportAll;
+import org.jboss.classloading.spi.metadata.ParentPolicyMetaData;
 import org.jboss.classloading.spi.metadata.Requirement;
 
 /**
  * ClassLoadingMetaDataModule.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public abstract class ClassLoadingMetaDataModule extends Module
@@ -155,6 +158,15 @@ public abstract class ClassLoadingMetaDataModule extends Module
    public boolean isJ2seClassLoadingCompliance()
    {
       return classLoadingMetaData.isJ2seClassLoadingCompliance();
+   }
+
+   public ParentPolicy getDeterminedParentPolicy()
+   {
+      ParentPolicyMetaData ppmd = classLoadingMetaData.getParentPolicy();
+      if (ppmd != null)
+         return ppmd.createParentPolicy();
+      else
+         return super.getDeterminedParentPolicy();
    }
 
    @Override

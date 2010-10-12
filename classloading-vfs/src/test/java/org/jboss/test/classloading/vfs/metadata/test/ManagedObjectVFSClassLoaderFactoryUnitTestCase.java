@@ -27,12 +27,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.Test;
-
 import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloading.spi.metadata.CapabilitiesMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.ExportAll;
+import org.jboss.classloading.spi.metadata.ParentPolicyMetaData;
 import org.jboss.classloading.spi.metadata.RequirementsMetaData;
 import org.jboss.classloading.spi.version.Version;
 import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory;
@@ -45,10 +44,13 @@ import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
 import org.jboss.test.BaseTestCase;
 
+import junit.framework.Test;
+
 /**
  * ManagedObjectVFSClassLoaderFactoryUnitTestCase.
  *
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
@@ -71,7 +73,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
    {
       ManagedObject result = moFactory.initManagedObject(test, null, null);
       assertNotNull(result);
-      List<String> expectedProperties = Arrays.asList("name", "version", "context", "domain", "parentDomain", "topLevelClassLoader", "exportAll", "shutdown", "included", "excluded", "excludedExport", "importAll", "parentFirst", "cache", "blackList", "system", "roots", "capabilities", "requirements");
+      List<String> expectedProperties = Arrays.asList("name", "version", "context", "domain", "parentDomain", "topLevelClassLoader", "exportAll", "shutdown", "included", "excluded", "excludedExport", "importAll", "parentFirst", "cache", "blackList", "system", "roots", "capabilities", "requirements", "parentPolicy");
       Set<String> actualProperties = result.getPropertyNames();
       for (String expected : expectedProperties)
       {
@@ -113,6 +115,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
    public void testConstructor() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
+      test.setParentPolicy(new ParentPolicyMetaData());
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "name", String.class, "<unknown>");
       assertManagedProperty(mo, "version", Version.class, Version.DEFAULT_VERSION);
@@ -128,6 +131,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       assertManagedProperty(mo, "parentFirst", boolean.class, true);
       assertManagedProperty(mo, "capabilities", CapabilitiesMetaData.class, new CapabilitiesMetaData());
       assertManagedProperty(mo, "requirements", RequirementsMetaData.class, new RequirementsMetaData());
+      assertManagedProperty(mo, "parentPolicy", ParentPolicyMetaData.class, new ParentPolicyMetaData());
    }
 
    public void testSetName() throws Exception
@@ -288,5 +292,13 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       test.getRequirements().addRequirement(factory.createRequirePackage("package"));
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "requirements", RequirementsMetaData.class, test.getRequirements());
+   }
+
+   public void testParentPolicy() throws Exception
+   {
+      VFSClassLoaderFactory test = new VFSClassLoaderFactory();
+      test.setParentPolicy(new ParentPolicyMetaData());
+      ManagedObject mo = assertManagedObject(test);
+      assertManagedProperty(mo, "parentPolicy", ParentPolicyMetaData.class, test.getParentPolicy());
    }
 }

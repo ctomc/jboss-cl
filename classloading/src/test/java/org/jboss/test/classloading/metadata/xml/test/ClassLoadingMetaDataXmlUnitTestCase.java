@@ -24,8 +24,6 @@ package org.jboss.test.classloading.metadata.xml.test;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Test;
-
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaData10;
@@ -37,6 +35,8 @@ import org.jboss.classloading.spi.version.VersionRange;
 import org.jboss.test.classloading.metadata.xml.AbstractJBossXBTest;
 import org.jboss.test.classloading.metadata.xml.support.TestCapability;
 import org.jboss.test.classloading.metadata.xml.support.TestRequirement;
+
+import junit.framework.Test;
 
 /**
  * ClassLoadingMetaDataXmlUnitTestCase.
@@ -74,6 +74,7 @@ public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
       assertTrue(result.isBlackListable());
       assertNull(result.getCapabilities().getCapabilities());
       assertNull(result.getRequirements().getRequirements());
+      assertNull(result.getParentPolicy());
    }
 
    public void testModuleVersion() throws Exception

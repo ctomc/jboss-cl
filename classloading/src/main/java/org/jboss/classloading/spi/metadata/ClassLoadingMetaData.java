@@ -21,10 +21,10 @@
  */
 package org.jboss.classloading.spi.metadata;
 
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
+
+import java.util.List;
 
 import org.jboss.classloader.plugins.filter.CombiningClassFilter;
 import org.jboss.classloader.spi.ShutdownPolicy;
@@ -38,9 +38,8 @@ import org.jboss.managed.api.annotation.ManagementProperty;
 /**
  * ClassLoadingMetaData.
  * 
- * [TODO] Add meaningful javadoc
- * 
  * @author <a href="adrian@jboss.org">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 @ManagementObject(properties=ManagementProperties.EXPLICIT, name="org.jboss.classloading.spi.metadata.ClassLoadingMetaData")
@@ -99,7 +98,10 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
    
    /** The capabilities */
    private CapabilitiesMetaData capabilities = new CapabilitiesMetaData();
-   
+
+   /** The parent policy */
+   private ParentPolicyMetaData parentPolicy;
+
    /**
     * Get the domain.
     * 
@@ -523,7 +525,28 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       this.requirements.setRequirements(requirements);
    }
 
-   @Override 
+   /**
+    * Get parent policy.
+    *
+    * @return the parent policy
+    */
+   public ParentPolicyMetaData getParentPolicy()
+   {
+      return parentPolicy;
+   }
+
+   /**
+    * Set parent policy.
+    *
+    * @param parentPolicy the parent policy
+    */
+   @ManagementProperty
+   public void setParentPolicy(ParentPolicyMetaData parentPolicy)
+   {
+      this.parentPolicy = parentPolicy;
+   }
+
+   @Override
    public String toString()
    {
       StringBuilder builder = new StringBuilder();
@@ -569,6 +592,8 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       List<Requirement> requirements = getRequirements().getRequirements();
       if (requirements != null)
          builder.append(" requirements=").append(requirements);
+      if (parentPolicy != null)
+         builder.append(" parent-policy=").append(parentPolicy);
    }
    
    @Override
@@ -601,6 +626,8 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
          return false;
       if (equals(this.getRequirements().getRequirements(), other.getRequirements().getRequirements()) == false)
          return false;
+      if (equals(this.getParentPolicy(), other.getParentPolicy()) == false)
+         return false;
       return true;
    }
    
@@ -611,7 +638,7 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       return super.hashCode();
    }
    
-   private static boolean equals(Object one, Object two)
+   static boolean equals(Object one, Object two)
    {
       if (one == null)
          return two == null;
@@ -622,8 +649,10 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
    public ClassLoadingMetaData clone()
    {
       ClassLoadingMetaData clone = (ClassLoadingMetaData) super.clone();
-      requirements = clone.requirements.clone();
-      capabilities = clone.capabilities.clone();
+      clone.requirements = requirements.clone();
+      clone.capabilities = capabilities.clone();
+      if (parentPolicy != null)
+         clone.parentPolicy = parentPolicy.clone();
       return clone;
    }
 }
