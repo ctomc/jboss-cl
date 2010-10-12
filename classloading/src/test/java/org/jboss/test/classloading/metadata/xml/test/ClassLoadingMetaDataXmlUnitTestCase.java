@@ -320,7 +320,9 @@ public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
       ClassLoadingMetaData result = unmarshal();
       ParentPolicyMetaData ppmd = result.getParentPolicy();
       assertNotNull(ppmd);
-      assertEquals("EVERYTHING", ppmd.getName());
+      assertEquals("BEFORE", ppmd.getName());
+      // actual PP and CF instantiation
+      assertNotNull(ppmd.createParentPolicy());
    }
 
    public void testParentPolicyWithFilters() throws Exception
