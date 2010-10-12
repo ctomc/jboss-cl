@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<classloading xmlns="urn:jboss:classloading:1.0" name="test">
+   <parent-policy>
+      <before-filter>
+         <javabean xmlns="urn:jboss:javabean:2.0" class="org.jboss.classloader.plugins.filter.EverythingClassFilter"/>
+      </before-filter>
+   </parent-policy>
+</classloading>

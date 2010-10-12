@@ -24,6 +24,7 @@ package org.jboss.classloading.spi.metadata;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -91,9 +92,20 @@ public class FilterMetaData implements Serializable, Cloneable
 
    @XmlAnyElement
    @ManagementProperty(ignored = true)
-   public void setValue(Object value)
+   public void setValueObject(Object value)
    {
-      this.value = value;
+      if (value instanceof String)
+         setValueString((String) value);
+      else
+         this.value = value;
+   }
+
+   @XmlValue
+   @ManagementProperty(ignored = true)
+   public void setValueString(String value)
+   {
+      if (value != null)
+         this.value = value.split(",");
    }
 
    public int hashCode()

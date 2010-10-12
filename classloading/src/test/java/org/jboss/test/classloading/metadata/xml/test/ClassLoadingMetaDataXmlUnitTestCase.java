@@ -24,14 +24,10 @@ package org.jboss.test.classloading.metadata.xml.test;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.classloading.spi.metadata.Capability;
-import org.jboss.classloading.spi.metadata.ClassLoadingMetaData;
-import org.jboss.classloading.spi.metadata.ClassLoadingMetaData10;
-import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
-import org.jboss.classloading.spi.metadata.ExportAll;
-import org.jboss.classloading.spi.metadata.Requirement;
+import org.jboss.classloading.spi.metadata.*;
 import org.jboss.classloading.spi.version.Version;
 import org.jboss.classloading.spi.version.VersionRange;
+import org.jboss.javabean.plugins.jaxb.JavaBean20;
 import org.jboss.test.classloading.metadata.xml.AbstractJBossXBTest;
 import org.jboss.test.classloading.metadata.xml.support.TestCapability;
 import org.jboss.test.classloading.metadata.xml.support.TestRequirement;
@@ -42,6 +38,7 @@ import junit.framework.Test;
  * ClassLoadingMetaDataXmlUnitTestCase.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
@@ -318,6 +315,43 @@ public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
       assertRequirements(result, factory.createUsesPackage("test1", new VersionRange("1.0.0"))); 
    }
    
+   public void testParentPolicyWithName() throws Exception
+   {
+      ClassLoadingMetaData result = unmarshal();
+      ParentPolicyMetaData ppmd = result.getParentPolicy();
+      assertNotNull(ppmd);
+      assertEquals("EVERYTHING", ppmd.getName());
+   }
+
+   public void testParentPolicyWithFilters() throws Exception
+   {
+      ClassLoadingMetaData result = unmarshal();
+      ParentPolicyMetaData ppmd = result.getParentPolicy();
+      assertNotNull(ppmd);
+      assertNull(ppmd.getName());
+      FilterMetaData before = ppmd.getBeforeFilter();
+      assertNotNull(before);
+      assertEqualStrings(new String[]{"org.jboss.acme", "com.redhat.acme"}, before.getValue());
+      FilterMetaData after = ppmd.getAfterFilter();
+      assertNotNull(after);
+      assertEqualStrings(new String[]{"org.jboss.foobar", "com.redhat.foobar"}, after.getValue());
+      assertEquals("Qwert", ppmd.getDescription());
+      // actual PP and CF instantiation
+      assertNotNull(ppmd.createParentPolicy());
+   }
+
+   public void testParentPolicyWithJavaBean() throws Exception
+   {
+      ClassLoadingMetaData result = unmarshal(JavaBean20.class);
+      ParentPolicyMetaData ppmd = result.getParentPolicy();
+      assertNotNull(ppmd);
+      assertNull(ppmd.getName());
+      FilterMetaData before = ppmd.getBeforeFilter();
+      assertNotNull(before);
+      // actual PP and CF instantiation
+      assertNotNull(ppmd.createParentPolicy());
+   }
+
    public void assertCapabilities(ClassLoadingMetaData metadata, Capability... expected)
    {
       List<Capability> temp = new ArrayList<Capability>();
@@ -333,7 +367,18 @@ public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
          temp.add(requirement);
       assertEquals(temp, metadata.getRequirements().getRequirements());
    }
-   
+
+   public void assertEqualStrings(String[] expected, Object result)
+   {
+      assertNotNull(expected);
+      assertNotNull(result);
+      assertTrue(result instanceof String[]);
+      String[] strings = (String[]) result;
+      assertEquals(expected.length, strings.length);
+      for (int i = 0; i < expected.length; i++)
+         assertEquals(expected[i], strings[i]);
+   }
+
    protected ClassLoadingMetaData unmarshal(Class<?>... extra) throws Exception
    {
       return unmarshalObject(ClassLoadingMetaData10.class, ClassLoadingMetaData10.class, extra);
