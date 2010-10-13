@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<classloading-domain xmlns="urn:jboss:classloading:1.0" name="test">
+   <parent>
+      <javabean xmlns="urn:jboss:javabean:2.0" class="org.jboss.test.classloading.metadata.xml.support.TestLoader"/>
+   </parent>
+</classloading-domain>

@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.Test;
-
 import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
@@ -40,10 +38,13 @@ import org.jboss.test.classloading.vfs.metadata.xml.AbstractJBossXBTest;
 import org.jboss.test.classloading.vfs.metadata.xml.support.TestCapability;
 import org.jboss.test.classloading.vfs.metadata.xml.support.TestRequirement;
 
+import junit.framework.Test;
+
 /**
  * VFSClassLoaderFactoryXMLUnitTestCase.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class VFSClassLoaderFactoryXMLUnitTestCase extends AbstractJBossXBTest
@@ -340,6 +341,12 @@ public class VFSClassLoaderFactoryXMLUnitTestCase extends AbstractJBossXBTest
       assertRequirements(result, factory.createUsesPackage("test1", new VersionRange("1.0.0"))); 
    }
  
+   public void testShutdown() throws Exception
+   {
+      VFSClassLoaderFactory result = unmarshal(TestRequirement.class);
+      assertEquals(ShutdownPolicy.GARBAGE_COLLECTION, result.getShutdownPolicy()); 
+   }
+
    public void assertCapabilities(VFSClassLoaderFactory metadata, Capability... expected)
    {
       List<Capability> temp = new ArrayList<Capability>();

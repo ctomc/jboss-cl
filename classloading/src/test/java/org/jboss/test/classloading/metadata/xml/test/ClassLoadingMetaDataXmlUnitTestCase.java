@@ -24,6 +24,7 @@ package org.jboss.test.classloading.metadata.xml.test;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloading.spi.metadata.*;
 import org.jboss.classloading.spi.version.Version;
 import org.jboss.classloading.spi.version.VersionRange;
@@ -315,6 +316,12 @@ public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
       assertRequirements(result, factory.createUsesPackage("test1", new VersionRange("1.0.0"))); 
    }
    
+   public void testShutdown() throws Exception
+   {
+      ClassLoadingMetaData result = unmarshal();
+      assertEquals(ShutdownPolicy.GARBAGE_COLLECTION, result.getShutdownPolicy());
+   }
+
    public void testParentPolicyWithName() throws Exception
    {
       ClassLoadingMetaData result = unmarshal();
