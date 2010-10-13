@@ -67,6 +67,7 @@ public class MetaDataTestSuite extends TestSuite
       suite.addTest(ClassLoadingMetaDataFactoryUnitTestCase.suite());
       suite.addTest(ClassLoadingMetaDataUnitTestCase.suite());
       suite.addTest(ManagedObjectClassLoadingMetaDataUnitTestCase.suite());
+      suite.addTest(ManagedObjectClassLoadingDomainMetaDataUnitTestCase.suite());
       suite.addTest(ClassLoadingMetaDataXmlUnitTestCase.suite());
       suite.addTest(ClassLoadingDomainMetaDataXmlUnitTestCase.suite());
 

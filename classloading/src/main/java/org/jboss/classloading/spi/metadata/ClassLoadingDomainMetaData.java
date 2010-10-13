@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloading.spi.helpers.NameAndVersionSupport;
+import org.jboss.classloading.spi.version.Version;
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
@@ -52,6 +53,12 @@ public class ClassLoadingDomainMetaData extends NameAndVersionSupport
 
    /** The shutdown policy */
    private ShutdownPolicy shutdownPolicy;
+
+   // ignore the version property
+   public void setTheVersion(Version version)
+   {
+      // ignored
+   }
 
    /**
     * Get the parentDomain.
