@@ -114,6 +114,12 @@ public class ClassLoadingDomainMetaDataXmlUnitTestCase extends AbstractJBossXBTe
       assertEquals(ShutdownPolicy.GARBAGE_COLLECTION, result.getShutdownPolicy());
    }
 
+   public void testDomainUseLoadClassForParent() throws Exception
+   {
+      ClassLoadingDomainMetaData result = unmarshal();
+      assertTrue(result.getUseLoadClassForParent());
+   }
+
    public void assertEqualStrings(String[] expected, Object result)
    {
       assertNotNull(expected);

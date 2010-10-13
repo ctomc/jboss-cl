@@ -21,22 +21,14 @@
  */
 package org.jboss.classloader.spi;
 
-import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
+import java.security.ProtectionDomain;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.plugins.system.ClassLoaderSystemBuilder;
 import org.jboss.classloader.spi.base.BaseClassLoaderSystem;
@@ -211,12 +203,49 @@ public abstract class ClassLoaderSystem extends BaseClassLoaderSystem implements
     */
    public ClassLoaderDomain createAndRegisterDomain(String name, ParentPolicy parentPolicy, Loader parent)
    {
+      return createAndRegisterDomain(name, parentPolicy, parent, null);
+   }
+
+   /**
+    * Create and register a domain with the given parent classloading policy
+    *
+    * @param name the name of the domain
+    * @param parentPolicy the parent classloading policy
+    * @param parent the parent
+    * @param shutdownPolicy the shutdown policy
+    * @return the domain
+    * @throws IllegalArgumentException for a null argument
+    * @throws IllegalStateException if there already is a domain with that name
+    */
+   public ClassLoaderDomain createAndRegisterDomain(String name, ParentPolicy parentPolicy, Loader parent, ShutdownPolicy shutdownPolicy)
+   {
+      return createAndRegisterDomain(name, parentPolicy, parent, shutdownPolicy, null);
+   }
+
+   /**
+    * Create and register a domain with the given parent classloading policy
+    *
+    * @param name the name of the domain
+    * @param parentPolicy the parent classloading policy
+    * @param parent the parent
+    * @param shutdownPolicy the shutdown policy
+    * @param useLoadClassForParent the use classloader for parent flag
+    * @return the domain
+    * @throws IllegalArgumentException for a null argument
+    * @throws IllegalStateException if there already is a domain with that name
+    */
+   public ClassLoaderDomain createAndRegisterDomain(String name, ParentPolicy parentPolicy, Loader parent, ShutdownPolicy shutdownPolicy, Boolean useLoadClassForParent)
+   {
       ClassLoaderDomain result = createDomain(name);
       if (result == null)
          throw new IllegalArgumentException("Created null domain: " + name);
 
+      if (useLoadClassForParent != null)
+         result.setUseLoadClassForParent(useLoadClassForParent);
       result.setParentPolicy(parentPolicy);
       result.setParent(parent);
+      if (shutdownPolicy != null)
+         result.setShutdownPolicy(shutdownPolicy);
       registerDomain(result);
       return result;
    }

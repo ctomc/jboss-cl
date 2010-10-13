@@ -54,6 +54,9 @@ public class ClassLoadingDomainMetaData extends NameAndVersionSupport
    /** The shutdown policy */
    private ShutdownPolicy shutdownPolicy;
 
+   /** The use load class for parent */
+   private Boolean useLoadClassForParent;
+
    // ignore the version property
    public void setTheVersion(Version version)
    {
@@ -147,6 +150,18 @@ public class ClassLoadingDomainMetaData extends NameAndVersionSupport
       this.shutdownPolicy = shutdownPolicy;
    }
 
+   public Boolean getUseLoadClassForParent()
+   {
+      return useLoadClassForParent;
+   }
+
+   @XmlAttribute
+   @ManagementProperty
+   public void setUseLoadClassForParent(Boolean useLoadClassForParent)
+   {
+      this.useLoadClassForParent = useLoadClassForParent;
+   }
+
    @Override
    public String toString()
    {
@@ -177,6 +192,7 @@ public class ClassLoadingDomainMetaData extends NameAndVersionSupport
          builder.append(" parent-policy=").append(parentPolicy);
       if (shutdownPolicy != null)
          builder.append(" ").append(shutdownPolicy);
+      builder.append(" use-load-class-for-parent=").append(useLoadClassForParent);
    }
    
    @Override
@@ -196,6 +212,8 @@ public class ClassLoadingDomainMetaData extends NameAndVersionSupport
       if (equals(this.getParentPolicy(), other.getParentPolicy()) == false)
          return false;
       if (equals(this.getShutdownPolicy(), other.getShutdownPolicy()) == false)
+         return false;
+      if (equals(this.getUseLoadClassForParent(), other.getUseLoadClassForParent()) == false)
          return false;
       return true;
    }

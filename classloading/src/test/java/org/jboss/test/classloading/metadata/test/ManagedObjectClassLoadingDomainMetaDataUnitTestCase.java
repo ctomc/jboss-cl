@@ -64,7 +64,7 @@ public class ManagedObjectClassLoadingDomainMetaDataUnitTestCase extends BaseTes
    {
       ManagedObject result = moFactory.initManagedObject(test, null, null);
       assertNotNull(result);
-      List<String> expectedProperties = Arrays.asList("name", "parentDomain", "parentPolicy", "shutdown");
+      List<String> expectedProperties = Arrays.asList("name", "parentDomain", "parentPolicy", "shutdown", "useLoadClassForParent");
       Set<String> actualProperties = result.getPropertyNames();
       for (String expected : expectedProperties)
       {
@@ -107,6 +107,7 @@ public class ManagedObjectClassLoadingDomainMetaDataUnitTestCase extends BaseTes
       assertManagedProperty(mo, "parentDomain", String.class, null);
       assertManagedProperty(mo, "parentPolicy", ParentPolicyMetaData.class, new ParentPolicyMetaData());
       assertManagedProperty(mo, "shutdown", ShutdownPolicy.class, null);
+      assertManagedProperty(mo, "useLoadClassForParent", Boolean.class, null);
    }
 
    public void testSetName() throws Exception
@@ -139,5 +140,13 @@ public class ManagedObjectClassLoadingDomainMetaDataUnitTestCase extends BaseTes
       test.setShutdownPolicy(ShutdownPolicy.GARBAGE_COLLECTION);
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "shutdown", ShutdownPolicy.class, ShutdownPolicy.GARBAGE_COLLECTION);
+   }
+
+   public void testSetUseLoadClassForParent() throws Exception
+   {
+      ClassLoadingDomainMetaData test = new ClassLoadingDomainMetaData();
+      test.setUseLoadClassForParent(true);
+      ManagedObject mo = assertManagedObject(test);
+      assertManagedProperty(mo, "useLoadClassForParent", Boolean.class, true);
    }
 }
