@@ -32,7 +32,7 @@ import org.jboss.xb.annotations.JBossXmlSchema;
  * 
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  */
-@JBossXmlSchema(namespace="urn:jboss:classloading:1.0", elementFormDefault=XmlNsForm.QUALIFIED)
+@JBossXmlSchema(namespace="urn:jboss:classloading-domain:1.0", elementFormDefault=XmlNsForm.QUALIFIED)
 @XmlRootElement(name="classloading-domain")
 @XmlType(name = "classloadingDomainType", propOrder = {"parent", "parentPolicy"})
 public class ClassLoadingDomainMetaData10 extends ClassLoadingDomainMetaData

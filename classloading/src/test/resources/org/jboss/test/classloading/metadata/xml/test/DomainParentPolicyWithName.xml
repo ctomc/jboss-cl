@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<classloading-domain xmlns="urn:jboss:classloading:1.0" name="test">
+<classloading-domain xmlns="urn:jboss:classloading-domain:1.0" name="test">
    <parent-policy name="BEFORE"/>
 </classloading-domain>
