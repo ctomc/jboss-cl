@@ -34,7 +34,7 @@ import org.jboss.xb.annotations.JBossXmlSchema;
  */
 @JBossXmlSchema(namespace="urn:jboss:classloading:1.0", elementFormDefault=XmlNsForm.QUALIFIED)
 @XmlRootElement(name="classloading-domain")
-@XmlType(propOrder = {"parent", "parentPolicy"})
+@XmlType(name = "classloadingDomainType", propOrder = {"parent", "parentPolicy"})
 public class ClassLoadingDomainMetaData10 extends ClassLoadingDomainMetaData
 {
    /** The serialVersionUID */
