@@ -3,7 +3,17 @@
 <classloading-domain xmlns="urn:jboss:classloading-domain:1.0" name="test">
    <parent-policy>
       <before-filter>
-         <javabean xmlns="urn:jboss:javabean:2.0" class="org.jboss.classloader.plugins.filter.EverythingClassFilter"/>
+         <javabean xmlns="urn:jboss:javabean:2.0" class="org.jboss.classloader.plugins.filter.NegatingClassFilter">
+            <constructor>
+               <parameter>
+                  <javabean xmlns="urn:jboss:javabean:2.0" class="org.jboss.classloader.spi.filter.PackageClassFilter">
+                     <constructor>
+                        <parameter>1.0.com.sun.codemodel</parameter>
+                     </constructor>
+                  </javabean>
+               </parameter>
+            </constructor>
+         </javabean>
       </before-filter>
    </parent-policy>
 </classloading-domain>
