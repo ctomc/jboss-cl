@@ -21,14 +21,76 @@
  */
 package org.jboss.classloading.spi.metadata;
 
+import org.jboss.classloader.spi.ClassLoaderDomain;
+import org.jboss.classloader.spi.ClassLoaderPolicy;
+import org.jboss.classloader.spi.ClassLoaderSystem;
+import org.jboss.util.loading.Translator;
+
 /**
  * TranslatorScope.
- * 
+ *
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  */
 public enum TranslatorScope
 {
-   SYSTEM,
-   DOMAIN,
+   SYSTEM
+         {
+            @Override
+            public void addTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
+            {
+               system.addTranslator(translator);
+            }
+
+            @Override
+            public void removeTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
+            {
+               system.removeTranslator(translator);
+            }
+         },
+   DOMAIN
+         {
+            @Override
+            public void addTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
+            {
+            }
+
+            @Override
+            public void removeTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
+            {
+            }
+         },
    POLICY
+         {
+            @Override
+            public void addTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
+            {
+               policy.addTranslator(translator);
+            }
+
+            @Override
+            public void removeTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
+            {
+               policy.removeTranslator(translator);
+            }
+         };
+
+   /**
+    * Add translator.
+    *
+    * @param system     the CL system
+    * @param domain     the CL domain
+    * @param policy     the CL policy
+    * @param translator the trsnslator
+    */
+   public abstract void addTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator);
+
+   /**
+    * Remove translator.
+    *
+    * @param system     the CL system
+    * @param domain     the CL domain
+    * @param policy     the CL policy
+    * @param translator the trsnslator
+    */
+   public abstract void removeTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator);
 }

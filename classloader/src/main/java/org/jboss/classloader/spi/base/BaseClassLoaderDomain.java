@@ -24,15 +24,29 @@ package org.jboss.classloader.spi.base;
 import java.io.IOException;
 import java.net.URL;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.classloader.plugins.ClassLoaderUtils;
-import org.jboss.classloader.spi.*;
+import org.jboss.classloader.spi.CacheLoader;
+import org.jboss.classloader.spi.ClassLoaderCache;
+import org.jboss.classloader.spi.ClassLoaderPolicy;
+import org.jboss.classloader.spi.DelegateLoader;
+import org.jboss.classloader.spi.ImportType;
+import org.jboss.classloader.spi.Loader;
+import org.jboss.classloader.spi.ShutdownPolicy;
+import org.jboss.classloader.spi.translator.TranslatorUtils;
 import org.jboss.logging.Logger;
 import org.jboss.util.collection.ConcurrentSet;
+import org.jboss.util.loading.Translator;
 
 /**
  * BaseClassLoaderDomain.<p>
@@ -52,6 +66,9 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
    /** The classloader system to which we belong */
    private BaseClassLoaderSystem system;
    
+   /** The translators */
+   private List<Translator> translators;
+
    /** The classloaders  in the order they were registered */
    private List<ClassLoaderInformation> classLoaders = new CopyOnWriteArrayList<ClassLoaderInformation>();
    
@@ -217,10 +234,13 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
     */
    protected byte[] transform(ClassLoader classLoader, String className, byte[] byteCode, ProtectionDomain protectionDomain) throws Exception
    {
+      byte[] result = byteCode;
+
       BaseClassLoaderSystem system = getClassLoaderSystem();
       if (system != null)
-         return system.transform(classLoader, className, byteCode, protectionDomain);
-      return byteCode;
+         result = system.transform(classLoader, className, result, protectionDomain);
+
+      return TranslatorUtils.applyTranslatorsOnTransform(getTranslators(), classLoader, className, result, protectionDomain);
    }
 
    /**
@@ -1712,7 +1732,62 @@ public abstract class BaseClassLoaderDomain implements CacheLoader
       for (ClassLoaderInformation info : infos)
          info.clearBlackList(name);
    }
-   
+
+   /**
+    * Get the policy's translators.
+    *
+    * @return the translators
+    */
+   public synchronized List<Translator> getTranslators()
+   {
+      if (translators == null || translators.isEmpty())
+         return Collections.emptyList();
+      else
+         return Collections.unmodifiableList(translators);
+   }
+
+   /**
+    * Set the translators.
+    *
+    * @param translators the translators
+    */
+   public synchronized void setTranslators(List<Translator> translators)
+   {
+      this.translators = translators;
+   }
+
+   /**
+    * Add the translator.
+    *
+    * @param translator the translator to add
+    * @throws IllegalArgumentException for null translator
+    */
+   public synchronized void addTranslator(Translator translator)
+   {
+      if (translator == null)
+         throw new IllegalArgumentException("Null translator");
+
+      if (translators == null)
+         translators = new ArrayList<Translator>();
+
+      translators.add(translator);
+   }
+
+   /**
+    * Remove the translator.
+    *
+    * @param translator the translator to remove
+    * @throws IllegalArgumentException for null translator
+    */
+   public synchronized void removeTranslator(Translator translator)
+   {
+      if (translator == null)
+         throw new IllegalArgumentException("Null translator");
+
+      if (translators != null)
+         translators.remove(translator);
+   }
+
    /**
     * ClassCacheItem.
     */

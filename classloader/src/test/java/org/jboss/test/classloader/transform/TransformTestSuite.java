@@ -24,6 +24,7 @@ package org.jboss.test.classloader.transform;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
+import org.jboss.test.classloader.transform.test.DomainTransformUnitTestCase;
 import org.jboss.test.classloader.transform.test.MixedTransformUnitTestCase;
 import org.jboss.test.classloader.transform.test.PolicyTransformUnitTestCase;
 import org.jboss.test.classloader.transform.test.SystemTransformUnitTestCase;
@@ -55,6 +56,7 @@ public class TransformTestSuite extends TestSuite
       TestSuite suite = new TestSuite("Transform Tests");
 
       suite.addTest(PolicyTransformUnitTestCase.suite());
+      suite.addTest(DomainTransformUnitTestCase.suite());
       suite.addTest(SystemTransformUnitTestCase.suite());
       suite.addTest(MixedTransformUnitTestCase.suite());
 

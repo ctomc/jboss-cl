@@ -21,6 +21,7 @@
  */
 package org.jboss.test.classloader.transform.test;
 
+import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.classloader.test.support.MockClassLoaderPolicy;
@@ -41,9 +42,10 @@ public abstract class TransformTest extends AbstractClassLoaderTest
    public void testTransform() throws Exception
    {
       ClassLoaderSystem system = createClassLoaderSystemWithModifiedBootstrap();
+      ClassLoaderDomain domain = system.getDefaultDomain();
       MockClassLoaderPolicy policy = createMockClassLoaderPolicy();
       policy.setPaths("org/jboss/test/classloader/transform/support");
-      prepareTransform(system, policy);
+      prepareTransform(system, domain, policy);
 
       ClassLoader cl = system.registerClassLoaderPolicy(policy);
       Class<?> clazz = cl.loadClass(getClassName());
@@ -51,7 +53,7 @@ public abstract class TransformTest extends AbstractClassLoaderTest
       testInstance(instance);
    }
 
-   protected abstract void prepareTransform(ClassLoaderSystem system, ClassLoaderPolicy policy);
+   protected abstract void prepareTransform(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy);
 
    protected abstract String getClassName();
 

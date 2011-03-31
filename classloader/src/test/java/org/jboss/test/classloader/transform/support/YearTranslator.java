@@ -21,25 +21,15 @@
  */
 package org.jboss.test.classloader.transform.support;
 
-import java.util.Locale;
+import javassist.CtClass;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class MethodHelper
+public class YearTranslator extends JavassistTranslator
 {
-   public static String author()
+   protected void addMethods(CtClass ctClass) throws Exception
    {
-      return System.getProperty("user.name", "Ales");     
-   }
-
-   public static int year()
-   {
-      return 2011;
-   }
-
-   public static Locale locale()
-   {
-      return Locale.getDefault();     
+      addMethod(ctClass, "year");
    }
 }

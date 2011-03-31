@@ -21,25 +21,9 @@
  */
 package org.jboss.test.classloader.transform.support;
 
-import java.util.Locale;
-
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class MethodHelper
+public class DomainTester
 {
-   public static String author()
-   {
-      return System.getProperty("user.name", "Ales");     
-   }
-
-   public static int year()
-   {
-      return 2011;
-   }
-
-   public static Locale locale()
-   {
-      return Locale.getDefault();     
-   }
 }

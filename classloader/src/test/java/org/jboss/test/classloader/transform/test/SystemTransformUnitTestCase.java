@@ -24,6 +24,7 @@ package org.jboss.test.classloader.transform.test;
 import java.lang.reflect.Method;
 
 import junit.framework.Test;
+import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.test.classloader.transform.support.LocaleTranslator;
@@ -45,7 +46,7 @@ public class SystemTransformUnitTestCase extends TransformTest
       return suite(SystemTransformUnitTestCase.class);
    }
 
-   protected void prepareTransform(ClassLoaderSystem system, ClassLoaderPolicy policy)
+   protected void prepareTransform(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy)
    {
       system.addTranslator(new LocaleTranslator());
    }

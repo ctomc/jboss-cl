@@ -27,38 +27,38 @@ import junit.framework.Test;
 import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderSystem;
-import org.jboss.test.classloader.transform.support.AuthorTranslator;
+import org.jboss.test.classloader.transform.support.YearTranslator;
 
 /**
  * Per policy transformation tests.
  *
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class PolicyTransformUnitTestCase extends TransformTest
+public class DomainTransformUnitTestCase extends TransformTest
 {
-   public PolicyTransformUnitTestCase(String name)
+   public DomainTransformUnitTestCase(String name)
    {
       super(name);
    }
 
    public static Test suite()
    {
-      return suite(PolicyTransformUnitTestCase.class);
+      return suite(DomainTransformUnitTestCase.class);
    }
 
    protected void prepareTransform(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy)
    {
-      policy.addTranslator(new AuthorTranslator());
+      domain.addTranslator(new YearTranslator());
    }
 
    protected String getClassName()
    {
-      return "org.jboss.test.classloader.transform.support.PolicyTester";
+      return "org.jboss.test.classloader.transform.support.DomainTester";
    }
 
    protected void testInstance(Object instance) throws Exception
    {
-      Method author = instance.getClass().getDeclaredMethod("author");
+      Method author = instance.getClass().getDeclaredMethod("year");
       assertNotNull(author.invoke(instance));
 
       try

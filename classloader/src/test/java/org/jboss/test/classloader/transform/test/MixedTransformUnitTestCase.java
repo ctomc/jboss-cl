@@ -24,10 +24,12 @@ package org.jboss.test.classloader.transform.test;
 import java.lang.reflect.Method;
 
 import junit.framework.Test;
+import org.jboss.classloader.spi.ClassLoaderDomain;
 import org.jboss.classloader.spi.ClassLoaderPolicy;
 import org.jboss.classloader.spi.ClassLoaderSystem;
 import org.jboss.test.classloader.transform.support.AuthorTranslator;
 import org.jboss.test.classloader.transform.support.LocaleTranslator;
+import org.jboss.test.classloader.transform.support.YearTranslator;
 
 /**
  * Mixed transformation tests.
@@ -46,9 +48,10 @@ public class MixedTransformUnitTestCase extends TransformTest
       return suite(MixedTransformUnitTestCase.class);
    }
 
-   protected void prepareTransform(ClassLoaderSystem system, ClassLoaderPolicy policy)
+   protected void prepareTransform(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy)
    {
       policy.addTranslator(new AuthorTranslator());
+      domain.addTranslator(new YearTranslator());
       system.addTranslator(new LocaleTranslator());
    }
 
@@ -61,6 +64,9 @@ public class MixedTransformUnitTestCase extends TransformTest
    {
       Method author = instance.getClass().getDeclaredMethod("author");
       assertNotNull(author.invoke(instance));
+
+      Method year = instance.getClass().getDeclaredMethod("year");
+      assertNotNull(year.invoke(instance));
 
       Method locale = instance.getClass().getDeclaredMethod("locale");
       assertNotNull(locale.invoke(instance));
