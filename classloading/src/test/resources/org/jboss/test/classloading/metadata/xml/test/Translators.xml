@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<classloading-translators xmlns="urn:jboss:classloading-translators:1.0" scope="SYSTEM">
+    <translator class="org.jboss.acme.X" />
+    <translator class="org.jboss.acme.X" scope="DOMAIN" />
+    <translator class="org.jboss.acme.X" method="bable" />
+</classloading-translators>

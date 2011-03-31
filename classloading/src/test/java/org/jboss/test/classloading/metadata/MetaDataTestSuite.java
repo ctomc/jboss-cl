@@ -21,18 +21,30 @@
  */
 package org.jboss.test.classloading.metadata;
 
-import org.jboss.test.classloading.metadata.test.*;
-import org.jboss.test.classloading.metadata.xml.test.ClassLoadingDomainMetaDataXmlUnitTestCase;
-import org.jboss.test.classloading.metadata.xml.test.ClassLoadingMetaDataXmlUnitTestCase;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
+import org.jboss.test.classloading.metadata.test.CapabilitiesMetaDataUnitTestCase;
+import org.jboss.test.classloading.metadata.test.ClassLoadingMetaDataFactoryUnitTestCase;
+import org.jboss.test.classloading.metadata.test.ClassLoadingMetaDataUnitTestCase;
+import org.jboss.test.classloading.metadata.test.ManagedObjectClassLoadingDomainMetaDataUnitTestCase;
+import org.jboss.test.classloading.metadata.test.ManagedObjectClassLoadingMetaDataUnitTestCase;
+import org.jboss.test.classloading.metadata.test.ModuleCapabilityUnitTestCase;
+import org.jboss.test.classloading.metadata.test.ModuleRequirementUnitTestCase;
+import org.jboss.test.classloading.metadata.test.NameAndVersionRangeUnitTestCase;
+import org.jboss.test.classloading.metadata.test.NameAndVersionUnitTestCase;
+import org.jboss.test.classloading.metadata.test.PackageCapabilityUnitTestCase;
+import org.jboss.test.classloading.metadata.test.PackageRequirementUnitTestCase;
+import org.jboss.test.classloading.metadata.test.RequirementsMetaDataUnitTestCase;
+import org.jboss.test.classloading.metadata.xml.test.ClassLoadingDomainMetaDataXmlUnitTestCase;
+import org.jboss.test.classloading.metadata.xml.test.ClassLoadingMetaDataXmlUnitTestCase;
+import org.jboss.test.classloading.metadata.xml.test.ClassLoadingTranslatorsMetaDataXmlUnitTestCase;
 
 /**
  * Version Test Suite.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 37459 $
  */
 public class MetaDataTestSuite extends TestSuite
@@ -70,6 +82,7 @@ public class MetaDataTestSuite extends TestSuite
       suite.addTest(ManagedObjectClassLoadingDomainMetaDataUnitTestCase.suite());
       suite.addTest(ClassLoadingMetaDataXmlUnitTestCase.suite());
       suite.addTest(ClassLoadingDomainMetaDataXmlUnitTestCase.suite());
+      suite.addTest(ClassLoadingTranslatorsMetaDataXmlUnitTestCase.suite());
 
       return suite;
    }
