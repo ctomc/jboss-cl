@@ -35,13 +35,11 @@ public enum TranslatorScope
 {
    SYSTEM
          {
-            @Override
             public void addTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
             {
                system.addTranslator(translator);
             }
 
-            @Override
             public void removeTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
             {
                system.removeTranslator(translator);
@@ -49,25 +47,23 @@ public enum TranslatorScope
          },
    DOMAIN
          {
-            @Override
             public void addTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
             {
+               domain.addTranslator(translator);
             }
 
-            @Override
             public void removeTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
             {
+               domain.removeTranslator(translator);
             }
          },
    POLICY
          {
-            @Override
             public void addTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
             {
                policy.addTranslator(translator);
             }
 
-            @Override
             public void removeTranslator(ClassLoaderSystem system, ClassLoaderDomain domain, ClassLoaderPolicy policy, Translator translator)
             {
                policy.removeTranslator(translator);
