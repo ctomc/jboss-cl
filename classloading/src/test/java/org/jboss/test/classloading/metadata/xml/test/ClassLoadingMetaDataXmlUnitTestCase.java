@@ -26,6 +26,7 @@ import java.util.List;
 
 import junit.framework.Test;
 import org.jboss.classloader.spi.ShutdownPolicy;
+import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaData10;
@@ -40,6 +41,7 @@ import org.jboss.javabean.plugins.jaxb.JavaBean20;
 import org.jboss.test.classloading.metadata.xml.AbstractJBossXBTest;
 import org.jboss.test.classloading.metadata.xml.support.TestCapability;
 import org.jboss.test.classloading.metadata.xml.support.TestRequirement;
+import org.jboss.test.classloading.metadata.xml.support.TestSingleResourceClassFilter;
 
 /**
  * ClassLoadingMetaDataXmlUnitTestCase.
@@ -166,6 +168,22 @@ public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
       assertEquals(expected, filter);
 
       assertNotNull(result.getExcludedExport());
+   }
+
+   public void testModuleCustomFiltering() throws Exception
+   {
+      FilterMetaData expected = new FilterMetaData();
+      expected.setFilterClassName(TestSingleResourceClassFilter.class.getName());
+      expected.setValueString("META-INF/capedwarf.config");
+      expected.setIgnoreSplit(true);
+
+      ClassLoadingMetaData result = unmarshal();
+      FilterMetaData filter = result.getExcludedMetaData();
+      assertEquals(expected, filter);
+
+      ClassFilter excluded = result.getExcluded();
+      assertNotNull(excluded);
+      assertTrue(excluded.matchesResourcePath("META-INF/capedwarf.config"));
    }
 
    public void testModuleImportAll() throws Exception
