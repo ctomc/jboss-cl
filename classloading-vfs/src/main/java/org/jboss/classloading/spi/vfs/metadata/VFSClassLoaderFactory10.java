@@ -31,11 +31,12 @@ import org.jboss.xb.annotations.JBossXmlSchema;
  * VFSClassLoaderFactory.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 @JBossXmlSchema(namespace="urn:jboss:classloader:1.0", elementFormDefault=XmlNsForm.QUALIFIED)
 @XmlRootElement(name="classloader")
-@XmlType(propOrder = {"requirements", "capabilities", "roots"})
+@XmlType(propOrder = {"includedMetaData", "excludedMetaData", "excludedExportMetaData", "requirements", "capabilities", "roots"})
 public class VFSClassLoaderFactory10 extends VFSClassLoaderFactory
 {
    /** The serialVersionUID */

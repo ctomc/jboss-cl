@@ -24,16 +24,22 @@ package org.jboss.test.classloading.metadata.xml.test;
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.Test;
 import org.jboss.classloader.spi.ShutdownPolicy;
-import org.jboss.classloading.spi.metadata.*;
+import org.jboss.classloading.spi.metadata.Capability;
+import org.jboss.classloading.spi.metadata.ClassLoadingMetaData;
+import org.jboss.classloading.spi.metadata.ClassLoadingMetaData10;
+import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
+import org.jboss.classloading.spi.metadata.ExportAll;
+import org.jboss.classloading.spi.metadata.FilterMetaData;
+import org.jboss.classloading.spi.metadata.ParentPolicyMetaData;
+import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.classloading.spi.version.Version;
 import org.jboss.classloading.spi.version.VersionRange;
 import org.jboss.javabean.plugins.jaxb.JavaBean20;
 import org.jboss.test.classloading.metadata.xml.AbstractJBossXBTest;
 import org.jboss.test.classloading.metadata.xml.support.TestCapability;
 import org.jboss.test.classloading.metadata.xml.support.TestRequirement;
-
-import junit.framework.Test;
 
 /**
  * ClassLoadingMetaDataXmlUnitTestCase.
@@ -64,8 +70,11 @@ public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
       assertFalse(result.isTopLevelClassLoader());
       assertNull(result.getExportAll());
       assertNull(result.getIncludedPackages());
+      assertNull(result.getIncludedMetaData());
       assertNull(result.getExcludedPackages());
+      assertNull(result.getExcludedMetaData());
       assertNull(result.getExcludedExportPackages());
+      assertNull(result.getExcludedExportMetaData());
       assertFalse(result.isImportAll());
       assertTrue(result.isJ2seClassLoadingCompliance());
       assertTrue(result.isCacheable());
@@ -111,16 +120,52 @@ public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
       assertEquals("Included", result.getIncludedPackages());
    }
 
+   public void testModuleIncludedFilter() throws Exception
+   {
+      FilterMetaData expected = new FilterMetaData();
+      expected.setValueString("org.jboss.acme");
+
+      ClassLoadingMetaData result = unmarshal();
+      FilterMetaData filter = result.getIncludedMetaData();
+      assertEquals(expected, filter);
+
+      assertNotNull(result.getIncluded());
+   }
+
    public void testModuleExcluded() throws Exception
    {
       ClassLoadingMetaData result = unmarshal();
       assertEquals("Excluded", result.getExcludedPackages());
    }
 
+   public void testModuleExcludedFilter() throws Exception
+   {
+      FilterMetaData expected = new FilterMetaData();
+      expected.setValueString("com.redhat.foobar");
+
+      ClassLoadingMetaData result = unmarshal();
+      FilterMetaData filter = result.getExcludedMetaData();
+      assertEquals(expected, filter);
+
+      assertNotNull(result.getExcluded());
+   }
+
    public void testModuleExcludedExport() throws Exception
    {
       ClassLoadingMetaData result = unmarshal();
       assertEquals("ExcludedExport", result.getExcludedExportPackages());
+   }
+
+   public void testModuleExcludedExportFilter() throws Exception
+   {
+      FilterMetaData expected = new FilterMetaData();
+      expected.setValueString("org.ceylon.modules");
+
+      ClassLoadingMetaData result = unmarshal();
+      FilterMetaData filter = result.getExcludedExportMetaData();
+      assertEquals(expected, filter);
+
+      assertNotNull(result.getExcludedExport());
    }
 
    public void testModuleImportAll() throws Exception
@@ -381,7 +426,8 @@ public class ClassLoadingMetaDataXmlUnitTestCase extends AbstractJBossXBTest
    {
       assertNotNull(expected);
       assertNotNull(result);
-      assertTrue(result instanceof String[]);
+      if (result instanceof String[] == false)
+         result = assertInstanceOf(result, String.class).split(",");
       String[] strings = (String[]) result;
       assertEquals(expected.length, strings.length);
       for (int i = 0; i < expected.length; i++)

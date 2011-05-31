@@ -21,6 +21,7 @@
  */
 package org.jboss.test.classloading.metadata.xml.test;
 
+import junit.framework.Test;
 import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloading.spi.metadata.ClassLoadingDomainMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingDomainMetaData10;
@@ -29,8 +30,6 @@ import org.jboss.classloading.spi.metadata.LoaderMetaData;
 import org.jboss.classloading.spi.metadata.ParentPolicyMetaData;
 import org.jboss.javabean.plugins.jaxb.JavaBean20;
 import org.jboss.test.classloading.metadata.xml.AbstractJBossXBTest;
-
-import junit.framework.Test;
 
 /**
  * ClassLoadingDomainMetaDataXmlUnitTestCase.
@@ -124,7 +123,8 @@ public class ClassLoadingDomainMetaDataXmlUnitTestCase extends AbstractJBossXBTe
    {
       assertNotNull(expected);
       assertNotNull(result);
-      assertTrue(result instanceof String[]);
+      if (result instanceof String[] == false)
+         result = assertInstanceOf(result, String.class).split(",");
       String[] strings = (String[]) result;
       assertEquals(expected.length, strings.length);
       for (int i = 0; i < expected.length; i++)

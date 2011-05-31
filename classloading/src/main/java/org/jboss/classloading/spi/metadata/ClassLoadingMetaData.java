@@ -21,10 +21,10 @@
  */
 package org.jboss.classloading.spi.metadata;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlTransient;
-
 import java.util.List;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.jboss.classloader.plugins.filter.CombiningClassFilter;
 import org.jboss.classloader.spi.ShutdownPolicy;
@@ -83,6 +83,15 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
 
    /** The excluded for export */
    private String excludedExportPackages;
+
+   /** The included packages */
+   private FilterMetaData includedMetaData;
+
+   /** The excluded packages */
+   private FilterMetaData excludedMetaData;
+
+   /** The excluded export packages */
+   private FilterMetaData excludedExportMetaData;
 
    /** The included packages */
    private ClassFilter included;
@@ -213,6 +222,28 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
    }
 
    /**
+    * Get included metadata.
+    *
+    * @return the included filter metadata
+    */
+   public FilterMetaData getIncludedMetaData()
+   {
+      return includedMetaData;
+   }
+
+   /**
+    * The included filter metadata.
+    *
+    * @param includedMetaData the included metadata
+    */
+   @ManagementProperty(name="includedMetaData")
+   @XmlElement(name="included-filter")
+   public void setIncludedMetaData(FilterMetaData includedMetaData)
+   {
+      this.includedMetaData = includedMetaData;
+   }
+
+   /**
     * Get a filter for the included packages
     * 
     * @return the included packages
@@ -222,7 +253,9 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       ClassFilter packageFilter = null;
       if (includedPackages != null)
          packageFilter = PackageClassFilter.createPackageClassFilterFromString(includedPackages);
-      
+      else if (includedMetaData != null)
+         packageFilter = includedMetaData.createFilter();
+
       if (packageFilter == null)
          return included;
       if (included == null)
@@ -264,6 +297,28 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
    }
 
    /**
+    * Get excluded metadata.
+    *
+    * @return the included filter metadata
+    */
+   public FilterMetaData getExcludedMetaData()
+   {
+      return excludedMetaData;
+   }
+
+   /**
+    * The excluded filter metadata.
+    *
+    * @param excludedMetaData the excluded metadata
+    */
+   @ManagementProperty(name="excludedMetaData")
+   @XmlElement(name="excluded-filter")
+   public void setExcludedMetaData(FilterMetaData excludedMetaData)
+   {
+      this.excludedMetaData = excludedMetaData;
+   }
+
+   /**
     * Get a filter for the excluded packages
     * 
     * @return the excluded packages
@@ -273,6 +328,8 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       ClassFilter packageFilter = null;
       if (excludedPackages != null)
          packageFilter = PackageClassFilter.createPackageClassFilterFromString(excludedPackages);
+      else if (excludedMetaData != null)
+         packageFilter = excludedMetaData.createFilter();
       
       if (packageFilter == null)
          return excluded;
@@ -314,6 +371,23 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       this.excludedExportPackages = excludedExportPackages;
    }
 
+   public FilterMetaData getExcludedExportMetaData()
+   {
+      return excludedExportMetaData;
+   }
+
+   /**
+    * The excluded export filter metadata.
+    *
+    * @param excludedExportMetaData the excluded export metadata
+    */
+   @ManagementProperty(name="excludedExportMetaData")
+   @XmlElement(name="excluded-export-filter")
+   public void setExcludedExportMetaData(FilterMetaData excludedExportMetaData)
+   {
+      this.excludedExportMetaData = excludedExportMetaData;
+   }
+
    /**
     * Get a filter for the excluded export packages
     * 
@@ -324,6 +398,8 @@ public class ClassLoadingMetaData extends NameAndVersionSupport
       ClassFilter packageFilter = null;
       if (excludedExportPackages != null)
          packageFilter = PackageClassFilter.createPackageClassFilterFromString(excludedExportPackages);
+      else if (excludedExportMetaData != null)
+         packageFilter = excludedExportMetaData.createFilter();
       
       if (packageFilter == null)
          return excludedExport;

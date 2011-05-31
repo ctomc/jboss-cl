@@ -21,13 +21,12 @@
 */
 package org.jboss.classloading.spi.metadata;
 
+import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
-
-import java.io.Serializable;
-import java.lang.reflect.Constructor;
 
 import org.jboss.classloader.spi.filter.ClassFilter;
 import org.jboss.classloader.spi.filter.PackageClassFilter;
@@ -35,7 +34,9 @@ import org.jboss.managed.api.annotation.ManagementProperty;
 
 /**
  * FilterMetaData.
- * 
+ * If the value is string, it's split with ',' and turned into String array.
+ * You can ignore this by setting the ignore-split attribute.
+ *
  * @author <a href="ales.justin@jboss.org">Ales Justin</a>
  */
 @XmlType(name="filter", propOrder= {"value"})
@@ -46,6 +47,7 @@ public class FilterMetaData implements Serializable, Cloneable
 
    private String filterClassName = PackageClassFilter.class.getName();
    private Object value;
+   private boolean ignoreSplit;
 
    /**
     * Create filter.
@@ -61,11 +63,17 @@ public class FilterMetaData implements Serializable, Cloneable
       }
       else
       {
+         Object arg;
+         if (value instanceof String && ignoreSplit == false)
+            arg = ((String) value).split(",");
+         else
+            arg = value;
+
          try
          {
             Class<?> clazz = getClass().getClassLoader().loadClass(filterClassName);
-            Constructor<?> ctor = (value != null) ? clazz.getDeclaredConstructor(value.getClass()) : clazz.getDeclaredConstructor();
-            return (ClassFilter) ctor.newInstance(value);
+            Constructor<?> ctor = (arg != null) ? clazz.getDeclaredConstructor(arg.getClass()) : clazz.getDeclaredConstructor();
+            return (ClassFilter) ((arg != null) ? ctor.newInstance(arg) : ctor.newInstance());
          }
          catch (Throwable t)
          {
@@ -94,23 +102,30 @@ public class FilterMetaData implements Serializable, Cloneable
    @ManagementProperty(ignored = true)
    public void setValueObject(Object value)
    {
-      if (value instanceof String)
-         setValueString((String) value);
-      else
-         this.value = value;
+      this.value = value;
    }
 
    @XmlValue
    @ManagementProperty(ignored = true)
    public void setValueString(String value)
    {
-      if (value != null)
-         this.value = value.split(",");
+      this.value = value;
+   }
+
+   public boolean isIgnoreSplit()
+   {
+      return ignoreSplit;
+   }
+
+   @XmlAttribute(name = "ignore-split", required = false)
+   public void setIgnoreSplit(boolean ignoreSplit)
+   {
+      this.ignoreSplit = ignoreSplit;
    }
 
    public int hashCode()
    {
-      return 3 * filterClassName.hashCode() + 7 * (value != null ? value.hashCode() : 0);
+      return 3 * filterClassName.hashCode() + 7 * (value != null ? value.hashCode() : 0) + 11 * Boolean.valueOf(ignoreSplit).hashCode();
    }
 
    public boolean equals(Object obj)
@@ -119,7 +134,8 @@ public class FilterMetaData implements Serializable, Cloneable
          return false;
 
       FilterMetaData other = (FilterMetaData) obj;
-      return filterClassName.equals(other.filterClassName) && ClassLoadingMetaData.equals(value, other.value);
+      return filterClassName.equals(other.filterClassName) && ClassLoadingMetaData.equals(value, other.value) && ignoreSplit == other.ignoreSplit;
+
    }
 
    @Override

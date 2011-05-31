@@ -39,7 +39,7 @@ import org.jboss.xb.annotations.JBossXmlSchema;
  */
 @JBossXmlSchema(namespace="urn:jboss:classloader:1.0", elementFormDefault=XmlNsForm.QUALIFIED)
 @XmlRootElement(name="classloader")
-@XmlType(propOrder = {"requirements", "capabilities", "roots"})
+@XmlType(propOrder = {"includedMetaData", "excludedMetaData", "excludedExportMetaData", "requirements", "capabilities", "roots"})
 public class NoopClassLoaderFactory extends VFSClassLoaderFactory
 {
    private static final long serialVersionUID = 1l;

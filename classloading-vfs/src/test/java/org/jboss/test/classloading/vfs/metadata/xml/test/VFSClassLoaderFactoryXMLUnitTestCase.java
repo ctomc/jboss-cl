@@ -25,10 +25,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import junit.framework.Test;
 import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloading.spi.metadata.Capability;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.ExportAll;
+import org.jboss.classloading.spi.metadata.FilterMetaData;
 import org.jboss.classloading.spi.metadata.Requirement;
 import org.jboss.classloading.spi.version.Version;
 import org.jboss.classloading.spi.version.VersionRange;
@@ -37,8 +39,6 @@ import org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory10;
 import org.jboss.test.classloading.vfs.metadata.xml.AbstractJBossXBTest;
 import org.jboss.test.classloading.vfs.metadata.xml.support.TestCapability;
 import org.jboss.test.classloading.vfs.metadata.xml.support.TestRequirement;
-
-import junit.framework.Test;
 
 /**
  * VFSClassLoaderFactoryXMLUnitTestCase.
@@ -70,8 +70,11 @@ public class VFSClassLoaderFactoryXMLUnitTestCase extends AbstractJBossXBTest
       assertNull(result.getExportAll());
       assertNull(result.getShutdownPolicy());
       assertNull(result.getIncludedPackages());
+      assertNull(result.getIncludedMetaData());
       assertNull(result.getExcludedPackages());
+      assertNull(result.getExcludedMetaData());
       assertNull(result.getExcludedExportPackages());
+      assertNull(result.getExcludedExportMetaData());
       assertFalse(result.isImportAll());
       assertTrue(result.isJ2seClassLoadingCompliance());
       assertTrue(result.isCacheable());
@@ -124,16 +127,52 @@ public class VFSClassLoaderFactoryXMLUnitTestCase extends AbstractJBossXBTest
       assertEquals("Included", result.getIncludedPackages());
    }
 
+   public void testModuleIncludedFilter() throws Exception
+   {
+      FilterMetaData expected = new FilterMetaData();
+      expected.setValueString("org.jboss.acme");
+
+      VFSClassLoaderFactory result = unmarshal();
+      FilterMetaData filter = result.getIncludedMetaData();
+      assertEquals(expected, filter);
+
+      assertNotNull(result.getIncluded());
+   }
+
    public void testModuleExcluded() throws Exception
    {
       VFSClassLoaderFactory result = unmarshal();
       assertEquals("Excluded", result.getExcludedPackages());
    }
 
+   public void testModuleExcludedFilter() throws Exception
+   {
+      FilterMetaData expected = new FilterMetaData();
+      expected.setValueString("com.redhat.foobar");
+
+      VFSClassLoaderFactory result = unmarshal();
+      FilterMetaData filter = result.getExcludedMetaData();
+      assertEquals(expected, filter);
+
+      assertNotNull(result.getExcluded());
+   }
+
    public void testModuleExcludedExport() throws Exception
    {
       VFSClassLoaderFactory result = unmarshal();
       assertEquals("ExcludedExport", result.getExcludedExportPackages());
+   }
+
+   public void testModuleExcludedExportFilter() throws Exception
+   {
+      FilterMetaData expected = new FilterMetaData();
+      expected.setValueString("org.ceylon.modules");
+
+      VFSClassLoaderFactory result = unmarshal();
+      FilterMetaData filter = result.getExcludedExportMetaData();
+      assertEquals(expected, filter);
+
+      assertNotNull(result.getExcludedExport());
    }
 
    public void testModuleImportAll() throws Exception

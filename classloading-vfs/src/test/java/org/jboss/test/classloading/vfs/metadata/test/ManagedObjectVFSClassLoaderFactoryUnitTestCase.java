@@ -27,10 +27,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import junit.framework.Test;
 import org.jboss.classloader.spi.ShutdownPolicy;
 import org.jboss.classloading.spi.metadata.CapabilitiesMetaData;
 import org.jboss.classloading.spi.metadata.ClassLoadingMetaDataFactory;
 import org.jboss.classloading.spi.metadata.ExportAll;
+import org.jboss.classloading.spi.metadata.FilterMetaData;
 import org.jboss.classloading.spi.metadata.ParentPolicyMetaData;
 import org.jboss.classloading.spi.metadata.RequirementsMetaData;
 import org.jboss.classloading.spi.version.Version;
@@ -43,8 +45,6 @@ import org.jboss.metatype.api.types.MetaTypeFactory;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
 import org.jboss.test.BaseTestCase;
-
-import junit.framework.Test;
 
 /**
  * ManagedObjectVFSClassLoaderFactoryUnitTestCase.
@@ -73,7 +73,7 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
    {
       ManagedObject result = moFactory.initManagedObject(test, null, null);
       assertNotNull(result);
-      List<String> expectedProperties = Arrays.asList("name", "version", "context", "domain", "parentDomain", "topLevelClassLoader", "exportAll", "shutdown", "included", "excluded", "excludedExport", "importAll", "parentFirst", "cache", "blackList", "system", "roots", "capabilities", "requirements", "parentPolicy");
+      List<String> expectedProperties = Arrays.asList("name", "version", "context", "domain", "parentDomain", "topLevelClassLoader", "exportAll", "shutdown", "included", "includedMetaData", "excluded", "excludedMetaData", "excludedExport", "excludedExportMetaData", "importAll", "parentFirst", "cache", "blackList", "system", "roots", "capabilities", "requirements", "parentPolicy");
       Set<String> actualProperties = result.getPropertyNames();
       for (String expected : expectedProperties)
       {
@@ -125,8 +125,11 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       assertManagedProperty(mo, "exportAll", ExportAll.class, null);
       assertManagedProperty(mo, "shutdown", ShutdownPolicy.class, null);
       assertManagedProperty(mo, "included", String.class, null);
+      assertManagedProperty(mo, "includedMetaData", FilterMetaData.class, null);
       assertManagedProperty(mo, "excluded", String.class, null);
+      assertManagedProperty(mo, "excludedMetaData", FilterMetaData.class, null);
       assertManagedProperty(mo, "excludedExport", String.class, null);
+      assertManagedProperty(mo, "excludedExportMetaData", FilterMetaData.class, null);
       assertManagedProperty(mo, "importAll", boolean.class, false);
       assertManagedProperty(mo, "parentFirst", boolean.class, true);
       assertManagedProperty(mo, "capabilities", CapabilitiesMetaData.class, new CapabilitiesMetaData());
@@ -206,6 +209,15 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       assertManagedProperty(mo, "included", String.class, "Included");
    }
 
+   public void testSetIncludedMetaData() throws Exception
+   {
+      VFSClassLoaderFactory test = new VFSClassLoaderFactory();
+      FilterMetaData fmd = new FilterMetaData();
+      test.setIncludedMetaData(fmd);
+      ManagedObject mo = assertManagedObject(test);
+      assertManagedProperty(mo, "includedMetaData", FilterMetaData.class, fmd);
+   }
+
    public void testSetExcludedPackages() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
@@ -214,12 +226,30 @@ public class ManagedObjectVFSClassLoaderFactoryUnitTestCase extends BaseTestCase
       assertManagedProperty(mo, "excluded", String.class, "Excluded");
    }
 
+   public void testSetExcludedMetaData() throws Exception
+   {
+      VFSClassLoaderFactory test = new VFSClassLoaderFactory();
+      FilterMetaData fmd = new FilterMetaData();
+      test.setExcludedMetaData(fmd);
+      ManagedObject mo = assertManagedObject(test);
+      assertManagedProperty(mo, "excludedMetaData", FilterMetaData.class, fmd);
+   }
+
    public void testSetExcludedExportPackages() throws Exception
    {
       VFSClassLoaderFactory test = new VFSClassLoaderFactory();
       test.setExcludedExportPackages("ExcludedExport");
       ManagedObject mo = assertManagedObject(test);
       assertManagedProperty(mo, "excludedExport", String.class, "ExcludedExport");
+   }
+
+   public void testSetExcludedExportMetaData() throws Exception
+   {
+      VFSClassLoaderFactory test = new VFSClassLoaderFactory();
+      FilterMetaData fmd = new FilterMetaData();
+      test.setExcludedExportMetaData(fmd);
+      ManagedObject mo = assertManagedObject(test);
+      assertManagedProperty(mo, "excludedExportMetaData", FilterMetaData.class, fmd);
    }
 
    public void testSetImportAll() throws Exception
