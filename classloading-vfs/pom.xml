@@ -18,11 +18,17 @@
     <dependency>
       <groupId>org.jboss</groupId>
       <artifactId>jboss-common-core</artifactId>
+        <exclusions>
+            <exclusion>
+              <groupId>org.jboss.logging</groupId>
+              <artifactId>jboss-logging-spi</artifactId>
+            </exclusion>
+         </exclusions>
     </dependency>
     
     <dependency>
       <groupId>org.jboss.logging</groupId>
-      <artifactId>jboss-logging-spi</artifactId>
+      <artifactId>jboss-logging</artifactId>
     </dependency>
     
     <dependency>
@@ -65,6 +71,10 @@
               <groupId>jboss</groupId>
               <artifactId>jboss-common-logging-spi</artifactId>
             </exclusion>
+          <exclusion>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging-spi</artifactId>
+          </exclusion>
         </exclusions>
     </dependency>
 
@@ -85,6 +95,10 @@
           <groupId>jboss</groupId>
           <artifactId>jboss-common-logging-spi</artifactId>
         </exclusion>
+          <exclusion>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging-spi</artifactId>
+          </exclusion>
       </exclusions>
     </dependency>
     
@@ -104,6 +118,10 @@
           <groupId>jboss</groupId>
           <artifactId>jboss-common-logging-spi</artifactId>
         </exclusion>
+          <exclusion>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging-spi</artifactId>
+          </exclusion>
       </exclusions>
     </dependency>
 
@@ -123,6 +141,10 @@
             <groupId>jboss</groupId>
             <artifactId>jboss-common-logging-spi</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging-spi</artifactId>
+          </exclusion>
       </exclusions>
     </dependency>
 
@@ -137,6 +159,10 @@
           <exclusion>
             <groupId>jboss</groupId>
             <artifactId>jboss-common-logging-spi</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging-spi</artifactId>
           </exclusion>
       </exclusions>
     </dependency>
@@ -168,6 +194,16 @@
       <groupId>org.jboss.test</groupId>
       <artifactId>jboss-test</artifactId>
       <scope>test</scope>
+        <exclusions>
+            <exclusion>
+              <groupId>org.jboss.logging</groupId>
+              <artifactId>jboss-logging-spi</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.jboss.logging</groupId>
+              <artifactId>jboss-logging-log4j</artifactId>
+            </exclusion>
+        </exclusions>
     </dependency>
     
     <dependency>
@@ -176,11 +212,5 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.jboss.logging</groupId>
-      <artifactId>jboss-logging-log4j</artifactId>
-      <scope>test</scope>
-    </dependency>
-    
-  </dependencies>  
+  </dependencies>
 </project>

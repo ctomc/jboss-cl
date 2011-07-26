@@ -30,13 +30,13 @@
   </modules>
   
   <properties>
-    <version.jboss.vfs>3.0.0.GA</version.jboss.vfs>
+    <version.jboss.vfs>3.0.1.GA</version.jboss.vfs>
     <version.jboss.reflect>2.2.0.GA</version.jboss.reflect>
     <version.jboss.man>2.1.1.SP2</version.jboss.man>
     <version.jboss.mdr>2.2.0.GA</version.jboss.mdr>
     <version.jboss.kernel>2.2.0.GA</version.jboss.kernel>
     <version.jboss.common.core>2.2.17.GA</version.jboss.common.core>
-    <version.jboss.logging.spi>2.2.0.CR1</version.jboss.logging.spi>
+    <version.jboss.logging.spi>3.0.0.GA</version.jboss.logging.spi>
     <version.jboss.classloading.spi>6.0.0-Alpha8</version.jboss.classloading.spi>
     <version.jbossxb>2.0.2.GA</version.jbossxb>
     <version.org.jboss.test>1.1.5.GA</version.org.jboss.test>
@@ -205,13 +205,7 @@
       
       <dependency>
         <groupId>org.jboss.logging</groupId>
-        <artifactId>jboss-logging-spi</artifactId>
-        <version>${version.jboss.logging.spi}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.jboss.logging</groupId>
-        <artifactId>jboss-logging-log4j</artifactId>
+        <artifactId>jboss-logging</artifactId>
         <version>${version.jboss.logging.spi}</version>
       </dependency>
 
